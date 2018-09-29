@@ -1,7 +1,7 @@
 import os
 import glob
 import re
-from .util import pip, tee, mapping, filtering, reducing
+from func_helper import pip, tee, mapping, filtering, reducing
 from IPython.display import display
 
 """

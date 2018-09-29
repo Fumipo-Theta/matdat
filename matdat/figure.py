@@ -117,7 +117,7 @@ class Figure:
     # dddd
     """
 
-    def __init__(self, figureStyle={}, padding=None):
+    def __init__(self, figureStyle={}, padding={}):
         self.subplots = []
         self.figureStyle = {
             "titleSize": 16,
@@ -134,6 +134,7 @@ class Figure:
         }
         self.length = 0
         self.axIdentifier = []
+
         self.matpos = MatPos(padding)
 
     def get_length(self):
