@@ -177,7 +177,7 @@ def scatterPlot(style={}):
     return setData
 
 
-def movalMeanPlot(num=5):
+def movalMeanPlot(num=5, style={}):
     def setData(df, opt):
         def plot(ax):
             x = df[opt["x"]] if "x" in opt else df.index

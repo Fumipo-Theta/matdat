@@ -91,7 +91,7 @@ class Figure:
     # customized.
     # ========================================
 
-    from src.matpos import MatPos
+    from matpos import MatPos
 
     mp = MatPos()
 
@@ -148,6 +148,7 @@ class Figure:
 
     def show(self, style={}, test=False):
         """
+        これを呼び出すときに, column数や余白を指定できるようにする.
 
         """
 
