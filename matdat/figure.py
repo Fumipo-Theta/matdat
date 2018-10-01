@@ -34,7 +34,18 @@ class Figure:
     # Distance between subplots are defined by instance variables
     # =============================================================
 
-    axes = figure.show()
+    axes = figure.show((4,3), 2, (1,1))
+    # Grid layout with 2 column. All size are 4 x 3, margin is 1 and 1
+    #   for both direction.
+    #
+    # aaaa bbbb
+    # aaaa bbbb
+    # aaaa bbbb
+    #
+    # cccc dddd
+    # cccc dddd
+    # cccc dddd
+    #
     # Added subplots are returned as dictionary.
     # Each subplots can be identified by their name or order.
     # axes = {
@@ -58,7 +69,7 @@ class Figure:
     # ========================
 
     # List of the size of subplots (width, height)
-    subgrids = [
+    subplot_sizes = [
         (4,3),
         (4,3),
         (4,1),
@@ -68,15 +79,13 @@ class Figure:
     # set padding around plot area when generate instance of Figure
     figure = Figure(padding={"left": 1, "right": 0.2})
 
-    axes = figure.show_grid(subgrids, column=2, offset=(1,1))
+    axes = figure.show_grid(subplot_sizes, column=2, margin=(1,1))
     # Grid layout with 2 column.
     #
     # aaaa bbbb
     # aaaa bbbb
     # aaaa bbbb
     #
-    # cccc dddd
-    # cccc dddd
     # cccc dddd
     #
     # The 1st row is 2 subplot having size of 4 x 3 (unit of inches)
@@ -117,25 +126,14 @@ class Figure:
     # dddd
     """
 
-    def __init__(self, figureStyle={}, padding={}):
+    def __init__(self, figureStyle={}):
         self.subplots = []
         self.figureStyle = {
             "titleSize": 16,
-            "width": 8,
-            "height": 6,
-            "column": 1,
-            "left": 0.1,
-            "bottom": 0.1,
-            "right": 0.99,
-            "top": 0.95,
-            "wspace": 0.2,
-            "hspace": 0.2,
             **figureStyle
         }
         self.length = 0
         self.axIdentifier = []
-
-        self.matpos = MatPos(padding)
 
     def get_length(self):
         return self.length
@@ -146,31 +144,27 @@ class Figure:
             identifier if identifier != None else self.length)
         self.length = self.length + 1
 
-    def show(self, style={}, test=False):
+    def show(self, size, column=1, margin=(1, 0.5), padding={}, test=False):
         """
-        これを呼び出すときに, column数や余白を指定できるようにする.
-
+        Grid layout by the same subplot size and margin.
         """
 
-        figureStyle = {**self.figureStyle, **style}
+        return self.show_grid(
+            [size for i in range(self.get_length())],
+            column,
+            margin,
+            padding,
+            test
+        )
 
-        fig = Figure._generateFigure(self.length, figureStyle)
+    def show_grid(self, sizes=[], column=1, margin=(1, 0.5), padding={}, test=False):
+        matpos = MatPos()
+        sgs = matpos.add_grid(sizes, column, margin)
 
-        axes = pip(
-            Figure._generateAxes(fig),
-            Figure._applyForEach(test),
-            list
-        )(self.subplots)
+        return self.show_custom(matpos, sgs, padding, test)
 
-        return dict(zip(self.axIdentifier, axes))
-
-    def show_grid(self, sizes=[], column=1, distance=(1, 0.5), style={}, test=False):
-
-        sgs = self.matpos.add_grid(sizes, column, distance)
-        return self.show_custom(sgs, style, test)
-
-    def show_custom(self, subgrids, style={}, test=False):
-        fig, empty_axes = self.matpos.figure_and_axes(subgrids)
+    def show_custom(self, matpos, subgrids, padding={}, test=False):
+        fig, empty_axes = matpos.figure_and_axes(subgrids, padding=padding)
 
         axes = pip(
             Figure._applyForEach(test),
@@ -178,56 +172,6 @@ class Figure:
         )(zip(empty_axes, self.subplots))
 
         return dict(zip(self.axIdentifier, axes))
-
-    @staticmethod
-    def _getGrid(col, totalNum):
-        return {
-            "row": int(totalNum/col)+(1 if totalNum % col != 0 else 0),
-            "column": col
-        }
-
-    @staticmethod
-    def _generateFigure(axNum, style):
-        fst = dotdict(style)
-
-        grid = Figure._getGrid(fst.column, axNum)
-
-        fig = plt.figure(figsize=(
-            fst.width * grid["column"],
-            fst.height * grid["row"]
-        ))
-        fig.subplots_adjust(
-            left=fst.left, bottom=fst.bottom,
-            right=fst.right, top=fst.top,
-            wspace=fst.wspace, hspace=fst.hspace
-        )
-        fig.patch.set_facecolor('white')
-        if (fst.get("title") != None):
-            plt.title(fst.title, fontsize=fst.titleSize)
-        return (fig, grid)
-
-    @staticmethod
-    def _generateAxes(figAndGrid):
-        """
-        (pyplot.Figure, (int, int) -> {int,int})
-            -> [Subplot]
-            -> [(pyplot.saxsubplot, Subplot)]
-        """
-        fig, grid = figAndGrid
-
-        def f(subplots):
-            return pip(
-                enumerate,
-                mapping(lambda t: [
-                    fig.add_subplot(
-                        grid["row"], grid["column"], t[0]+1
-                    ),
-                    t[1]
-                ]),
-                list
-            )(subplots)
-
-        return f
 
     @staticmethod
     def _applyForEach(test=False):
