@@ -95,7 +95,7 @@ Point free style:
 
 ```python
 sub_a = SubplotTime.create(ax_style)\
-    .register()
+    .register()\
     .register()
 ```
 

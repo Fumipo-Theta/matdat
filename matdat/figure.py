@@ -1,8 +1,5 @@
 import pandas as pd
 from func_helper import pip, tee, mapping, filtering, reducing, identity
-from .csv_reader import CsvReader
-from .dotdict import dotdict
-from .get_path import PathList, getFileList
 from .save_plot import actionSavePNG
 from matpos import MatPos
 
@@ -144,6 +141,7 @@ class Figure:
         self.axIdentifier.append(
             identifier if identifier != None else self.length-1)
         self.length = self.length + 1
+        return self
 
     def show(self, *arg, **kwargs):
         """
@@ -175,41 +173,49 @@ class Figure:
         if type(arg[0]) is MatPos:
             matpos = arg[0]
             subgrids = arg[1]
-            return self._show_custom(matpos, subgrids, **kwargs)
+            return self.__show_custom(matpos, subgrids, **kwargs)
         elif type(arg[0]) is tuple:
             size = arg[0]
 
-            return self._show_grid(
+            return self.__show_grid(
                 [size for i in range(self.get_length())],
                 **kwargs
             )
         elif type(arg[0]) is list:
             sizes = arg[0]
 
-            return self._show_grid(sizes, **kwargs)
+            return self.__show_grid(sizes, **kwargs)
         else:
             raise TypeError(
                 "The first arguments must be MatPos, Tuple, or List")
 
-    def _show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, **kwargs):
+    def __show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, **kwargs):
         matpos = MatPos()
         sgs = matpos.add_grid(sizes, column, margin)
 
-        return self._show_custom(matpos, sgs, padding, test, **kwargs)
+        return self.__show_custom(matpos, sgs, padding, test, **kwargs)
 
-    def _show_custom(self, matpos, subgrids, padding={}, test=False, **kwargs):
-        fig, empty_axes = matpos.figure_and_axes(
-            subgrids, padding=padding, **kwargs)
-
-        axes = pip(
-            Figure._applyForEach(test),
-            list
-        )(zip(empty_axes, self.subplots))
-
-        return dict(zip(self.axIdentifier, axes))
+    def __show_custom(self, matpos, subgrids, padding={}, test=False, **kwargs):
+        fig, empty_axes = Figure.generate_figure_and_axes(
+            matpos, subgrids, padding, **kwargs)
+        axes = Figure.plot_on_axes(empty_axes, self.subplots, test)
+        return (fig, dict(zip(self.axIdentifier, axes)))
 
     @staticmethod
-    def _applyForEach(test=False):
+    def generate_figure_and_axes(matpos, subgrids, padding, **kwargs):
+        return matpos.figure_and_axes(
+            subgrids, padding=padding, **kwargs
+        )
+
+    @staticmethod
+    def plot_on_axes(axes, subplots, test):
+        return pip(
+            Figure.__applyForEach(test),
+            list
+        )(zip(axes, subplots))
+
+    @staticmethod
+    def __applyForEach(test=False):
         """
         [(pyplot.axsubplot, Subplot)] -> [pyplot.axsubplot]
         """

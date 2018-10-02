@@ -24,12 +24,10 @@ class Subplot:
                 },
                 plot=[scatterPlot(),linePlot()],
                 option={
+                    "xlim" : ["2018/08/10 00:00:00","2018/08/19 00:00:00"],
                     "y" : "Salinity",
                     "ylim" : [25,35],
                     "yLabel" : "Salinity"
-                },
-                limit={
-                    "xlim" : ["2018/08/10 00:00:00","2018/08/19 00:00:00"]
                 }
             )
     )
@@ -132,9 +130,15 @@ class Subplot:
 
         if type(self.data[i]) == dict:
             data = pd.DataFrame(self.data[i])
+            return Subplot.__read_DataFrame(
+                pd.DataFrame(self.data[i]),
+                self.dataTransformer[i]
+            )
 
         elif type(self.data[i]) == pd.DataFrame:
-            data = self.data[i]
+            return Subplot.__read_DataFrame(
+                self.data[i], self.dataTransformer[i]
+            )
 
         else:
             # path(s) of data source
@@ -154,7 +158,9 @@ class Subplot:
 
             return pd.concat(dfs) if len(dfs) > 0 else []
 
-        return pip(*self.dataTransformer[i])(data)
+    @staticmethod
+    def __read_DataFrame(df, transformer):
+        return pip(*transformer)(df)
 
     @staticmethod
     def __toPathList(pathLike):
@@ -174,7 +180,11 @@ class Subplot:
         transformer = arg.get("transformer") if arg.get(
             "transformer") != None else identity
         self.data.append(data)
-        self.dataInfo.append(dataInfo)
+        self.dataInfo.append({
+            **dataInfo,
+            **arg.get("header", {}),
+            **arg.get("index", {})
+        })
         self.plotMethods.append(plot)
         self.option.append({
             **option,
