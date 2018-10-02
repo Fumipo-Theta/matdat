@@ -129,7 +129,7 @@ class Figure:
     def __init__(self, figureStyle={}):
         self.subplots = []
         self.figureStyle = {
-            "titleSize": 16,
+            "title_size": 16,
             **figureStyle
         }
         self.length = 0
@@ -144,27 +144,44 @@ class Figure:
             identifier if identifier != None else self.length)
         self.length = self.length + 1
 
-    def show(self, size, column=1, margin=(1, 0.5), padding={}, test=False):
+    def show(self, *arg, **kwargs):
         """
         Grid layout by the same subplot size and margin.
         """
+        n = len(arg)
 
-        return self.show_grid(
-            [size for i in range(self.get_length())],
-            column,
-            margin,
-            padding,
-            test
-        )
+        if type(arg[0]) is MatPos:
+            matpos = arg[0]
+            subgrids = arg[1]
+            return self._show_custom(matpos, subgrids, **kwargs)
+        elif type(arg[0]) is tuple:
+            size = arg[0]
+            column = arg[1] if n > 1\
+                else kwargs.pop("column", 1)
 
-    def show_grid(self, sizes=[], column=1, margin=(1, 0.5), padding={}, test=False):
+            return self._show_grid(
+                [size for i in range(self.get_length())],
+                column,
+                **kwargs
+            )
+        elif type(arg[0]) is list:
+            sizes = arg[0]
+            column = arg[1] if n > 1\
+                else kwargs.pop("column", 1)
+            return self._show_grid(sizes, column, **kwargs)
+        else:
+            raise TypeError(
+                "The first arguments must be MatPos, Tuple, or List")
+
+    def _show_grid(self, sizes, column, margin=(1, 0.5), padding={}, test=False, **kwargs):
         matpos = MatPos()
         sgs = matpos.add_grid(sizes, column, margin)
 
-        return self.show_custom(matpos, sgs, padding, test)
+        return self._show_custom(matpos, sgs, padding, test, **kwargs)
 
-    def show_custom(self, matpos, subgrids, padding={}, test=False):
-        fig, empty_axes = matpos.figure_and_axes(subgrids, padding=padding)
+    def _show_custom(self, matpos, subgrids, padding={}, test=False, **kwargs):
+        fig, empty_axes = matpos.figure_and_axes(
+            subgrids, padding=padding, **kwargs)
 
         axes = pip(
             Figure._applyForEach(test),
