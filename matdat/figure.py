@@ -146,9 +146,30 @@ class Figure:
 
     def show(self, *arg, **kwargs):
         """
-        Grid layout by the same subplot size and margin.
+        Parameters
+        ----------
+        *arg
+            Same size grid mode
+                size: tuple[float]
+
+            Different size grid mode
+                sizes: list[tuple[float]]
+
+            Custom layout mode
+                matpos: MatPos
+                subgrids: Subgrids
+
+        **kwargs
+            column: int
+            margin: tuple[float]
+            padding: dict
+            test: bool
+            ** compatible to matplotlib.figure.Figure
+
+        Return
+        ------
+        axs: dict[str:matplotlib.axes._subplots.Axsubplot]
         """
-        n = len(arg)
 
         if type(arg[0]) is MatPos:
             matpos = arg[0]
@@ -156,24 +177,20 @@ class Figure:
             return self._show_custom(matpos, subgrids, **kwargs)
         elif type(arg[0]) is tuple:
             size = arg[0]
-            column = arg[1] if n > 1\
-                else kwargs.pop("column", 1)
 
             return self._show_grid(
                 [size for i in range(self.get_length())],
-                column,
                 **kwargs
             )
         elif type(arg[0]) is list:
             sizes = arg[0]
-            column = arg[1] if n > 1\
-                else kwargs.pop("column", 1)
-            return self._show_grid(sizes, column, **kwargs)
+
+            return self._show_grid(sizes, **kwargs)
         else:
             raise TypeError(
                 "The first arguments must be MatPos, Tuple, or List")
 
-    def _show_grid(self, sizes, column, margin=(1, 0.5), padding={}, test=False, **kwargs):
+    def _show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, **kwargs):
         matpos = MatPos()
         sgs = matpos.add_grid(sizes, column, margin)
 
