@@ -19,7 +19,7 @@ class Figure:
     Example
     -------
     # overwrite each subplot size as 10 (inch), column of subplots as 2
-    figure = Figure({"width" : 10, "column": 2})
+    figure = Figure()
 
     # add 4 subplots
     figure.add_subplot(subplot1, "a")
@@ -34,9 +34,10 @@ class Figure:
     # Distance between subplots are defined by instance variables
     # =============================================================
 
-    axes = figure.show((4,3), 2, (1,1))
-    # Grid layout with 2 column. All size are 4 x 3, margin is 1 and 1
-    #   for both direction.
+    axes = figure.show((4,3), column=2, margin=(1,1),
+        padding={"left": 1, "bottom": 1})
+    # Grid layout with 2 column. All size are 4 x 3,
+    #   margin is 1 and 1 for both direction.
     #
     # aaaa bbbb
     # aaaa bbbb
@@ -51,12 +52,12 @@ class Figure:
     # axes = {
     #   "a" : matplotlib.pyplot.axsubplot,
     #   "b" : matplotlib.pyplot.axsubplot,
-    #    3  : matplotlib.pyplot.axsubplot,
-    #    4  : matplotlib.pyplot.axsubplot
+    #    2  : matplotlib.pyplot.axsubplot,
+    #    3  : matplotlib.pyplot.axsubplot
     # }
 
     # You can customize detail of them.
-    axes[3].set_ylabel("c", fontsize=16)
+    axes[2].set_ylabel("c", fontsize=16)
 
     # save image as png
     figure.save("./image/","image.png")
@@ -77,9 +78,9 @@ class Figure:
     ]
 
     # set padding around plot area when generate instance of Figure
-    figure = Figure(padding={"left": 1, "right": 0.2})
+    figure = Figure()
 
-    axes = figure.show_grid(subplot_sizes, column=2, margin=(1,1))
+    axes = figure.show(subplot_sizes, column=2, margin=(1,1), padding = {"left": 1, "right": 0.2})
     # Grid layout with 2 column.
     #
     # aaaa bbbb
@@ -109,8 +110,8 @@ class Figure:
     c = mp.add_bottom(a, size=(None,2), offset=(0,1))
     d = mp.add_bottom(c, size=(4,1), offset=(0,1))
 
-    figure = Figure(padding=padding)
-    axes = figure.show_custom([a,b,c,d])
+    figure = Figure()
+    axes = figure.show(mp, [a,b,c,d], padding=padding)
     # Subgrids are defined their size and relative position
     # from the other subgrid.
     # If element of size is None, it indicates expanding to
@@ -141,7 +142,7 @@ class Figure:
     def add_subplot(self, subplot, identifier=None):
         self.subplots.append(subplot)
         self.axIdentifier.append(
-            identifier if identifier != None else self.length)
+            identifier if identifier != None else self.length-1)
         self.length = self.length + 1
 
     def show(self, *arg, **kwargs):

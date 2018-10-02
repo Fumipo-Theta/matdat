@@ -152,8 +152,8 @@ The axs is dictionary of Axsubplot
 axs = {
    "a" : matplotlib.axes._subplot.Axsubplot,
    "b" : matplotlib.axes._subplot.Axsubplot,
+   2 : matplotlib.axes._subplot.Axsubplot,
    3 : matplotlib.axes._subplot.Axsubplot,
-   4 : matplotlib.axes._subplot.Axsubplot,
  }
 ```
 
