@@ -43,8 +43,6 @@ class SubplotTime(Subplot):
 
     def setXaxisFormat(self):
         def f(ax):
-            #xtick = ax.get_xticklabels()
-            #ax.set_xticklabels(xtick, rotation=self.style["xTickRotation"])
             ax.xaxis.set_major_formatter(
                 mdates.DateFormatter(
                     self.style["xFmt"]
@@ -65,8 +63,12 @@ class SubplotTime(Subplot):
 
         if test:
             df = pd.DataFrame({
-                "x": pd.to_datetime(["1990/10/07 00:00:00", "2030/10/07 00:00:00"]),
-                "y": [0, 28]
+                "x": pd.to_datetime([
+                    "1990/10/07 00:00:00",
+                    "2010/10/07 00:00:00",
+                    "2030/10/07 00:00:00"
+                ]),
+                "y": [0, 20, 40]
             })
 
             return df.set_index("x")

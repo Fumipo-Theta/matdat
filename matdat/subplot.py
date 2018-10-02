@@ -48,9 +48,9 @@ class Subplot:
         self.option = []
         self.length = 0
         self.style = {
-            "labelSize": 16,
-            "legendSize": 16,
-            "tickSize": 14,
+            "label_size": 16,
+            "legend_size": 16,
+            "tick_size": 14,
             "xTickRotation": 0,
             **style
         }
@@ -90,8 +90,6 @@ class Subplot:
 
     def setXaxisFormat(self):
         def f(ax):
-            #xtick = ax.get_xticks()
-            #ax.set_xticklabels(xtick, rotation=self.style["xTickRotation"])
             return ax
         return f
 
@@ -128,15 +126,15 @@ class Subplot:
     def read(self, i, test=False):
         if test:
             return pd.DataFrame({
-                "x": [0, 1],
-                "y": [0, 1]
+                "x": [0, 0.5, 1],
+                "y": [0, 0.5, 1]
             })
 
         if type(self.data[i]) == dict:
-            return pd.DataFrame(self.data[i])
+            data = pd.DataFrame(self.data[i])
 
         elif type(self.data[i]) == pd.DataFrame:
-            return self.data[i]
+            data = self.data[i]
 
         else:
             # path(s) of data source
@@ -156,6 +154,8 @@ class Subplot:
 
             return pd.concat(dfs) if len(dfs) > 0 else []
 
+        return pip(*self.dataTransformer[i])(data)
+
     @staticmethod
     def __toPathList(pathLike):
         if type(pathLike) is PathList:
@@ -169,16 +169,21 @@ class Subplot:
 
     def register(self, data,
                  dataInfo={}, plot=[],
-                 option={}, limit={},
+                 option={},
                  **arg):
         transformer = arg.get("transformer") if arg.get(
             "transformer") != None else identity
         self.data.append(data)
         self.dataInfo.append(dataInfo)
         self.plotMethods.append(plot)
-        self.option.append({**option, **limit})
-        self.dataTransformer.append(transformer if type(
-            transformer) == list else [transformer])
+        self.option.append({
+            **option,
+            **arg.get("limit", {}),
+            **arg.get("xlim", {}),
+            **arg.get("ylim", {})
+        })
+        self.dataTransformer.append(
+            transformer if type(transformer) == list else [transformer])
         self.length = self.length+1
         return self
 
@@ -186,7 +191,7 @@ class Subplot:
         self.preset = preset
         return self
 
-    def usePreset(self, name, fileSelector=[], plot=[], option={}, limit={}, **arg):
+    def usePreset(self, name, fileSelector=[], plot=[], option={}, **arg):
         preset = self.preset[name]
         return self.register(
             data=getFileList(*fileSelector)(preset["directory"]),
@@ -194,6 +199,5 @@ class Subplot:
             plot=[*preset["plot"], *
                   plot] if "plotOverwrite" not in arg else arg["plotOverwrite"],
             option={**preset["option"], **option},
-            limit=limit,
             **arg
         )
