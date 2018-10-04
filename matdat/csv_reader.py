@@ -2,7 +2,7 @@ import pandas as pd
 import chardet
 from chardet.universaldetector import UniversalDetector
 import re
-from func_helper import pip, tee, mapping, filtering, reducing, identity
+from func_helper import pip, tee, mapping, filtering, identity
 from IPython.display import display
 from tqdm import tqdm
 

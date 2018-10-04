@@ -21,9 +21,9 @@ def getAllSubPath(_directory):
 
 
 def isMatchAll(patterns):
-    return lambda s: reducing(lambda a, b: a and b)(
+    return lambda s: reducing(True)(lambda a, b: a and b)(
         mapping(lambda pattern: re.search(pattern, s) != None)(patterns)
-    )(True)
+    )
 
 
 class PathList:

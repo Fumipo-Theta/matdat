@@ -1,5 +1,5 @@
 import pandas as pd
-from func_helper import pip, tee, mapping, filtering, reducing, identity
+from func_helper import pip, identity
 from .save_plot import actionSavePNG
 from matpos import MatPos
 
