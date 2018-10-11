@@ -9,49 +9,69 @@ _theme = {
 
 _default = {
     "line": {
-        "line_width": 1,
-        "line_color": _theme["plot_color"],
+        "linewidth": 1,
+        "color": _theme["plot_color"],
         "alpha": 1.
     },
     "scatter": {
-        "marker_size": 2,
-        "line_color": _theme["plot_color"],
+        "s": 2,
+        "color": _theme["plot_color"],
         "alpha": 1.
     },
     "rect": {
-        "fillColor": _theme["info_color"],
+        "color": _theme["info_color"],
         "alpha": 0.5
     },
     "arrow": {
         "alpha": 0.3,
-        "line_color": "gray",
-        "line_width": 0.001,
-        "head_width": 5,
-        "head_length": 10
+        "color": "gray",
+        "width": 0.001,
+        "headwidth": 5,
+        "headlength": 10
     },
-    "string" : {
-        "label_size" : 16,
-        "tick_size" : 10
+    "string": {
+        "label_size": 16,
+        "tick_size": 10
     }
+}
+
+line_kwargs = [
+    "color",
+    "linestyle",
+    "linewidth",
+    "alpha"
+]
+
+scatter_kwargs = {
+    "color",
+    "s",
+    "alpha",
+    "marker",
+    "edgecolors",
+    "linewidth",
+    "linestyle"
 }
 
 
 def setStyle(opt, style):
     def f(ax):
-        ax.tick_params(axis="y", labelsize=style.get("tick_size",_default["string"]["tick_size"]))
+        ax.tick_params(axis="y", labelsize=style.get(
+            "tick_size", _default["string"]["tick_size"]))
         ax.tick_params(axis="x", labelsize=style.get(
             "tick_size", _default["string"]["tick_size"]))
 
         if "xlabel" in opt:
             ax.set_xlabel(
                 opt["xlabel"],
-                fontsize=style.get("label_size", _default["string"]["label_size"])
+                fontsize=style.get(
+                    "label_size", _default["string"]["label_size"])
             )
 
         if "ylabel" in opt:
             ax.set_ylabel(
                 opt["ylabel"],
-                fontsize=style.get("label_size",_default["string"]["label_size"])
+                fontsize=style.get(
+                    "label_size", _default["string"]["label_size"])
             )
 
         return ax
@@ -108,19 +128,18 @@ def set_ylim(df, opt):
 
 def setGrid(axis="both", style={}):
     st = {
-        "grid_color": 'gray',
-        "line_style": ':',
-        "line_width": 1,
+        "color": 'gray',
+        "linestyle": ':',
+        "linewidth": 1,
         **style
     }
 
     def setData(d, opt):
         def plot(ax):
-            ax.grid(color=st["grid_color"],
-                    linestyle=st["line_style"],
-                    linewidth=st["line_width"],
-                    axis=axis
-                    )
+            ax.grid(
+                **st,
+                axis=axis
+            )
             return ax
         return plot
     return setData
@@ -139,7 +158,12 @@ def set_ylabel(name):
 def linePlot(style={}):
 
     def setData(df, opt):
-        st = {**_default["line"], **style, **opt}
+        st = {
+            k: v for k, v in
+            filter(
+                lambda kv: kv[0] in line_kwargs,
+                {**_default["line"], **style, **opt.get("style", {})}.items())
+        }
 
         def plot(ax):
             x = df[opt["x"]] if "x" in opt else df.index
@@ -148,8 +172,7 @@ def linePlot(style={}):
             if (len(df) > 1):
                 ax.plot(
                     x, df[opt["y"]],
-                    color=st["line_color"],
-                    linewidth=st["line_width"]
+                    **st
                 )
             elif (len(df) == 0):
                 ax = scatterPlot(st)(df, opt)(ax)
@@ -163,7 +186,12 @@ def linePlot(style={}):
 
 def scatterPlot(style={}):
     def setData(df, opt):
-        st = {**_default["scatter"], **style, **opt}
+        st = {
+            k: v for k, v in
+            filter(
+                lambda kv: kv[0] in scatter_kwargs,
+                {**_default["scatter"], **style, **opt.get("style", {})}.items())
+        }
 
         def plot(ax):
             x = df[opt["x"]] if "x" in opt else df.index
@@ -173,8 +201,7 @@ def scatterPlot(style={}):
             if (len(df) > 0):
                 ax.scatter(
                     x, df[opt["y"]],
-                    s=st["marker_size"],
-                    color=st["line_color"]
+                    **st
                 )
 
             return ax
@@ -191,7 +218,8 @@ def movalMeanPlot(num=5, style={}):
             try:
                 y2 = np.convolve(df[opt["y"]], b, mode='same')  # 移動平均
 
-                ax.plot(x, y2, c="black", ls='--', label='Moval mean '+str(num))
+                ax.plot(x, y2, c="black", ls='--',
+                        label='Moval mean '+str(num))
             except:
                 return ax
             return ax
@@ -201,13 +229,18 @@ def movalMeanPlot(num=5, style={}):
 
 def barPlot(lower=0, style={}):
     def setData(df, opt):
-        st = {**_default["line"], **style, **opt}
+        st = {
+            k: v for k, v in
+            filter(
+                lambda kv: kv[0] in line_kwargs,
+                {**_default["line"], **style, **opt.get("style", {})}.items())
+        }
 
         def plot(ax):
             x = df[opt["x"]] if "x" in opt else df.index
             ax.vlines(
                 x, [lower for i in x], df[opt["y"]],
-                color=st["line_color"]
+                **st
             )
             return ax
         return plot
@@ -216,7 +249,7 @@ def barPlot(lower=0, style={}):
 
 def vLinePlotRGB(lower=0, style={}):
     def setData(df, opt):
-        st = {**_default["line"], **style, **opt}
+        st = {**_default["line"], **style, **opt.get("style", {})}
 
         def plot(ax):
             x = df[opt["x"]] if "x" in opt else df.index
@@ -232,7 +265,12 @@ def vLinePlotRGB(lower=0, style={}):
 
 def bandPlot(xPos, style={}):
     def setData(df, opt):
-        st = {**_default["rect"], **style, **opt}
+        st = {
+            k: v for k, v in
+            filter(
+                lambda kv: kv[0] in line_kwargs,
+                {**_default["rect"], **style, **opt.get("style", {})}.items())
+        }
         yName = opt["y"]
 
         if (("ylim" in opt) and (len(opt["ylim"]) > 1)):
@@ -250,8 +288,7 @@ def bandPlot(xPos, style={}):
             ax.fill(
                 [xPos[0], xPos[0], xPos[1], xPos[1]],
                 [ylim[0], ylim[1], ylim[1], ylim[0]],
-                c=st["fillColor"],
-                alpha=st["alpha"]
+                **st
             )
             return ax
         return plot
@@ -260,7 +297,7 @@ def bandPlot(xPos, style={}):
 
 def velocityPlot(style={}):
     def setData(df, opt):
-        st = {**_default["arrow"], **style, **opt}
+        st = {**_default["arrow"], **style, **opt.get("style", {})}
 
         def plot(ax):
             # 時刻と位置0の組 を作る(d,0)
@@ -269,11 +306,7 @@ def velocityPlot(style={}):
 
             ax.plot(x, y, color="gray")
             ax.quiver(x, y, df[opt["EW"]], df[opt["NS"]], scale=1, scale_units="y",
-                      color=st["line_color"],
-                      alpha=st["alpha"],
-                      width=st["line_width"],
-                      headwidth=st["head_width"],
-                      headlength=st["head_length"]
+                      **st
                       )
 
             return ax
@@ -283,7 +316,8 @@ def velocityPlot(style={}):
 
 def velocityPlotRGB(style={}):
     def setData(df, opt):
-        st = {**_default["arrow"], **style, **opt}
+        st = {**_default["arrow"], **style, **opt.get("style", {})}
+        st.pop("color")
 
         def plot(ax):
             # 時刻と位置0の組 を作る(d,0)
@@ -293,10 +327,7 @@ def velocityPlotRGB(style={}):
             ax.plot(x, y, color="gray")
             ax.quiver(x, y, df[opt["EW"]], df[opt["NS"]], scale=1, scale_units="y",
                       color=df["rgb"],
-                      alpha=st["alpha"],
-                      width=st["line_width"],
-                      headwidth=st["head_width"],
-                      headlength=st["head_length"]
+                      **st
                       )
 
             return ax
