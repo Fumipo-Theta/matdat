@@ -31,7 +31,7 @@ class Figure:
     # Distance between subplots are defined by instance variables
     # =============================================================
 
-    axes = figure.show((4,3), column=2, margin=(1,1),
+    axes = figure.show(size=(4,3), column=2, margin=(1,1),
         padding={"left": 1, "bottom": 1})
     # Grid layout with 2 column. All size are 4 x 3,
     #   margin is 1 and 1 for both direction.
@@ -77,7 +77,7 @@ class Figure:
     # set padding around plot area when generate instance of Figure
     figure = Figure()
 
-    axes = figure.show(subplot_sizes, column=2, margin=(1,1), padding = {"left": 1, "right": 0.2})
+    axes = figure.show(size=subplot_sizes, column=2, margin=(1,1), padding = {"left": 1, "right": 0.2})
     # Grid layout with 2 column.
     #
     # aaaa bbbb
@@ -149,18 +149,19 @@ class Figure:
         ----------
         *arg
             Same size grid mode
-                size: tuple[float]
+                None
                   or
                 figure_sizing: FigureSizing
 
             Different size grid mode
-                sizes: list[tuple[float]]
+                None
 
             Custom layout mode
                 matpos: MatPos
                 subgrids: Subgrids
 
         **kwargs
+            size: tuple[float] | list[tuple[float]]
             column: int
             margin: tuple[float]
             padding: dict
@@ -170,36 +171,41 @@ class Figure:
         Return
         ------
         axs: dict[str:matplotlib.axes._subplots.Axsubplot]
+
+
         """
+        if len(arg) > 0:
+            if type(arg[0]) is MatPos:
+                matpos = arg[0]
+                subgrids = arg[1]
+                return self.__show_custom(matpos, subgrids, **kwargs)
+            elif type(arg[0]) is FigureSizing:
+                figure_sizing = arg[0]
+                return self.__show_grid(
+                    [figure_sizing.get_figsize()
+                     for i in range(self.get_length())],
+                    margin=figure_sizing.get_margin(),
+                    padding=figure_sizing.get_padding(),
+                    **kwargs
+                )
+            elif type(arg[0]) is dict:
+                return self.show(**arg[0], **kwargs)
 
-        if type(arg[0]) is MatPos:
-            matpos = arg[0]
-            subgrids = arg[1]
-            return self.__show_custom(matpos, subgrids, **kwargs)
-        elif type(arg[0]) is FigureSizing:
-            figure_sizing = arg[0]
-
-            return self.__show_grid(
-                [figure_sizing.get_figsize()
-                 for i in range(self.get_length())],
-                margin=figure_sizing.get_margin(),
-                padding=figure_sizing.get_padding(),
-                **kwargs
-            )
-        elif type(arg[0]) is tuple:
-            size = arg[0]
-
-            return self.__show_grid(
-                [size for i in range(self.get_length())],
-                **kwargs
-            )
-        elif type(arg[0]) is list:
-            sizes = arg[0]
-
-            return self.__show_grid(sizes, **kwargs)
         else:
-            raise TypeError(
-                "The first arguments must be MatPos, Tuple, or List")
+            if type(kwargs.get("size")) is tuple:
+                size = kwargs.pop("size")
+
+                return self.__show_grid(
+                    [size for i in range(self.get_length())],
+                    **kwargs
+                )
+            elif type(kwargs.get("size")) is list:
+                sizes = kwargs.pop("size")
+
+                return self.__show_grid(sizes, **kwargs)
+            else:
+                raise TypeError(
+                    "The first arguments must be MatPos, Tuple, or List")
 
     def __show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, **kwargs):
         matpos = MatPos()
