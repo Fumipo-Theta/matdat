@@ -122,6 +122,13 @@ fig.add_subplot(sub_b, "b")
 fig.add_subplot(sub_c)
 fig.add_subplot(sub_d)
 
+padding = {
+    "top" : 0.5,
+    "left" : 1,
+    "bottom" : 1,
+    "right" : 0.5
+}
+
 figure, axs = fig.show(size=(8,6), column=2, margin=(1,0.5), padding=padding)
 ```
 

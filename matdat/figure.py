@@ -15,7 +15,6 @@ class Figure:
 
     Example
     -------
-    # overwrite each subplot size as 10 (inch), column of subplots as 2
     figure = Figure()
 
     # add 4 subplots
@@ -74,7 +73,6 @@ class Figure:
         (4,1)
     ]
 
-    # set padding around plot area when generate instance of Figure
     figure = Figure()
 
     axes = figure.show(size=subplot_sizes, column=2, margin=(1,1), padding = {"left": 1, "right": 0.2})
