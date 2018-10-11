@@ -122,7 +122,7 @@ fig.add_subplot(sub_b, "b")
 fig.add_subplot(sub_c)
 fig.add_subplot(sub_d)
 
-axs = fig.show((8,6), column=2, margin=(1,0.5), padding=padding)
+figure, axs = fig.show(size=(8,6), column=2, margin=(1,0.5), padding=padding)
 ```
 
 The list of sizes can be used for grid layout with different size subplots.
@@ -130,7 +130,20 @@ The list of sizes can be used for grid layout with different size subplots.
 ```python
 sizes = [(8,6), (4,6), (8,6), (4,6)]
 
-axs = fig.show(sizes, column=2, margin=(1,0.5),padding=padding)
+figure, axs = fig.show(size=sizes, column=2, margin=(1,0.5),padding=padding)
+```
+
+You can also use dictionary defining parameters in show().
+
+```python
+setting = {
+    "size" : [(8,6), (4,6), (8,6), (4,6)],
+    "column" : 2,
+    "margin" : (1,0.5),
+    "padding" : padding
+}
+
+figure, axs = fig.show(setting)
 ```
 
 And more, you can make complex layout by using subgrids by MatPos.
@@ -143,7 +156,7 @@ b = mp.add_right(a, (2,2), margin=1)
 c = mp.add_bottom(a, (4,1), margin=0.5)
 d = mp.add_bottom(d, (4,1), margin=0.5)
 
-axs = fig.show(mp,[a,b,c,d],padding=padding)
+figure, axs = fig.show(mp,[a,b,c,d],padding=padding)
 ```
 
 The axs is dictionary of Axsubplot
