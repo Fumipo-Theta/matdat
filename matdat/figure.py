@@ -1,7 +1,7 @@
 import pandas as pd
 from func_helper import pip, identity
 from .save_plot import actionSavePNG
-from matpos import MatPos
+from matpos import MatPos, FigureSizing
 
 from IPython.display import display
 import matplotlib.pyplot as plt
@@ -139,7 +139,7 @@ class Figure:
     def add_subplot(self, subplot, identifier=None):
         self.subplots.append(subplot)
         self.axIdentifier.append(
-            identifier if identifier != None else self.length-1)
+            identifier if identifier != None else self.length+1)
         self.length = self.length + 1
         return self
 
@@ -150,6 +150,8 @@ class Figure:
         *arg
             Same size grid mode
                 size: tuple[float]
+                  or
+                figure_sizing: FigureSizing
 
             Different size grid mode
                 sizes: list[tuple[float]]
@@ -174,6 +176,16 @@ class Figure:
             matpos = arg[0]
             subgrids = arg[1]
             return self.__show_custom(matpos, subgrids, **kwargs)
+        elif type(arg[0]) is FigureSizing:
+            figure_sizing = arg[0]
+
+            return self.__show_grid(
+                [figure_sizing.get_figsize()
+                 for i in range(self.get_length())],
+                margin=figure_sizing.get_margin(),
+                padding=figure_sizing.get_padding(),
+                **kwargs
+            )
         elif type(arg[0]) is tuple:
             size = arg[0]
 

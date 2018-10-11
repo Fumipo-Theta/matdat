@@ -1,7 +1,8 @@
 import os
 import glob
 import re
-from func_helper import pip, tee, mapping, filtering, reducing
+from func_helper import pip, tee
+import func_helper.func_helper.iterator as it
 from IPython.display import display
 
 """
@@ -21,8 +22,8 @@ def getAllSubPath(_directory):
 
 
 def isMatchAll(patterns):
-    return lambda s: reducing(True)(lambda a, b: a and b)(
-        mapping(lambda pattern: re.search(pattern, s) != None)(patterns)
+    return lambda s: it.reducing(lambda a, b: a and b)(True)(
+        it.mapping(lambda pattern: re.search(pattern, s) != None)(patterns)
     )
 
 
@@ -32,7 +33,7 @@ class PathList:
 
     def directories(self):
         return pip(
-            filtering(os.path.isdir),
+            it.filtering(os.path.isdir),
             list,
             tee(
                 pip(
@@ -45,7 +46,7 @@ class PathList:
 
     def files(self):
         return pip(
-            filtering(os.path.isfile),
+            it.filtering(os.path.isfile),
             list,
             tee(
                 pip(
@@ -60,7 +61,7 @@ class PathList:
 def getFileList(*patterns):
     return lambda dirPath: pip(
         getAllSubPath,
-        filtering(isMatchAll(patterns)),
+        it.filtering(isMatchAll(patterns)),
         list,
         PathList
     )(dirPath)
