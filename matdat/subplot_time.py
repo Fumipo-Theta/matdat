@@ -56,13 +56,13 @@ class SubplotTime(Subplot):
             *self.dataInfo[i]["index"]
         )
 
-    def read(self, i, test=False):
+    def read(self, i):
 
         if ("xlim" in self.option[i]):
             self.option[i]["xlim"] = pd.to_datetime(self.option[i]["xlim"])
 
-        if test:
-            df = pd.DataFrame({
+        if self.isTest():
+            data_source = pd.DataFrame({
                 "x": pd.to_datetime([
                     "1990/10/07 00:00:00",
                     "2010/10/07 00:00:00",
@@ -71,6 +71,6 @@ class SubplotTime(Subplot):
                 "y": [0, 20, 40]
             })
 
-            return df.set_index("x")
+            return data_source.set_index("x")
 
         return super().read(i)

@@ -1,6 +1,8 @@
 import pandas as pd
+import re
 from func_helper import pip, identity
 from .save_plot import actionSavePNG
+from .i_subplot import ISubplot
 from matpos import MatPos, FigureSizing
 
 from IPython.display import display
@@ -135,6 +137,14 @@ class Figure:
         return self.length
 
     def add_subplot(self, subplot, identifier=None):
+        """
+        subplot: Subplot
+            has methods:
+               plot: ax -> ax
+        """
+        if not isinstance(subplot, ISubplot):
+            raise TypeError("subplot must inherit ISubplot.")
+
         self.subplots.append(subplot)
         self.axIdentifier.append(
             identifier if identifier != None else self.length+1)
@@ -236,7 +246,9 @@ class Figure:
         [(pyplot.axsubplot, Subplot)] -> [pyplot.axsubplot]
         """
         def helper(t):
-            return t[1].plot(t[0], test)
+            ax = t[0]
+            subplot = t[1]
+            return subplot.plot(ax, test)
 
         def f(axesAndSubplots):
             return map(
@@ -249,5 +261,11 @@ class Figure:
         print("Identifier of axes are: ")
         display(self.axIdentifier)
 
-    def save(self, directory, fileName):
-        return actionSavePNG(directory, fileName)
+    def save(self, directory, fileName, ext="png"):
+        saver = Figure.__IFigureSaver(ext)
+        return saver(directory, fileName)
+
+    @staticmethod
+    def __IFigureSaver(ext):
+        if re.match(r"\.[pP](ng|NG)$", ext):
+            return actionSavePNG

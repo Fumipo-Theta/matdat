@@ -4,9 +4,11 @@ from func_helper import identity, pip
 from .plot_action import set_xlim, set_ylim, setStyle
 from .csv_reader import CsvReader
 from .get_path import PathList, getFileList
+from .i_subplot import ISubplot
+from .data_loader import DictLoader, DataFrameLoader, TableLoader, TestLoader
 
 
-class Subplot:
+class Subplot(ISubplot):
     """
     Csvファイルを読み込み, その中のデータを変形し, プロットするメソッドを返す.
     Figureオブジェクトに登録することで最終的にプロットが作成される.
@@ -53,6 +55,24 @@ class Subplot:
             **style
         }
 
+    @staticmethod
+    def IDataReader(data_source):
+        """
+        Interface IDataReader
+
+        read(data_source)
+        transformBy(transformer_funcs)
+        get(): pandas.DataFrame
+        """
+
+        if type(data_source) is dict:
+            return DictLoader()
+
+        elif type(data_source) is pd.DataFrame:
+            return DataFrameLoader()
+        else:
+            return CsvReader()
+
     def plot(self, ax, test=False):
         """
         pyplot.axsubplot -> pyplot.axsubplot
@@ -72,8 +92,11 @@ class Subplot:
         plotted_ax: pyplot.axsubplot
             Ax applied the plot actions.
         """
+
+        self.set_test_mode(test)
+
         actions = map(
-            lambda i: self.__getPlotAction(i, test),
+            lambda i: self.__getPlotAction(i),
             range(self.length)
         )
 
@@ -91,10 +114,20 @@ class Subplot:
             return ax
         return f
 
-    def __getPlotAction(self, i, test=False):
-        df = self.read(i, test)
-        opt = self.option[i] if not test else {
+    def set_test_mode(self, test):
+        self._isTest = test
+        return self
+
+    def isTest(self):
+        return self._isTest
+
+    def get_option(self, i):
+        return self.option[i] if not self.isTest else {
             **self.option[i], "y": "y"}
+
+    def __getPlotAction(self, i):
+        df = self.read(i)
+        opt = self.get_option(i)
 
         if len(df) == 0:
             return Subplot.__noDataAx
@@ -121,46 +154,34 @@ class Subplot:
         else:
             return identity
 
-    def read(self, i, test=False):
-        if test:
-            return pd.DataFrame({
-                "x": [0, 0.5, 1],
-                "y": [0, 0.5, 1]
-            })
+    def read(self, i):
+        if self.isTest():
+            data_source = None
+            loader = TestLoader()
+            transformers = None
 
-        if type(self.data[i]) == dict:
-            data = pd.DataFrame(self.data[i])
-            return Subplot.__read_DataFrame(
-                pd.DataFrame(self.data[i]),
-                self.dataTransformer[i]
-            )
+        elif type(self.data[i]) == dict:
+            data_source = self.data[i]
+            loader = DictLoader()
+            transformers = self.dataTransformer[i]
 
         elif type(self.data[i]) == pd.DataFrame:
-            return Subplot.__read_DataFrame(
-                self.data[i], self.dataTransformer[i]
-            )
+            data_source = self.data[i]
+            loader = DataFrameLoader()
+            transformers = self.dataTransformer[i]
 
         else:
             # path(s) of data source
-            reader = self.dataReader
-            data = Subplot.__toPathList(self.data[i])
+            data_source = Subplot.__toPathList(self.data[i])
+            loader = TableLoader()
+            transformers = [
+                self.setIndex(i),
+                self.filterX(i),
+                *self.dataTransformer[i]
+            ]
 
-            dfs = []
-            for path in data:
-                reader.setPath(path)
-                reader.read(self.dataInfo[i]["head"])
-                reader.assembleDataFrame(
-                    self.setIndex(i),
-                    self.filterX(i),
-                    *self.dataTransformer[i]
-                )
-                dfs.append(reader.df)
-
-            return pd.concat(dfs) if len(dfs) > 0 else []
-
-    @staticmethod
-    def __read_DataFrame(df, transformer):
-        return pip(*transformer)(df)
+        return loader.read(data_source, meta=self.dataInfo[i],
+                           transformers=transformers)
 
     @staticmethod
     def __toPathList(pathLike):
