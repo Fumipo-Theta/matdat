@@ -16,32 +16,32 @@ class CsvReader:
     from src.csv_reader import CsvReader
 
     reader = CsvReader()
-    reader.setPath(path_to_csv, head=30, show=True)
+    reader.setPath(path_to_csv, header=30, show=True)
     # The first 30 lines in {path_to_csv} file are shown.
     reader.read(header = 10)
     """
 
-    def __init__(self, path=None, head=None, show=None):
+    def __init__(self, path=None, header=None, show=None):
         if path != None:
-            self.setPath(path, head, show)
+            self.setPath(path, header, show)
 
     @staticmethod
-    def create(path=None, head=None, show=None):
-        return CsvReader(path, head, show)
+    def create(path=None, header=None, show=None):
+        return CsvReader(path, header, show)
 
-    def setPath(self, path: str, head: int=30, show: bool=False):
+    def setPath(self, path: str, header: int=30, show: bool=False):
         self.path = path
-        self.encoding = CsvReader.showLines(path, head, show)
+        self.encoding = CsvReader.showLines(path, header, show)
         return self
 
     @staticmethod
-    def showLines(path: str, head: int, show: bool):
+    def showLines(path: str, header: int, show: bool):
         with open(path, mode='rb') as f:
             detector = UniversalDetector()
             i = 0
             lines = []
             for line in f:
-                if (i >= head or detector.done):
+                if (i >= header or detector.done):
                     break
                 detector.feed(line)
                 lines.append(line)

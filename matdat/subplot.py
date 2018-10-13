@@ -2,10 +2,8 @@ import pandas as pd
 from func_helper import identity, pip
 
 from .plot_action import set_xlim, set_ylim, setStyle
-from .csv_reader import CsvReader
 from .get_path import PathList, getFileList
 from .i_subplot import ISubplot
-from .data_loader import DictLoader, DataFrameLoader, TableLoader, TestLoader
 
 
 class Subplot(ISubplot):
@@ -40,9 +38,10 @@ class Subplot(ISubplot):
         return subplot
 
     def __init__(self, style={}):
-        self.dataReader = CsvReader()
+
         self.data = []
         self.dataInfo = []
+        self.index_name = []
         self.dataTransformer = []
         self.plotMethods = []
         self.option = []
@@ -54,24 +53,6 @@ class Subplot(ISubplot):
             "xTickRotation": 0,
             **style
         }
-
-    @staticmethod
-    def IDataReader(data_source):
-        """
-        Interface IDataReader
-
-        read(data_source)
-        transformBy(transformer_funcs)
-        get(): pandas.DataFrame
-        """
-
-        if type(data_source) is dict:
-            return DictLoader()
-
-        elif type(data_source) is pd.DataFrame:
-            return DataFrameLoader()
-        else:
-            return CsvReader()
 
     def plot(self, ax, test=False):
         """
@@ -96,34 +77,13 @@ class Subplot(ISubplot):
         self.set_test_mode(test)
 
         actions = map(
-            lambda i: self.__getPlotAction(i),
+            self.__getPlotAction,
             range(self.length)
         )
 
         return pip(
             *actions
         )(ax)
-
-    @staticmethod
-    def __noDataAx(ax):
-        ax.axis("off")
-        return ax
-
-    def setXaxisFormat(self):
-        def f(ax):
-            return ax
-        return f
-
-    def set_test_mode(self, test):
-        self._isTest = test
-        return self
-
-    def isTest(self):
-        return self._isTest
-
-    def get_option(self, i):
-        return self.option[i] if not self.isTest else {
-            **self.option[i], "y": "y"}
 
     def __getPlotAction(self, i):
         df = self.read(i)
@@ -140,81 +100,74 @@ class Subplot(ISubplot):
             self.setXaxisFormat(),
         )(ax)
 
-    def setIndex(self, i):
-        return identity
-
-    def filterX(self, i):
-        if ("xlim" in self.option[i]):
-            xlim = self.option[i]["xlim"]
-            if ("x" in self.option[i]):
-                x = self.option[i]["x"]
-                return lambda df: df[(xlim[0] <= df[x]) & (df[x] <= xlim[1])]
-            else:
-                return lambda df: df[(xlim[0] <= df.index) & (df.index <= xlim[1])]
-        else:
-            return identity
-
     def read(self, i):
+        """
+        Indipendent from type of data source.
+        """
+        loader = ISubplot.IDataLoader(self.data[i], self.isTest())
+
         if self.isTest():
-            data_source = None
-            loader = TestLoader()
             transformers = None
-
-        elif type(self.data[i]) == dict:
-            data_source = self.data[i]
-            loader = DictLoader()
-            transformers = self.dataTransformer[i]
-
-        elif type(self.data[i]) == pd.DataFrame:
-            data_source = self.data[i]
-            loader = DataFrameLoader()
-            transformers = self.dataTransformer[i]
-
         else:
-            # path(s) of data source
-            data_source = Subplot.__toPathList(self.data[i])
-            loader = TableLoader()
             transformers = [
                 self.setIndex(i),
                 self.filterX(i),
                 *self.dataTransformer[i]
             ]
 
-        return loader.read(data_source, meta=self.dataInfo[i],
+        return loader.read(self.data[i], meta=self.dataInfo[i],
                            transformers=transformers)
 
-    @staticmethod
-    def __toPathList(pathLike):
-        if type(pathLike) is PathList:
-            return pathLike.files()
-        elif type(pathLike) is list:
-            return pathLike
-        elif type(pathLike) is str:
-            return [pathLike]
+    def get_option(self, i):
+        if self.isTest():
+            return {**self.option[i], "y": "y"}
         else:
-            raise TypeError("Invalid data source type.")
+            return self.option[i]
 
     def register(self, data,
                  dataInfo={}, plot=[],
                  option={},
-                 **arg):
-        transformer = arg.get("transformer") if arg.get(
-            "transformer") != None else identity
+                 **kwargs):
+        """
+        Parameters
+        ----------
+            **kwargs:
+                header: int
+                index: str | list[str]
+                x: str
+                y: str
+                xlim: list|tuple
+                ylim: list|tuple
+                limit: dict[list|tuple]
+                transformer: df -> df | list|tuple[df->df]
+
+        """
+
         self.data.append(data)
-        self.dataInfo.append({
-            **dataInfo,
-            **arg.get("header", {}),
-            **arg.get("index", {})
-        })
+
+        _dataInfo = {**dataInfo}
+        for kw in ["header"]:
+            if kw in kwargs:
+                _dataInfo[kw] = kwargs.get(kw)
+
+        self.index_name.append(kwargs.get(
+            "index", []) if "index" not in _dataInfo else _dataInfo.pop("index"))
+
+        self.dataInfo.append(_dataInfo)
+
         self.plotMethods.append(plot)
-        self.option.append({
-            **option,
-            **arg.get("limit", {}),
-            **arg.get("xlim", {}),
-            **arg.get("ylim", {})
-        })
+
+        _option = {**option, **kwargs.get("limit", {})}
+        for kw in ["x", "y", "xlim", "ylim"]:
+            if kw in kwargs:
+                _option[kw] = kwargs.get(kw)
+        self.option.append(_option)
+
+        transformer = kwargs.get("transformer") if kwargs.get(
+            "transformer") != None else identity
         self.dataTransformer.append(
-            transformer if type(transformer) == list else [transformer])
+            transformer if type(transformer) in [list, tuple] else [transformer])
+
         self.length = self.length+1
         return self
 
@@ -232,3 +185,34 @@ class Subplot(ISubplot):
             option={**preset["option"], **option},
             **arg
         )
+
+    def setIndex(self, i):
+        return identity
+
+    def filterX(self, i):
+        if ("xlim" in self.option[i]):
+            xlim = self.option[i]["xlim"]
+            if ("x" in self.option[i]):
+                x = self.option[i]["x"]
+                return lambda df: df[(xlim[0] <= df[x]) & (df[x] <= xlim[1])]
+            else:
+                return lambda df: df[(xlim[0] <= df.index) & (df.index <= xlim[1])]
+        else:
+            return identity
+
+    @staticmethod
+    def __noDataAx(ax):
+        ax.axis("off")
+        return ax
+
+    def setXaxisFormat(self):
+        def f(ax):
+            return ax
+        return f
+
+    def set_test_mode(self, test):
+        self._isTest = test
+        return self
+
+    def isTest(self):
+        return self._isTest

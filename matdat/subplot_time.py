@@ -53,13 +53,10 @@ class SubplotTime(Subplot):
 
     def setIndex(self, i):
         return CsvReader.setTimeSeriesIndex(
-            *self.dataInfo[i]["index"]
+            *self.index_name[i]
         )
 
     def read(self, i):
-
-        if ("xlim" in self.option[i]):
-            self.option[i]["xlim"] = pd.to_datetime(self.option[i]["xlim"])
 
         if self.isTest():
             data_source = pd.DataFrame({
@@ -70,7 +67,18 @@ class SubplotTime(Subplot):
                 ]),
                 "y": [0, 20, 40]
             })
-
             return data_source.set_index("x")
 
         return super().read(i)
+
+    def register(self, data,
+                 dataInfo={}, plot=[],
+                 option={},
+                 **arg):
+        super().register(data, dataInfo=dataInfo,
+                         plot=plot, option=option, **arg)
+        i = self.length - 1
+        if ("xlim" in self.option[i]):
+            self.option[i]["xlim"] = pd.to_datetime(self.option[i]["xlim"])
+
+        return self

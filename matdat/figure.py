@@ -5,7 +5,6 @@ from .save_plot import actionSavePNG
 from .i_subplot import ISubplot
 from matpos import MatPos, FigureSizing
 
-from IPython.display import display
 import matplotlib.pyplot as plt
 
 
@@ -174,7 +173,7 @@ class Figure:
             margin: tuple[float]
             padding: dict
             test: bool
-            ** compatible to matplotlib.figure.Figure
+            **compatible to matplotlib.figure.Figure
 
         Return
         ------
@@ -259,7 +258,7 @@ class Figure:
 
     def showIdentifier(self):
         print("Identifier of axes are: ")
-        display(self.axIdentifier)
+        print(self.axIdentifier)
 
     def save(self, directory, fileName, ext="png"):
         saver = Figure.__IFigureSaver(ext)
