@@ -1,3 +1,10 @@
+"""
+plot actions  are function:
+
+(setting_and_styles: any) -> (df: pandas.DataFrame, option_for_plot: dict)
+    -> ax: matplotlib.pyplot._subplot.Axsubplot -> ax: matplotlib.pyplot._subplot.Axsubplot
+"""
+
 import numpy as np
 
 

@@ -3,7 +3,7 @@ import re
 from func_helper import pip, identity
 from .save_plot import actionSavePNG
 from .i_subplot import ISubplot
-from matpos import MatPos, FigureSizing
+from matpos import Matpos, FigureSizing
 
 import matplotlib.pyplot as plt
 
@@ -97,9 +97,9 @@ class Figure:
     # customized.
     # ========================================
 
-    from matpos import MatPos
+    from matpos import Matpos
 
-    mp = MatPos()
+    mp = Matpos()
 
     a = mp.from_left_top(mp,size=(4,3))
     b = mp.add_right(a, size=(4,3), offset=(1,0))
@@ -182,7 +182,7 @@ class Figure:
 
         """
         if len(arg) > 0:
-            if type(arg[0]) is MatPos:
+            if type(arg[0]) is Matpos:
                 matpos = arg[0]
                 subgrids = arg[1]
                 return self.__show_custom(matpos, subgrids, **kwargs)
@@ -215,7 +215,7 @@ class Figure:
                     "The first arguments must be MatPos, Tuple, or List")
 
     def __show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, **kwargs):
-        matpos = MatPos()
+        matpos = Matpos()
         sgs = matpos.add_grid(sizes, column, margin)
 
         return self.__show_custom(matpos, sgs, padding, test, **kwargs)
