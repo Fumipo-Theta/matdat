@@ -197,6 +197,9 @@ class Figure:
                 )
             elif type(arg[0]) is dict:
                 return self.show(**arg[0], **kwargs)
+            else:
+                raise SystemError(
+                    "Type of positional arguments must be Matpos or dict. Or use keyword arguments.")
 
         else:
             if type(kwargs.get("size")) is tuple:

@@ -16,7 +16,7 @@ class TableLoader(IDataLoader):
         for path in paths:
             reader.setPath(path)
             reader.read(**meta)
-            reader.assembleDataFrame(*transformers)
+            reader.assemble(*transformers)
             dfs.append(reader.df)
 
         return pd.concat(dfs) if len(dfs) > 0 else []

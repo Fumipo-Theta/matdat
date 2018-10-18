@@ -6,6 +6,8 @@ from func_helper import pip, tee, mapping, filtering, identity
 from IPython.display import display
 from tqdm import tqdm
 
+matchCsv = r"\.[cC](sv|SV)$"
+
 
 class CsvReader:
     """
@@ -21,21 +23,21 @@ class CsvReader:
     reader.read(header = 10)
     """
 
-    def __init__(self, path=None, header=None, show=None):
+    def __init__(self, path: str=None, header: int=0, verbose: bool=False):
+        self.is_verbose = verbose
         if path != None:
-            self.setPath(path, header, show)
+            self.setPath(path, header)
 
     @staticmethod
-    def create(path=None, header=None, show=None):
-        return CsvReader(path, header, show)
+    def create(path: str=None, header: int=0, verbose: bool=False):
+        return CsvReader(path, header, verbose)
 
-    def setPath(self, path: str, header: int=30, show: bool=False):
+    def setPath(self, path: str, header: int=30):
         self.path = path
-        self.encoding = CsvReader.showLines(path, header, show)
+        self.encoding = self.detect_encoding(path, header)
         return self
 
-    @staticmethod
-    def showLines(path: str, header: int, show: bool):
+    def detect_encoding(self, path: str, header: int):
         with open(path, mode='rb') as f:
             detector = UniversalDetector()
             i = 0
@@ -48,8 +50,8 @@ class CsvReader:
                 i = i+1
             detector.close()
             encoding = detector.result['encoding'] if detector.result['encoding'] != None else "shift-JIS"
-            # print(encoding+"?")
-            if (show):
+
+            if self.is_verbose:
                 pip(
                     enumerate,
                     mapping(lambda t: (t[0], str(t[1], encoding=encoding))),
@@ -88,19 +90,23 @@ class CsvReader:
         }
         if (re.search(r"\.csv$", self.path, re.IGNORECASE) != None):
             self.reader = CsvReader.readCsv(
-                self.path, **arg)
+                self.path, self.is_verbose, **arg)
         else:
             raise SystemError("Invalid file type.")
         return self
 
     @staticmethod
-    def readCsv(path: str, **kwd):
+    def readCsv(path: str, verbose: bool, **kwd):
         """
         Wrapper function for pandas.read_csv.
         """
         hasMultiByteChar = re.search(r"[^0-9a-zA-Z\._\-\s/\\]", path)
 
         engine = "python" if hasMultiByteChar else "c"
+        engine = kwd.pop("engine", engine)
+        if verbose:
+            print("engine is:", engine)
+            print("kwargs for pandas.read_csv:", kwd)
 
         try:
             return pd.read_csv(path, engine=engine, **kwd)
@@ -150,7 +156,7 @@ class CsvReader:
             return df
         return f
 
-    def assembleDataFrame(self, *preprocesses):
+    def assemble(self, *preprocesses):
         """
         Cocatenate all chunks preprocessed by some functions.
         DataFrame is created only after calling this method.
@@ -173,6 +179,10 @@ class CsvReader:
             self.df.index.max()
         ]
         return self
+
+    def assembleDataFrame(self, *preprocesses):
+        print("Deplicated. Use assemble()")
+        return self.assemble(*preprocesses)
 
     def check(self, showFunc):
         self.showPath()

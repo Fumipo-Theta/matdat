@@ -6,6 +6,7 @@ plot actions  are function:
 """
 
 import numpy as np
+import func_helper.func_helper.iterator as it
 
 
 _theme = {
@@ -49,7 +50,7 @@ line_kwargs = [
     "alpha"
 ]
 
-scatter_kwargs = {
+scatter_kwargs = [
     "color",
     "s",
     "alpha",
@@ -57,8 +58,7 @@ scatter_kwargs = {
     "edgecolors",
     "linewidth",
     "linestyle"
-}
-
+]
 
 def setStyle(opt, style):
     def f(ax):
@@ -90,22 +90,25 @@ def set_xlim(df, opt):
         if len(df) == 0:
             return ax
         col = df[opt["x"]] if "x" in opt else df.index
-        if (("xlim" in opt) and (len(opt["xlim"]) >= 2)):
-            xlim = []
-            _xlim = opt["xlim"]
-            xlim.append(_xlim[0]
-                        if _xlim[0] != None
-                        else np.min(col))
-            xlim.append(_xlim[1]
-                        if _xlim[1] != None
-                        else np.max(col))
-            ax.set_xlim(xlim)
-        else:
-            ax.set_xlim([
-                np.min(col),
-                np.max(col)
-            ])
-        return ax
+        try:
+            if (("xlim" in opt) and (len(opt["xlim"]) >= 2)):
+                xlim = []
+                _xlim = opt["xlim"]
+                xlim.append(_xlim[0]
+                            if _xlim[0] != None
+                            else np.min(col))
+                xlim.append(_xlim[1]
+                            if _xlim[1] != None
+                            else np.max(col))
+                ax.set_xlim(xlim)
+            else:
+                ax.set_xlim([
+                    np.min(col),
+                    np.max(col)
+                ])
+            return ax
+        except:
+            return ax
     return plot
 
 
@@ -115,21 +118,23 @@ def set_ylim(df, opt):
         if len(df) == 0:
             return ax
 
-        yName = opt.get("y")
+        try:
+            yName = opt.get("y")
+            if (("ylim" in opt) and (len(opt["ylim"]) > 1)):
+                ylim = opt.get("ylim")
 
-        if (("ylim" in opt) and (len(opt["ylim"]) > 1)):
-            ylim = opt.get("ylim")
+                ylim[0] = ylim[0] if ylim[0] != None else df[yName].min()
+                ylim[1] = ylim[1] if ylim[1] != None else df[yName].max()
 
-            ylim[0] = ylim[0] if ylim[0] != None else df[yName].min()
-            ylim[1] = ylim[1] if ylim[1] != None else df[yName].max()
-
-            ax.set_ylim([ylim[0], ylim[1]])
-        else:
-            ax.set_ylim([
-                df[yName].min(),
-                df[yName].max()
-            ])
-        return ax
+                ax.set_ylim([ylim[0], ylim[1]])
+            else:
+                ax.set_ylim([
+                    df[yName].min(),
+                    df[yName].max()
+                ])
+            return ax
+        except:
+            return ax
     return plot
 
 
