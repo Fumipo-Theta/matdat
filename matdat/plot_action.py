@@ -390,3 +390,76 @@ def rgbScale(min, max):
 
         return (r, g, b)
     return f
+
+
+def boxPlot(style={}, **kwargs):
+    """
+    Make boxplots for multiple columns.
+
+    Usage
+    -----
+    opt_multiple = {
+        "y":["column1","column2","column3"]
+    }
+    ax = boxPlot(style)(df,opt_multiple)(ax)
+
+    opt_single = {
+        "y" : "column1"
+    }
+    ax = boxPlot(style)(df,opt_single)(ax)
+    """
+    def setData(df, opt):
+        st = {
+            **style,
+            **opt.get("style", {})
+        }
+
+        def plot(ax):
+            """
+            for n, col in enumerate(opt["y"]):
+                ax.boxplot(df[col].dropna(), positions=[n+1])
+                ax.set_xticks([opt["y"]])
+            """
+            yNames = opt["y"] if type(opt["y"]) in [
+                list, tuple] else [opt["y"]]
+            ax.boxplot([df[y].dropna()
+                        for y in yNames], labels=yNames, **kwargs)
+            return ax
+        return plot
+    return setData
+
+
+def boxPlotEachFactor(style={}, **kwargs):
+    """
+    Make multiple boxplots for each sub dataframe
+        separated by a facor.
+
+    Usage
+    -----
+    opt = {
+        "y" : "data_column",
+        "f" : "factor_column"
+    }
+
+    ax = boxPlotEachColumn(style)(df,opt)(ax)
+    """
+    def setData(df, opt):
+        st = {
+            **style,
+            **opt.get("style", {})
+        }
+        yName = opt.get("y")
+        fName = opt.get("f")
+        factor = df[fName].cat.categories
+
+        def plot(ax):
+            """
+            for n, col in enumerate(opt["y"]):
+                ax.boxplot(df[col].dropna(), positions=[n+1])
+                ax.set_xticks([opt["y"]])
+            """
+            ax.boxplot([df[df[fName] == f][yName].dropna()
+                        for f in factor], labels=factor, **kwargs)
+            return ax
+        return plot
+    return setData
