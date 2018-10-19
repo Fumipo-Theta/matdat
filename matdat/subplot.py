@@ -127,6 +127,7 @@ class Subplot(ISubplot):
     def register(self, data,
                  dataInfo={}, plot=[],
                  option={},
+                 transformer=identity,
                  **kwargs):
         """
         Parameters
@@ -148,7 +149,7 @@ class Subplot(ISubplot):
         _dataInfo = {**dataInfo}
         for kw in ["header"]:
             if kw in kwargs:
-                _dataInfo[kw] = kwargs.get(kw)
+                _dataInfo[kw] = kwargs.pop(kw)
 
         self.index_name.append(kwargs.get(
             "index", []) if "index" not in _dataInfo else _dataInfo.pop("index"))
@@ -157,14 +158,9 @@ class Subplot(ISubplot):
 
         self.plotMethods.append(plot)
 
-        _option = {**option, **kwargs.get("limit", {})}
-        for kw in ["x", "y", "xlim", "ylim"]:
-            if kw in kwargs:
-                _option[kw] = kwargs.get(kw)
+        _option = {**option, **kwargs}
         self.option.append(_option)
 
-        transformer = kwargs.get("transformer") if kwargs.get(
-            "transformer") != None else identity
         self.dataTransformer.append(
             transformer if type(transformer) in [list, tuple] else [transformer])
 
