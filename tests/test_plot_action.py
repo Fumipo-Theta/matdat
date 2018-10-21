@@ -28,29 +28,56 @@ import func_helper.func_helper.iterator as it
 
 import matdat.matdat.plot as plot
 import pandas as pd
+import numpy as np
 from func_helper import pip
-# -
 
-moc = pd.DataFrame(
-    {
+# +
+moc = {
         "x" : [x - 5 for x in range(0,11)],
         "y" : [(x-5)**2 for x in range(0,11)],
         "z" : [(x-5)*2 for x in range(0,11)]
-    }
+    } 
+
+moc_df = pd.DataFrame(moc)
+
+# +
+moclist = list(
+    zip([x - 5 for x in range(0,11)],
+    [(x-5)**2 for x in range(0,11)],
+    [(x-5)*2 for x in range(0,11)])
 )
 
+
+moclist_df = pd.DataFrame(moclist)
+moclist_df.head(5)
+# -
+
+type(moclist_df.groupby(0))
+
+[moc.get(k) for k in ("x","y")]
+
+np.min([moc.get(k) for k in ("x","y")])
+
+np.min(np.min(moc_df[list(("x","y"))]))
+
+np.min(moc_df[list(("x"))].min())
+
 pip(
+    plot.line()(moc,{
+        "x" : "x",
+        "y" : ["y"]
+    }),
     plot.scatter()(moc,{
         "y" : ["x","y","z"],
-        "ylim" : (-20,20),
+        "ylim" : [-20,20],
         "x" : "x",
-        "color" : "white",
+        "c" : "white",
         "edgecolors" : ["red","green","blue"],
         "s" : 100,
         "linewidth" : 1,
         "linestyle" :["-","--"]
     }),
-    plot.bar()(
+    plot.vlines()(
         moc,
         {
             "lower":[0,-10]
@@ -91,14 +118,16 @@ pip(
     plot.set_ylim()(
         moc,
         {
-            "ylim" : (-20,30)
+            "y":("y","z"),
+            "ylim" : None
         }
     )
 )(plt.subplot())
 
-pip(
+# +
+ax = pip(
     plot.velocity()(
-        moc,
+        moc_df,
         x="x",
         ex="y",
         ey="z",
@@ -114,10 +143,20 @@ pip(
     )
 )(plt.subplot())
 
+type(ax)
+# -
+
 plot.box(showmeans=True,meanprops=[{"marker":"o"}])(
-    moc,
+    moc_df,
     y=("y","z"),
     vert=False
+)(plt.subplot())
+
+plot.scatter()(
+    moc,
+    x="x",
+    y="z",
+    s_name="y"
 )(plt.subplot())
 
 # +

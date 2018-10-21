@@ -1,9 +1,15 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from typing import Union, List, Tuple,TypeVar, Callable, NewType
 import func_helper.func_helper.iterator as it
 
+DataSource = Union[dict,pd.DataFrame,np.ndarray]
+Ax = NewType("Ax", [plt.subplot])
+AxPlot = Callable[[Ax], Ax]
+PlotAction = Callable[..., AxPlot]
 
-def plot_action(arg_kwarg_generator, arg_filter, kwarg_filter, plotter, default={}):
+def plot_action( plotter:PlotAction, arg_kwarg_generator, arg_names,default_kwargs={}):
     """
     Generate plot action by hashable object and some parameters, which takes
         matplotlib.pyplot.Axes.subplot and return it.
@@ -16,18 +22,22 @@ def plot_action(arg_kwarg_generator, arg_filter, kwarg_filter, plotter, default=
     arg_kwarg_generator: pandas.DataFrame, dict, dict -> list[tuple[list,dict]]
     arg_filter: dict -> dict
     kwarg_filter: dict -> dict
-    plotter: dict | list[dict] -> ax -> ax
+    plotter: arg,kwargs -> ax -> ax
+    default: dict
 
     Return
     ------
-    callable: (df, dict, kwargs) -> ax -> ax
+    callable: (kwargs -> df, dict, kwargs) -> (ax -> ax)
     """
+    arg_filter = get_dict(arg_names)
+    kwarg_filter = filter_dict(default_kwargs.keys())
+
     def presetting(**setting):
-        def set_data(df, option={}, **kwargs):
+        def set_data(data_source: DataSource, option:dict={}, **kwargs):
             """
             Parameters
             ----------
-            df: pandas.DataFrame
+            df: pandas.DataFrame | dict
             option: dict, optional
                 {
                     "x" : "x_name",
@@ -36,27 +46,42 @@ def plot_action(arg_kwarg_generator, arg_filter, kwarg_filter, plotter, default=
                     "ylabel" : "Y",
                     "linewidth" : [1,1.5]
                 }
+            kwargs: parameters corresponding to items of option.
             """
-            list_of_entry = to_flatlist({**default, **setting, **option,**kwargs})
+            list_of_entry = to_flatlist({**default_kwargs, **setting, **option,**kwargs})
             #print(list_of_entry)
 
+
             arg_and_kwarg = arg_kwarg_generator(
-                df,
+                as_DataFrame(data_source),
                 list(map(arg_filter, list_of_entry)),
                 list(map(kwarg_filter, list_of_entry))
             )
 
+            # return plot action
             return lambda ax: it.reducing(
                 lambda ax, e: plotter(*e[0], **e[1])(ax))(ax)(arg_and_kwarg)
         return set_data
     return presetting
+
+def as_DataFrame(d: DataSource) -> pd.DataFrame:
+    if type(d) in [pd.DataFrame]:
+        return d
+    elif type(d) in [list,dict,np.ndarray]:
+        return pd.DataFrame(d)
+    else:
+        raise TypeError(f"{type(d)} is not available for data source.")
 
 def generate_arg_and_kwags(arg_func):
     """
     Setup positional arguments and keyword arguments for plotter.
     Positional arguments can be preprocessed by arg_func.
     """
-    def gen_func(df, option, style):
+    def gen_func(
+        df: DataSource,
+        option: Union[dict, List[dict]],
+        style: Union[dict, List[dict]]
+        )->List[Tuple[list, dict]]:
         opt = option if is_iterable(option) else [option]
         st = style if is_iterable(style) else [style]
         if len(opt) != len(st):
@@ -64,39 +89,29 @@ def generate_arg_and_kwags(arg_func):
 
         arg_and_kwarg = []
         for o, s in zip(opt, st):
-            arg = []
-
-            arg.append(df)
-
-            for k, v in o.items():
-                arg.append(arg_func(df, k, v))
-
+            arg = [df, *o.values()]
             kwargs = s
             arg_and_kwarg.append((arg, kwargs))
         return arg_and_kwarg
     return gen_func
 
 
-def get_series(use_index=True):
-    def f(df, k, v):
+def get_subset(use_index=True):
+    def f(df:pd.DataFrame, k):
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
         if type(df) in [pd.DataFrame]:
-            return df[v] if v not in ["", "index", None] else df.index
-        elif type(df) is dict:
-            return df.get(v,[])
+            if type(k) is not tuple:
+                return df[k] if k not in ["", "index", None] else df.index
+            else:
+                return df[list(k)]
         else:
-            raise TypeError("df must be hashable.")
-    return f
-
-def get_df():
-    def f(df,k,v):
-        return (v,df)
+            raise TypeError("df must be pandas.DataFrame.")
     return f
 
 
-def get_name(default=""):
+def get_value(default=""):
     def f(_, k, v):
         """
         Return value.
@@ -108,7 +123,7 @@ def is_iterable(o):
     return type(o) in [list, tuple]
 
 
-def to_flatlist(d: dict):
+def to_flatlist(d: dict) -> List[dict]:
     """
     Usage
     -----
@@ -126,7 +141,7 @@ def to_flatlist(d: dict):
     ]
 
     """
-    def value_to_list(d):
+    def value_to_list(d: dict) -> dict:
         return dict(it.mapping(
             lambda kv: (kv[0], kv[1]) if type(
                 kv[1]) is list else (kv[0], [kv[1]])
@@ -152,13 +167,13 @@ def to_flatlist(d: dict):
     return flatlist
 
 
-def filter_dict(k: list):
+def filter_dict(k: list) -> dict:
     return lambda d: dict(
         filter(lambda kv: kv[0] in k, d.items())
     )
 
 
-def get_dict(k: list, default=None):
+def get_dict(k: list, default=None)->dict:
     """
     Filter dictionary by list of keys.
 
@@ -189,7 +204,25 @@ _grid_kwargs = {
     "linewidth": 1,
 }
 
+_line2d_kwargs = {
+    "alpha" : 1,
+    "marker" : "",
+    "markeredgecolor" :None,
+    "markeredgewidth" : None,
+    "markerfacecolor" : None,
+    "markerfacecoloralt" : None,
+    "markersize" : None,
+}
+
 _line_kwargs = {
+    **_line2d_kwargs,
+    "c": "#2196f3",
+    "linestyle": "-",
+    "linewidth": 1,
+    "alpha": 1
+}
+
+_vhlines_kwargs = {
     "color": "#2196f3",
     "linestyle": "-",
     "linewidth": 1,
@@ -197,12 +230,16 @@ _line_kwargs = {
 }
 
 _scatter_kwargs = {
-    "color": "#2196f3",
-    "s": 2,
+    "c": "#2196f3",
+    "s": None,
+    "cmap" : None,
+    "norm" : None,
+    "vmin" : None,
+    "vmax" : None,
     "alpha": 1,
     "marker": "o",
-    "edgecolors": None,
-    "linewidth": 1,
+    "edgecolors": "face",
+    "linewidth": None,
     "linestyle": "-"
 }
 
@@ -222,34 +259,35 @@ _velocity_kwargs = {
     "headlength": 10
 }
 
-def get_lim(series, lim_tuple):
+def get_lim(df:pd.DataFrame, lim_tuple:Union[Tuple[float,None],None]):
     try:
         if lim_tuple is not None and len(lim_tuple) >= 2:
             lim = []
-            _lim = lim_tuple
+            _lim = list(lim_tuple)
             lim.append(_lim[0]
                        if _lim[0] != None
-                       else np.min(series))
+                       else np.min(df.min()))
             lim.append(_lim[1]
                        if _lim[1] != None
-                       else np.max(series))
+                       else np.max(df.max()))
             return lim
         else:
             return [
-                np.min(series),
-                np.max(series)
+                np.min(df.min()),
+                np.max(df.max())
             ]
     except:
+        print("Failed: Set limit.")
         return None
 
 
-def xlim_setter(df,x,*arg, **kwargs):
+def xlim_setter(df:pd.DataFrame,x,*arg, **kwargs)->AxPlot:
     """
     Parameters
     ----------
     x
     """
-    lim = get_lim(x, kwargs.get("xlim"))
+    lim = get_lim(get_subset()(df,x), kwargs.get("xlim"))
 
     def plot(ax):
         if lim is not None:
@@ -258,13 +296,13 @@ def xlim_setter(df,x,*arg, **kwargs):
     return plot
 
 
-def ylim_setter(df,y,*arg, **kwargs):
+def ylim_setter(df:pd.DataFrame,y,*arg, **kwargs)->AxPlot:
     """
     Parameters
     ----------
     y
     """
-    lim = get_lim(y, kwargs.get("ylim"))
+    lim = get_lim(get_subset()(df, y), kwargs.get("ylim"))
 
     def plot(ax):
         if lim is not None:
@@ -274,21 +312,21 @@ def ylim_setter(df,y,*arg, **kwargs):
 
 
 set_xlim = plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["x"]),
-    filter_dict(["xlim"]),
-    xlim_setter
+    xlim_setter,
+    generate_arg_and_kwags(get_value()),
+    ["x"],
+    {"xlim":None},
 )
 
 set_ylim = plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["y"]),
-    filter_dict(["ylim"]),
-    ylim_setter
+    ylim_setter,
+    generate_arg_and_kwags(get_value()),
+    ["y"],
+    {"ylim":None},
 )
 
 
-def grid_setter(df,*arg, **kwargs):
+def grid_setter(df:pd.DataFrame,*arg, **kwargs)->AxPlot:
     def plot(ax):
         ax.grid(**kwargs)
         return ax
@@ -296,15 +334,14 @@ def grid_setter(df,*arg, **kwargs):
 
 
 set_grid = plot_action(
-    generate_arg_and_kwags(get_name()),
-    get_dict([]),
-    filter_dict(_grid_kwargs.keys()),
     grid_setter,
+    generate_arg_and_kwags(get_value()),
+    [],
     _grid_kwargs
 )
 
 
-def tick_params_setter(df,*arg, **kwargs):
+def tick_params_setter(df:pd.DataFrame,*arg, **kwargs)->AxPlot:
     def plot(ax):
         ax.tick_params(**kwargs)
         return ax
@@ -312,15 +349,14 @@ def tick_params_setter(df,*arg, **kwargs):
 
 
 set_tick_parames = plot_action(
-    generate_arg_and_kwags(get_name()),
-    get_dict([]),
-    filter_dict(_tick_params_kwargs.keys()),
     tick_params_setter,
+    generate_arg_and_kwags(get_value()),
+    [],
     _tick_params_kwargs
 )
 
 
-def label_setter(df,xlabel,ylabel,*arg, **kwargs):
+def label_setter(df:pd.DataFrame,xlabel:str,ylabel:str,*arg, **kwargs)->AxPlot:
     def plot(ax):
         ax.set_xlabel(
             xlabel,
@@ -336,65 +372,70 @@ def label_setter(df,xlabel,ylabel,*arg, **kwargs):
 
 
 set_label = plot_action(
-    generate_arg_and_kwags(get_name()),
-    get_dict(["xlabel", "ylabel"]),
-    filter_dict(_label_kwargs.keys()),
     label_setter,
+    generate_arg_and_kwags(get_value()),
+    ["xlabel", "ylabel"],
     _label_kwargs
 )
 
 
-def line_plotter(df,*arg, **kwargs):
+def line_plotter(df:pd.DataFrame,x,y,*arg, **kwargs)->AxPlot:
+    _x = get_subset()(df,x)
+    _y = get_subset()(df,y)
     def plot(ax):
-        ax.plot(*arg, **kwargs)
+        ax.plot(_x,_y, **kwargs)
         return ax
     return plot
 
 
 line = plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["x", "y"]),
-    filter_dict(_line_kwargs.keys()),
     line_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["x", "y"],
     _line_kwargs
 )
 
 
-def scatter_plotter(df,*arg, **kwargs):
+def scatter_plotter(df:pd.DataFrame,x,y,*arg, s_name=None, c_name=None,**kwargs)->AxPlot:
+    if c_name is not None:
+        kwargs.update({"c":get_subset(False)(df,c_name)})
+    if s_name is not None:
+        kwargs.update({"s":get_subset(False)(df,s_name)})
+    _x = get_subset()(df,x)
+    _y = get_subset()(df,y)
     def plot(ax):
-        ax.scatter(*arg, **kwargs)
+        ax.scatter(_x,_y, **kwargs)
         return ax
     return plot
 
 
 scatter = plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["x", "y"]),
-    filter_dict(_scatter_kwargs.keys()),
     scatter_plotter,
-    _scatter_kwargs
+    generate_arg_and_kwags(get_value()),
+    ["x", "y"],
+    {**_scatter_kwargs,"c_name":None,"s_name":None}
 )
 
-def bar_plotter(df,x,y,*arg,lower=0,**kwargs):
+def vlines_plotter(df:pd.DataFrame,x,y,*arg,lower=0,**kwargs)->AxPlot:
+    _x = get_subset()(df,x)
+    _y = get_subset()(df,y)
     def plot(ax):
-        #lower = kwargs.pop("lower")
         ax.vlines(
-            x, [lower for i in x], y, **kwargs
+            _x, [lower for i in _x], _y, **kwargs
         )
         return ax
     return plot
 
-bar = plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["x","y"]),
-    filter_dict([*_line_kwargs.keys(),"lower"]),
-    bar_plotter,
-    {**_line_kwargs,"lower":0}
+vlines = plot_action(
+    vlines_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["x","y"],
+    {**_vhlines_kwargs,"lower":0}
 )
 
 
-def xband_plotter(df,x,y,*arg,xlim=None,ypos=None,**kwargs):
-    lim = get_lim(x,xlim)
+def xband_plotter(df:pd.DataFrame,x,y,*arg,xlim=None,ypos=None,**kwargs)->AxPlot:
+    lim = get_lim(get_subset()(df, x),xlim)
     def plot(ax):
         if type(ypos) is not tuple or len(ypos) < 2:
             print("ypos must be tuple with having length >= 2.")
@@ -407,8 +448,8 @@ def xband_plotter(df,x,y,*arg,xlim=None,ypos=None,**kwargs):
         return ax
     return plot
 
-def yband_plotter(df,x,y,*arg, ylim=None,xpos=None,**kwargs):
-    lim=get_lim(y,ylim)
+def yband_plotter(df:pd.DataFrame,x,y,*arg, ylim=None,xpos=None,**kwargs)->AxPlot:
+    lim=get_lim(get_subset()(df,y),ylim)
     def plot(ax):
         if type(xpos) is not tuple or len(xpos) < 2:
             print("xpos must be tuple with having length >= 2.")
@@ -423,38 +464,38 @@ def yband_plotter(df,x,y,*arg, ylim=None,xpos=None,**kwargs):
 
 
 xband = plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["x", "y"]),
-    filter_dict([*_fill_kwargs.keys(), "xlim", "ypos"]),
     xband_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["x", "y"],
     {**_fill_kwargs, "xlim": None, "ypos": None}
 )
 
 yband = plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["x","y"]),
-    filter_dict([*_fill_kwargs.keys(),"ylim","xpos"]),
     yband_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["x","y"],
     {**_fill_kwargs,"ylim":None,"xpos":None}
 )
 
-def velocity_plotter(df,x,ex,ey,*arg,**kwargs):
+def velocity_plotter(df:pd.DataFrame,x,ex,ey,*arg,**kwargs)->AxPlot:
+    _x=get_subset()(df,x)
+    _y = [0. for i in x],
+    _ex = get_subset()(df,ex)
+    _ey = get_subset()(df,ey)
     def plot(ax):
-        _y = [0. for i in x]
         #ax.plot(x, _y, color="gray")
-        ax.quiver(x, _y, ex, ey, **kwargs)
+        ax.quiver(_x, _y, _ex, _ey, **kwargs)
         return ax
     return plot
 
 velocity=plot_action(
-    generate_arg_and_kwags(get_series()),
-    get_dict(["x","ex","ew"]),
-    filter_dict(_velocity_kwargs.keys()),
     velocity_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["x","ex","ew"],
     _velocity_kwargs
 )
 
-def box_plotter(df,ys,*arg,**kwargs):
+def box_plotter(df:pd.DataFrame,ys,*arg,**kwargs)->AxPlot:
     def plot(ax):
         ax.boxplot(
             [df[y].dropna() for y in ys],
@@ -492,14 +533,13 @@ _box_kwargs={
 }
 
 box=plot_action(
-    generate_arg_and_kwags(get_name()),
-    get_dict(["y"]),
-    filter_dict(_box_kwargs.keys()),
     box_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["y"],
     _box_kwargs
 )
 
-def factor_box_plotter(df,y,f,*arg,**kwargs):
+def factor_box_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
     factor = df[f].cat.categories
     def plot(ax):
         ax.boxplot(
@@ -512,9 +552,8 @@ def factor_box_plotter(df,y,f,*arg,**kwargs):
     return plot
 
 factor_box = plot_action(
-    generate_arg_and_kwags(get_name()),
-    get_dict(["y","f"]),
-    filter_dict(_box_kwargs.keys()),
     factor_box_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["y","f"],
     _box_kwargs
 )
