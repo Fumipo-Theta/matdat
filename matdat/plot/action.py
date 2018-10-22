@@ -98,7 +98,7 @@ def generate_arg_and_kwags(arg_func):
 
 def get_subset(use_index=True):
     def f(df:pd.DataFrame, k):
-        print(k)
+
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
@@ -451,9 +451,10 @@ def xband_plotter(df:pd.DataFrame,x,y,*arg,xlim=None,ypos=None,**kwargs)->AxPlot
 
 def yband_plotter(df:pd.DataFrame,x,y,*arg, ylim=None,xpos=None,**kwargs)->AxPlot:
     lim=get_lim(get_subset()(df,y),ylim)
+
     def plot(ax):
-        if type(xpos) is not list or len(xpos) < 2:
-            print("xpos must be list with having length >= 2.")
+        if len(xpos) < 2:
+            print("xpos must be list like object with having length >= 2.")
             return ax
         ax.fill(
             [xpos[0],xpos[0],xpos[1],xpos[1]],
