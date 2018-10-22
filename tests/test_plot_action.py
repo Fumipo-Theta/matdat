@@ -109,7 +109,7 @@ pip(
             "xlim":[-10,10]
         }
     ),
-    plot.set_tick_parames()(
+    plot.set_tick_parameters()(
         moc,
         labelsize=20
     ),

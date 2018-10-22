@@ -2,6 +2,7 @@ import pandas as pd
 from func_helper import identity, pip
 
 from .plot_action import set_xlim, set_ylim, setStyle
+import matdat.matdat.plot as plot
 from .get_path import PathList, getFileList
 from .i_subplot import ISubplot
 
@@ -93,10 +94,11 @@ class Subplot(ISubplot):
             return Subplot.__noDataAx
 
         return lambda ax: pip(
-            set_xlim(df, opt),
-            set_ylim(df, opt),
+            plot.set_xlim()(df, opt),
+            plot.set_ylim()(df, opt),
             *[f(df, opt) for f in self.plotMethods[i]],
-            setStyle(opt, self.style),
+            plot.set_tick_parameters(self.style)(df, opt),
+            plot.set_label(self.style)(df, opt),
             self.setXaxisFormat(),
         )(ax)
 

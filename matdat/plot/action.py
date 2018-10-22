@@ -32,7 +32,7 @@ def plot_action( plotter:PlotAction, arg_kwarg_generator, arg_names,default_kwar
     arg_filter = get_values_by_keys(arg_names, None)
     kwarg_filter = filter_dict(default_kwargs.keys())
 
-    def presetting(**setting):
+    def presetting(setting={},**setting_kwargs):
         def set_data(data_source: DataSource, option:dict={}, **kwargs):
             """
             Parameters
@@ -48,7 +48,8 @@ def plot_action( plotter:PlotAction, arg_kwarg_generator, arg_names,default_kwar
                 }
             kwargs: parameters corresponding to items of option.
             """
-            list_of_entry = to_flatlist({**default_kwargs, **setting, **option,**kwargs})
+            list_of_entry = to_flatlist(
+                {**default_kwargs, **setting, **setting_kwargs,**option, **kwargs})
             #print(list_of_entry)
 
 
@@ -347,7 +348,7 @@ def tick_params_setter(df:pd.DataFrame,*arg, **kwargs)->AxPlot:
     return plot
 
 
-set_tick_parames = plot_action(
+set_tick_parameters = plot_action(
     tick_params_setter,
     generate_arg_and_kwags(get_value()),
     [],
@@ -357,22 +358,23 @@ set_tick_parames = plot_action(
 
 def label_setter(df:pd.DataFrame,xlabel:str,ylabel:str,*arg, **kwargs)->AxPlot:
     def plot(ax):
-        ax.set_xlabel(
-            xlabel,
-            **kwargs
-        )
-
-        ax.set_ylabel(
-            ylabel,
-            **kwargs
-        )
+        if xlabel is not None:
+            ax.set_xlabel(
+                xlabel,
+                **kwargs
+            )
+        if ylabel is not None:
+            ax.set_ylabel(
+                ylabel,
+                **kwargs
+            )
         return ax
     return plot
 
 
 set_label = plot_action(
     label_setter,
-    generate_arg_and_kwags(get_value()),
+    generate_arg_and_kwags(get_value("")),
     ["xlabel", "ylabel"],
     _label_kwargs
 )
