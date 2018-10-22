@@ -39,7 +39,6 @@ class PathList:
                 pip(
                     enumerate,
                     list,
-                    display
                 )
             )
         )(self.paths)
@@ -52,7 +51,6 @@ class PathList:
                 pip(
                     enumerate,
                     list,
-                    display
                 )
             )
         )(self.paths)
