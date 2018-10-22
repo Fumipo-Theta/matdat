@@ -29,7 +29,7 @@ def plot_action( plotter:PlotAction, arg_kwarg_generator, arg_names,default_kwar
     ------
     callable: (kwargs -> df, dict, kwargs) -> (ax -> ax)
     """
-    arg_filter = get_dict(arg_names)
+    arg_filter = get_values_by_keys(arg_names, None)
     kwarg_filter = filter_dict(default_kwargs.keys())
 
     def presetting(**setting):
@@ -79,17 +79,16 @@ def generate_arg_and_kwags(arg_func):
     """
     def gen_func(
         df: DataSource,
-        option: Union[dict, List[dict]],
-        style: Union[dict, List[dict]]
+        option: List[list],
+        style: List[dict]
         )->List[Tuple[list, dict]]:
-        opt = option if is_iterable(option) else [option]
-        st = style if is_iterable(style) else [style]
-        if len(opt) != len(st):
+
+        if len(option) != len(style):
             raise SystemError("option and style must be same size list.")
 
         arg_and_kwarg = []
-        for o, s in zip(opt, st):
-            arg = [df, *o.values()]
+        for o, s in zip(option, style):
+            arg = [df, *o]
             kwargs = s
             arg_and_kwarg.append((arg, kwargs))
         return arg_and_kwarg
@@ -98,14 +97,15 @@ def generate_arg_and_kwags(arg_func):
 
 def get_subset(use_index=True):
     def f(df:pd.DataFrame, k):
+        print(k)
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
         if type(df) in [pd.DataFrame]:
-            if type(k) is not tuple:
+            if type(k) is not list:
                 return df[k] if k not in ["", "index", None] else df.index
             else:
-                return df[list(k)]
+                return df[k]
         else:
             raise TypeError("df must be pandas.DataFrame.")
     return f
@@ -128,23 +128,23 @@ def to_flatlist(d: dict) -> List[dict]:
     Usage
     -----
     d = {
-        "x" : [0,1,2],
+        "x" : (0,1,2),
         "y" : [1,2],
         "z" : 0
     }
 
     to_flatlist(d) is...
     [
-        {"x" : 0, "y" : 1, "z" : 0},
-        {"x" : 1, "y" : 2, "z" : 0},
-        {"x" : 2, "y" : 2, "z" : 0}
+        {"x" : 0, "y" : [1,2], "z" : 0},
+        {"x" : 1, "y" : [1,2], "z" : 0},
+        {"x" : 2, "y" : [1,2], "z" : 0}
     ]
 
     """
     def value_to_list(d: dict) -> dict:
         return dict(it.mapping(
             lambda kv: (kv[0], kv[1]) if type(
-                kv[1]) is list else (kv[0], [kv[1]])
+                kv[1]) is tuple else (kv[0], [kv[1]])
         )(d.items()))
 
     list_dict = value_to_list(d)
@@ -167,13 +167,13 @@ def to_flatlist(d: dict) -> List[dict]:
     return flatlist
 
 
-def filter_dict(k: list) -> dict:
+def filter_dict(k: list) -> Callable[[dict],dict]:
     return lambda d: dict(
         filter(lambda kv: kv[0] in k, d.items())
     )
 
 
-def get_dict(k: list, default=None)->dict:
+def get_values_by_keys(k: list, default=None)->Callable[[dict],list]:
     """
     Filter dictionary by list of keys.
 
@@ -184,9 +184,8 @@ def get_dict(k: list, default=None)->dict:
         Set as default value for key not in dict.
         Default value is None
     """
-    return lambda d: dict(
-        map(lambda key: (key, d.get(key, default)), k)
-    )
+    return lambda d: list(map(lambda key: d.get(key, default), k))
+
 
 
 _tick_params_kwargs = {
@@ -259,11 +258,11 @@ _velocity_kwargs = {
     "headlength": 10
 }
 
-def get_lim(df:pd.DataFrame, lim_tuple:Union[Tuple[float,None],None]):
+def get_lim(df:pd.DataFrame, lim_list:Union[list,None]):
     try:
-        if lim_tuple is not None and len(lim_tuple) >= 2:
+        if lim_list is not None and len(lim_list) >= 2:
             lim = []
-            _lim = list(lim_tuple)
+            _lim = list(lim_list)
             lim.append(_lim[0]
                        if _lim[0] != None
                        else np.min(df.min()))
@@ -437,8 +436,8 @@ vlines = plot_action(
 def xband_plotter(df:pd.DataFrame,x,y,*arg,xlim=None,ypos=None,**kwargs)->AxPlot:
     lim = get_lim(get_subset()(df, x),xlim)
     def plot(ax):
-        if type(ypos) is not tuple or len(ypos) < 2:
-            print("ypos must be tuple with having length >= 2.")
+        if type(ypos) is not list or len(ypos) < 2:
+            print("ypos must be list with having length >= 2.")
             return ax
         ax.fill(
             [lim[0], lim[1], lim[1], lim[0]],
@@ -451,8 +450,8 @@ def xband_plotter(df:pd.DataFrame,x,y,*arg,xlim=None,ypos=None,**kwargs)->AxPlot
 def yband_plotter(df:pd.DataFrame,x,y,*arg, ylim=None,xpos=None,**kwargs)->AxPlot:
     lim=get_lim(get_subset()(df,y),ylim)
     def plot(ax):
-        if type(xpos) is not tuple or len(xpos) < 2:
-            print("xpos must be tuple with having length >= 2.")
+        if type(xpos) is not list or len(xpos) < 2:
+            print("xpos must be list with having length >= 2.")
             return ax
         ax.fill(
             [xpos[0],xpos[0],xpos[1],xpos[1]],

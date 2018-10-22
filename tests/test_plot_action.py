@@ -65,31 +65,38 @@ np.min(moc_df[list(("x"))].min())
 pip(
     plot.line()(moc,{
         "x" : "x",
-        "y" : ["y"]
+        "y" : ("y")
     }),
     plot.scatter()(moc,{
-        "y" : ["x","y","z"],
+        "y" : ("x","y","z"),
         "ylim" : [-20,20],
         "x" : "x",
         "c" : "white",
-        "edgecolors" : ["red","green","blue"],
+        "edgecolors" : ("red","green","blue"),
         "s" : 100,
         "linewidth" : 1,
-        "linestyle" :["-","--"]
+        "linestyle" :("-","--")
     }),
     plot.vlines()(
         moc,
         {
-            "lower":[0,-10]
+            "lower":(0,-10)
         },
         x="x",
-        y=["y","z"],
+        y=("y","z"),
     ),
-    plot.yband(xpos=[(-0.5,0.5),(1,1.5)])(
+    plot.yband(xpos=([-0.5,0.5],[1,1.5]))(
         moc,
         {
             "y":["y","z"],
             "hatch":"x"
+        }
+    ),
+    plot.yband(xpos=([-0.5,0.5],[1,1.5]))(
+        moc,
+        {
+            "y":("y","z"),
+            "color":"red"
         }
     ),
     plot.xband()(
@@ -97,9 +104,9 @@ pip(
         {
             "x":"x",
             "y":"y",
-            "ypos":(5,5.5),
+            "ypos":[5,5.5],
             "color":"blue",
-            "xlim":(-10,10)
+            "xlim":[-10,10]
         }
     ),
     plot.set_tick_parames()(
@@ -118,7 +125,7 @@ pip(
     plot.set_ylim()(
         moc,
         {
-            "y":("y","z"),
+            "y":["y","z"],
             "ylim" : None
         }
     )
@@ -135,20 +142,20 @@ ax = pip(
     ),
     plot.set_xlim()(
         moc,
-        xlim=(-5,10)
+        xlim=[-5,10]
     ),
     plot.set_ylim()(
         moc,
-        ylim=(-5, 20)
+        ylim=[-5, 20]
     )
 )(plt.subplot())
 
 type(ax)
 # -
 
-plot.box(showmeans=True,meanprops=[{"marker":"o"}])(
+plot.box(showmeans=True,meanprops=({"marker":"o"}))(
     moc_df,
-    y=("y","z"),
+    y=["y","z"],
     vert=False
 )(plt.subplot())
 
@@ -156,19 +163,25 @@ plot.scatter()(
     moc,
     x="x",
     y="z",
-    s_name="y"
+    s=moc["y"]
+    #s_name="y"
 )(plt.subplot())
 
 # +
-print(plot.get_dict(["x","y","z"])({
-    "y" : [0,1,2],
+print(plot.get_values_by_keys(["x","y","z"])({
+    "y" : (0,1,2),
     "x" : [0,0,0],
 }))
 
-print(plot.to_flatlist(plot.get_dict(["x","y","z"])({
-    "y" : [0,1,2],
-    "x" : [0,0,0],
-})))
+print(
+    plot.to_flatlist(
+        {
+                "y" : ([0],1,2),
+                "x" : [0,0,0],
+        }
+        
+    )
+)
 
 # +
 option = plot.to_flatlist({
