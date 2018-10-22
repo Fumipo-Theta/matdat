@@ -262,14 +262,11 @@ _velocity_kwargs = {
 def get_lim(df:pd.DataFrame, lim_list:Union[list,None]):
     try:
         if lim_list is not None and len(lim_list) >= 2:
-            lim = []
-            _lim = list(lim_list)
-            lim.append(_lim[0]
-                       if _lim[0] != None
-                       else np.min(df.min()))
-            lim.append(_lim[1]
-                       if _lim[1] != None
-                       else np.max(df.max()))
+            lim = lim_list
+            if lim[0] is None:
+                lim[0] = np.min(df.min())
+            if lim[1] is None:
+                lim[1] = np.max(df.max())
             return lim
         else:
             return [
@@ -277,7 +274,7 @@ def get_lim(df:pd.DataFrame, lim_list:Union[list,None]):
                 np.max(df.max())
             ]
     except:
-        print("Failed: Set limit.")
+        print(f"Failed: Set limit {lim_list}.")
         return None
 
 

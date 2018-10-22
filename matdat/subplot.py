@@ -129,6 +129,7 @@ class Subplot(ISubplot):
     def register(self, data,
                  dataInfo={}, plot=[],
                  option={},
+                 limit={},
                  transformer=identity,
                  **kwargs):
         """
@@ -160,7 +161,7 @@ class Subplot(ISubplot):
 
         self.plotMethods.append(plot)
 
-        _option = {**option, **kwargs}
+        _option = {**option, **limit, **kwargs}
         self.option.append(_option)
 
         self.dataTransformer.append(
