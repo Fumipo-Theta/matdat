@@ -19,7 +19,7 @@ class TableLoader(IDataLoader):
             reader.assemble(*transformers)
             dfs.append(reader.df)
 
-        return pd.concat(dfs) if len(dfs) > 0 else []
+        return pd.concat(dfs, sort=True) if len(dfs) > 0 else []
 
     @staticmethod
     def toPathList(pathLike):
