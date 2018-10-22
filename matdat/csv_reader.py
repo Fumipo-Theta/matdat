@@ -170,9 +170,11 @@ class CsvReader:
         preprocessor = pip(
             *preprocesses) if len(preprocesses) > 0 else identity
 
-        self.df = pd.concat(
-            preprocessor(r) for r in tqdm(self.reader)
-        )
+        with tqdm(self.reader) as _tqdm:
+            _tqdm.set_postfix(path=self.path)
+            self.df = pd.concat(
+                preprocessor(r) for r in _tqdm
+            )
 
         self.indexRange = [
             self.df.index.min(),
