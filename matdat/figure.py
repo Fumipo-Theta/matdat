@@ -123,12 +123,8 @@ class Figure:
     # dddd
     """
 
-    def __init__(self, figureStyle={}):
+    def __init__(self, *arg, **kwargs):
         self.subplots = []
-        self.figureStyle = {
-            "title_size": 16,
-            **figureStyle
-        }
         self.length = 0
         self.axIdentifier = []
 

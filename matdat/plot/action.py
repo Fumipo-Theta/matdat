@@ -450,9 +450,13 @@ def yband_plotter(df:pd.DataFrame,x,y,*arg, ylim=None,xpos=None,**kwargs)->AxPlo
     lim=get_lim(get_subset()(df,y),ylim)
 
     def plot(ax):
-        if len(xpos) < 2:
+        if xpos is None:
+            return ax
+
+        if len(xpos) < 2 :
             print("xpos must be list like object with having length >= 2.")
             return ax
+
         ax.fill(
             [xpos[0],xpos[0],xpos[1],xpos[1]],
             [lim[0],lim[1],lim[1],lim[0]],
