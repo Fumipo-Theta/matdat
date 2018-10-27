@@ -1,7 +1,7 @@
 import os
 import glob
 import re
-from func_helper import pip, tee
+from func_helper import pip, tee, identity
 import func_helper.func_helper.iterator as it
 from IPython.display import display
 
@@ -31,7 +31,7 @@ class PathList:
     def __init__(self, pathList):
         self.paths = pathList
 
-    def directories(self):
+    def directories(self, verbose=False):
         return pip(
             it.filtering(os.path.isdir),
             list,
@@ -39,11 +39,12 @@ class PathList:
                 pip(
                     enumerate,
                     list,
+                    print if verbose else identity
                 )
             )
         )(self.paths)
 
-    def files(self):
+    def files(self, verbose=False):
         return pip(
             it.filtering(os.path.isfile),
             list,
@@ -51,6 +52,7 @@ class PathList:
                 pip(
                     enumerate,
                     list,
+                    print if verbose else identity
                 )
             )
         )(self.paths)
