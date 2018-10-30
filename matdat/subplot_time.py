@@ -41,6 +41,12 @@ class SubplotTime(Subplot):
     def __init__(self, style={}):
         super().__init__({"xFmt": "%m/%d", **style})
 
+    def plot(self, ax, test=False):
+        if ("xlim" in self.global_limit):
+            self.global_limit["xlim"] = pd.to_datetime(
+                self.global_limit["xlim"])
+        return super().plot(ax, test)
+
     def setXaxisFormat(self):
         def f(ax):
             ax.xaxis.set_major_formatter(
@@ -70,15 +76,3 @@ class SubplotTime(Subplot):
             return data_source.set_index("x")
 
         return super().read(i)
-
-    def register(self, data,
-                 dataInfo={}, plot=[],
-                 option={},
-                 **arg):
-        super().register(data, dataInfo=dataInfo,
-                         plot=plot, option=option, **arg)
-        i = self.length - 1
-        if ("xlim" in self.option[i]):
-            self.option[i]["xlim"] = pd.to_datetime(self.option[i]["xlim"])
-
-        return self

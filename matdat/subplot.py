@@ -46,11 +46,17 @@ class Subplot(ISubplot):
         self.dataTransformer = []
         self.plotMethods = []
         self.option = []
+        self.global_limit = {}
+        self.global_label = {
+            "fontsize": 16,
+            **style.pop("label", {})
+        }
+        self.global_tick_params = {
+            "labelsize": 14,
+            **style.pop("tick", {})
+        }
         self.length = 0
         self.style = {
-            "label_size": 16,
-            "legend_size": 16,
-            "tick_size": 14,
             "xTickRotation": 0,
             **style
         }
@@ -83,7 +89,12 @@ class Subplot(ISubplot):
         )
 
         return pip(
-            *actions
+            *actions,
+            plot.set_tick_parameters()({}, self.global_tick_params),
+            plot.set_xlim()({}, self.global_limit),
+            plot.set_ylim()({}, self.global_limit),
+            plot.set_label()({}, self.global_label),
+            self.setXaxisFormat(),
         )(ax)
 
     def __getPlotAction(self, i):
@@ -94,12 +105,7 @@ class Subplot(ISubplot):
             return Subplot.__noDataAx
 
         return lambda ax: pip(
-            plot.set_xlim()(df, opt),
-            plot.set_ylim()(df, opt),
             *[f(df, opt) for f in self.plotMethods[i]],
-            plot.set_tick_parameters(self.style)(df, opt),
-            plot.set_label(self.style)(df, opt),
-            self.setXaxisFormat(),
         )(ax)
 
     def read(self, i):
@@ -127,9 +133,12 @@ class Subplot(ISubplot):
             return self.option[i]
 
     def register(self, data,
-                 dataInfo={}, plot=[],
+                 dataInfo={},
+                 plot=[],
                  option={},
                  limit={},
+                 tick={},
+                 label={},
                  transformer=identity,
                  **kwargs):
         """
@@ -159,9 +168,21 @@ class Subplot(ISubplot):
 
         self.dataInfo.append(_dataInfo)
 
+        for kw in ["xlabel", "ylabel"]:
+            if kw in kwargs:
+                self.global_label[kw] = kwargs.pop(kw)
+        self.global_label.update(label)
+
+        self.global_tick_params.update(tick)
+
+        self.global_limit.update(limit)
+        for kw in ["xlim", "ylim"]:
+            if kw in kwargs:
+                self.global_limit[kw] = kwargs.pop(kw)
+
         self.plotMethods.append(plot)
 
-        _option = {**option, **limit, **kwargs}
+        _option = {**option, **kwargs}
         self.option.append(_option)
 
         self.dataTransformer.append(
@@ -181,8 +202,19 @@ class Subplot(ISubplot):
             dataInfo=preset["dataInfo"],
             plot=[*preset["plot"], *
                   plot] if "plotOverwrite" not in arg else arg["plotOverwrite"],
+
+            limit={
+                "xlim": preset["option"].get("xlim", None),
+                "ylim": preset["option"].get("ylim", None),
+                **arg.pop("limit", {})
+            },
+            label={
+                "xlabel": preset["option"].get("xlabel", None),
+                "ylabel": preset["option"].get("ylabel", None),
+                **arg.pop("label", {})
+            },
             option={**preset["option"], **option},
-            **arg
+            ** arg
         )
 
     def setIndex(self, i):
