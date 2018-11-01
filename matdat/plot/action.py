@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import Union, List, Tuple,TypeVar, Callable, NewType
+import matplotlib.transforms
+from typing import Union, List, Tuple,TypeVar, Callable, NewType, Optional
+from func_helper import pip
 import func_helper.func_helper.iterator as it
 
 DataSource = Union[dict,pd.DataFrame,np.ndarray]
@@ -191,7 +193,15 @@ def get_values_by_keys(k: list, default=None)->Callable[[dict],list]:
 
 _tick_params_kwargs = {
     "axis": "both",
-    "labelsize": 12
+    "labelsize": 12,
+    "labelbottom": True,
+    "labelleft" : True,
+    "labeltop" : False,
+    "labelright":False,
+    "bottom" : True,
+    "left" : True,
+    "top" : False,
+    "right":False
 }
 
 _label_kwargs = {
@@ -259,10 +269,10 @@ _velocity_kwargs = {
     "headlength": 10
 }
 
-def get_lim(df:pd.DataFrame, lim_list:Union[list,None]):
+def get_lim(df:pd.DataFrame, lim_list:Optional[list]):
     try:
         if lim_list is not None and len(lim_list) >= 2:
-            lim = lim_list
+            lim = [*lim_list]
             if lim[0] is None:
                 lim[0] = np.min(df.min())
             if lim[1] is None:
@@ -277,33 +287,46 @@ def get_lim(df:pd.DataFrame, lim_list:Union[list,None]):
         print(f"Failed: Set limit {lim_list}.")
         return None
 
+def get_lim_parameter(df:pd.DataFrame, lim_list:Optional[list]):
+    if lim_list is not None and len(lim_list) >= 2:
+        return lim_list
+    else:
+        return None
 
-def xlim_setter(df:pd.DataFrame,x,*arg, **kwargs)->AxPlot:
+def xlim_setter(df:pd.DataFrame,x,*arg, xlim=None,**kwargs)->AxPlot:
     """
     Parameters
     ----------
     x
     """
-    lim = get_lim(get_subset()(df,x), kwargs.get("xlim"))
+    lim = get_lim_parameter(get_subset()(df,x), xlim)
 
     def plot(ax):
         if lim is not None:
-            ax.set_xlim(lim)
+            now_lim = ax.get_xlim()
+            next_lim = [None,None]
+            next_lim[0] = lim[0] if lim[0] is not None else now_lim[0]
+            next_lim[1] = lim[1] if lim[1] is not None else now_lim[1]
+            ax.set_xlim(next_lim)
         return ax
     return plot
 
 
-def ylim_setter(df:pd.DataFrame,y,*arg, **kwargs)->AxPlot:
+def ylim_setter(df:pd.DataFrame,y,*arg, ylim=None,**kwargs)->AxPlot:
     """
     Parameters
     ----------
     y
     """
-    lim = get_lim(get_subset()(df, y), kwargs.get("ylim"))
+    lim = get_lim_parameter(get_subset()(df, y), ylim)
 
     def plot(ax):
         if lim is not None:
-            ax.set_ylim(lim)
+            now_lim = ax.get_ylim()
+            next_lim = [None, None]
+            next_lim[0] = lim[0] if lim[0] is not None else now_lim[0]
+            next_lim[1] = lim[1] if lim[1] is not None else now_lim[1]
+            ax.set_ylim(next_lim)
         return ax
     return plot
 
@@ -323,7 +346,7 @@ set_ylim = plot_action(
 )
 
 
-def grid_setter(df:pd.DataFrame,*arg, **kwargs)->AxPlot:
+def grid_setter(*arg, **kwargs)->AxPlot:
     def plot(ax):
         ax.grid(**kwargs)
         return ax
@@ -338,7 +361,7 @@ set_grid = plot_action(
 )
 
 
-def tick_params_setter(df:pd.DataFrame,*arg, **kwargs)->AxPlot:
+def tick_params_setter(*arg, **kwargs)->AxPlot:
     def plot(ax):
         ax.tick_params(**kwargs)
         return ax
@@ -498,12 +521,16 @@ velocity=plot_action(
     _velocity_kwargs
 )
 
-def box_plotter(df:pd.DataFrame,ys,*arg,**kwargs)->AxPlot:
+def box_plotter(df:pd.DataFrame,ys:Union[str,List[str]],*arg,**kwargs)->AxPlot:
+    """
+    Generate box plots for indicated columns.
+    """
+    _ys = ys if type(ys) is list else [ys]
     def plot(ax):
         ax.boxplot(
-            [df[y].dropna() for y in ys],
-            labels=ys,
-            positions=range(0,len(ys)),
+            [df[y].dropna() for y in _ys],
+            labels=_ys,
+            positions=range(0,len(_ys)),
             **kwargs
         )
         return ax
@@ -543,6 +570,10 @@ box=plot_action(
 )
 
 def factor_box_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
+    """
+    Generate box plots grouped by a factor column in DataFrame.
+
+    """
     factor = df[f].cat.categories
     def plot(ax):
         ax.boxplot(
@@ -560,3 +591,114 @@ factor_box = plot_action(
     ["y","f"],
     _box_kwargs
 )
+
+
+_violin_kwargs = {
+    "vert": True,
+    "widths" :0.5,
+    "showmeans":False,
+    "showextrema":True,
+    "showmedians":False,
+    "points":100,
+    "bw_method":None
+}
+
+def factor_violin_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
+    factor = df[f].cat.categories
+    dataset = [df[df[f] == fname][y].dropna() for fname in factor]
+    hasLegalLength = pip(
+        it.filtering(lambda iv: len(iv[1]) > 0),
+    )(enumerate(dataset))
+    print([iv[0] for iv in hasLegalLength])
+    def plot(ax):
+        ax.violinplot(
+            dataset=[iv[1] for iv in hasLegalLength],
+            positions=[iv[0] for iv in hasLegalLength],
+            **kwargs
+        )
+        if kwargs.get("vert",True):
+            ax.set_xticks(list(range(0, len(factor))))
+            ax.set_xticklabels(*factor)
+        else:
+            ax.set_yticks(list(range(0, len(factor))))
+            ax.set_yticklabels(*factor)
+
+        return ax
+    return plot
+
+factor_violin = plot_action(
+    factor_violin_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["y","f"],
+    _violin_kwargs
+)
+
+"""
+plot.text(
+    dataframe,
+
+)
+"""
+
+def selector_or_literal(df, s):
+    if s is None:
+        return df.index
+    elif callable(s):
+        return s(df)
+    elif type(s) is list:
+        return s
+    elif type(s) in [int, float]:
+        return [s]
+    elif s in df:
+        return df[s]
+    else:
+        return df.index
+
+
+_text_kwargs={
+    "horizontalalignment":'left',
+    "ha":None,
+    "verticalalignment":'bottom',
+    "va":None,
+    "color":"black",
+    "family":None,
+    "fontsize" :10,
+    "rotation":None,
+    "style":None,
+    "xcoordinate":None, # "data" = None | "axes"
+    "ycoordinate":None, # "data" = None | "axes"
+    "wrap":False
+}
+
+def Icoordinate_transform(ax,xcoordinate:Optional[str],ycoordinate:Optional[str]):
+    """
+    Select coordinate transform method for x and y axis.
+
+    """
+    return matplotlib.transforms.blended_transform_factory(
+        ax.transAxes if xcoordinate is "axes" else ax.transData,
+        ax.transAxes if ycoordinate is "axes" else ax.transData
+    )
+
+def text_plotter(df:pd.DataFrame, xpos,ypos,text,*arg,
+    xcoordinate=None,
+    ycoordinate=None,
+    **kwargs):
+    _x = selector_or_literal(df, xpos)
+    _y = selector_or_literal(df, ypos)
+    _text = selector_or_literal(df, text)
+
+    def plot(ax):
+        for x, y, t in zip(_x, _y, _text):
+            transform = Icoordinate_transform(ax,xcoordinate,ycoordinate)
+            ax.text(x, y, t, transform=transform, **kwargs)
+        return ax
+    return plot
+
+text = plot_action(
+    text_plotter,
+    generate_arg_and_kwags(get_value()),
+    ["xpos","ypos","text"],
+    _text_kwargs
+)
+

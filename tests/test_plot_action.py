@@ -30,6 +30,7 @@ import matdat.matdat.plot as plot
 import pandas as pd
 import numpy as np
 from func_helper import pip
+from matdat import Figure, Subplot
 
 # +
 moc = {
@@ -106,7 +107,7 @@ pip(
             "y":"y",
             "ypos":[5,5.5],
             "color":"blue",
-            "xlim":[-10,10]
+            "xlim":[None,10]
         }
     ),
     plot.set_tick_parameters()(
@@ -159,13 +160,28 @@ plot.box(showmeans=True,meanprops=({"marker":"o"}))(
     vert=False
 )(plt.subplot())
 
-plot.scatter()(
-    moc,
-    x="x",
-    y="z",
-    s=moc["y"]
-    #s_name="y"
-)(plt.subplot())
+# +
+figure = Figure()
+
+figure.add_subplot(
+    Subplot.create()\
+    .register(
+        moc,
+        x="x",
+        y="z",
+        s=moc["y"],
+        ylim = [-10,None],
+        plot=[plot.scatter()]
+    )\
+    .register(
+        moc,
+        x="x",
+        y="y",
+        plot=[plot.line()]
+    )
+)
+
+fig, axs = figure.show(size=(8,6))
 
 # +
 print(plot.get_values_by_keys(["x","y","z"])({

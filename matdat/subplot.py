@@ -34,11 +34,11 @@ class Subplot(ISubplot):
     )
     """
     @staticmethod
-    def create(style={}):
-        subplot = Subplot(style)
+    def create(style={}, title=None):
+        subplot = Subplot(style, title)
         return subplot
 
-    def __init__(self, style={}):
+    def __init__(self, style={}, title=None):
 
         self.data = []
         self.dataInfo = []
@@ -46,6 +46,10 @@ class Subplot(ISubplot):
         self.dataTransformer = []
         self.plotMethods = []
         self.option = []
+        self.title = title
+        self.global_title = {
+            **style.pop("title", {})
+        }
         self.global_limit = {}
         self.global_label = {
             "fontsize": 16,
@@ -60,6 +64,10 @@ class Subplot(ISubplot):
             "xTickRotation": 0,
             **style
         }
+
+    def set_title(self, ax):
+        ax.set_title(self.title, **self.global_title)
+        return ax
 
     def plot(self, ax, test=False):
         """
@@ -95,6 +103,7 @@ class Subplot(ISubplot):
             plot.set_ylim()({}, self.global_limit),
             plot.set_label()({}, self.global_label),
             self.setXaxisFormat(),
+            self.set_title
         )(ax)
 
     def __getPlotAction(self, i):
