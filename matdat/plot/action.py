@@ -191,6 +191,7 @@ def get_values_by_keys(k: list, default=None)->Callable[[dict], list]:
     """
     return lambda d: list(map(lambda key: d.get(key, default), k))
 
+default_kwargs={}
 
 _tick_params_kwargs = {
     "axis": "both",
@@ -204,6 +205,8 @@ _tick_params_kwargs = {
     "top" : False,
     "right":False
 }
+
+
 
 _label_kwargs = {
     "fontsize": 16
@@ -270,7 +273,19 @@ _velocity_kwargs = {
     "headlength": 10
 }
 
-def get_lim(df:pd.DataFrame, lim_list:Optional[list]):
+default_kwargs.update({
+    "tick_params": _tick_params_kwargs,
+    "axis_label": _label_kwargs,
+    "grid": _grid_kwargs,
+    "line": _line_kwargs,
+    "vlines": _vhlines_kwargs,
+    "hlines": _vhlines_kwargs,
+    "scatter": _scatter_kwargs,
+    "fill": _fill_kwargs,
+    "velocity" : _velocity_kwargs
+})
+
+def _get_lim(df:pd.DataFrame, lim_list:Optional[list]):
     try:
         if lim_list is not None and len(lim_list) >= 2:
             lim = [*lim_list]
@@ -288,19 +303,19 @@ def get_lim(df:pd.DataFrame, lim_list:Optional[list]):
         print(f"Failed: Set limit {lim_list}.")
         return None
 
-def get_lim_parameter(df:pd.DataFrame, lim_list:Optional[list]):
+def _get_lim_parameter(df:pd.DataFrame, lim_list:Optional[list]):
     if lim_list is not None and len(lim_list) >= 2:
         return lim_list
     else:
         return None
 
-def xlim_setter(df:pd.DataFrame,x,*arg, xlim=None,**kwargs)->AxPlot:
+def _xlim_setter(df:pd.DataFrame,x,*arg, xlim=None,**kwargs)->AxPlot:
     """
     Parameters
     ----------
     x
     """
-    lim = get_lim_parameter(get_subset()(df,x), xlim)
+    lim = _get_lim_parameter(get_subset()(df,x), xlim)
 
     def plot(ax):
         if lim is not None:
@@ -313,13 +328,13 @@ def xlim_setter(df:pd.DataFrame,x,*arg, xlim=None,**kwargs)->AxPlot:
     return plot
 
 
-def ylim_setter(df:pd.DataFrame,y,*arg, ylim=None,**kwargs)->AxPlot:
+def _ylim_setter(df:pd.DataFrame,y,*arg, ylim=None,**kwargs)->AxPlot:
     """
     Parameters
     ----------
     y
     """
-    lim = get_lim_parameter(get_subset()(df, y), ylim)
+    lim = _get_lim_parameter(get_subset()(df, y), ylim)
 
     def plot(ax):
         if lim is not None:
@@ -332,52 +347,61 @@ def ylim_setter(df:pd.DataFrame,y,*arg, ylim=None,**kwargs)->AxPlot:
     return plot
 
 
-set_xlim = plot_action(
-    xlim_setter,
-    generate_arg_and_kwags(get_value()),
-    ["x"],
-    {"xlim": None},
-)
+def set_xlim(**presetting):
+    """
+    Set xlim of ax.
 
-set_ylim = plot_action(
-    ylim_setter,
-    generate_arg_and_kwags(get_value()),
-    ["y"],
-    {"ylim": None},
-)
+    xlim is list of numbers.
+    """
+    return plot_action(
+        _xlim_setter,
+        generate_arg_and_kwags(get_value()),
+        ["x"],
+        {"xlim": None},
+    )(**presetting)
+
+def set_ylim(**presetting):
+    return plot_action(
+        _ylim_setter,
+        generate_arg_and_kwags(get_value()),
+        ["y"],
+        {"ylim": None},
+    )(**presetting)
 
 
-def grid_setter(*arg, **kwargs)->AxPlot:
+def _grid_setter(*arg, **kwargs)->AxPlot:
     def plot(ax):
         ax.grid(**kwargs)
         return ax
     return plot
 
 
-set_grid = plot_action(
-    grid_setter,
-    generate_arg_and_kwags(get_value()),
-    [],
-    _grid_kwargs
-)
+def set_grid(**presetting):
+    return plot_action(
+        _grid_setter,
+        generate_arg_and_kwags(get_value()),
+        [],
+        _grid_kwargs
+    )(**presetting)
 
 
-def tick_params_setter(*arg, **kwargs)->AxPlot:
+def _tick_params_setter(*arg, **kwargs)->AxPlot:
     def plot(ax):
         ax.tick_params(**kwargs)
         return ax
     return plot
 
 
-set_tick_parameters = plot_action(
-    tick_params_setter,
-    generate_arg_and_kwags(get_value()),
-    [],
-    _tick_params_kwargs
-)
+def set_tick_parameters(**presetting):
+    return plot_action(
+        _tick_params_setter,
+        generate_arg_and_kwags(get_value()),
+        [],
+        _tick_params_kwargs
+    )(**presetting)
 
 
-def label_setter(df: pd.DataFrame, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
+def _label_setter(df: pd.DataFrame, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
     def plot(ax):
         if xlabel is not None:
             ax.set_xlabel(
@@ -393,15 +417,16 @@ def label_setter(df: pd.DataFrame, xlabel: str, ylabel: str, *arg, **kwargs)->Ax
     return plot
 
 
-set_label = plot_action(
-    label_setter,
-    generate_arg_and_kwags(get_value("")),
-    ["xlabel", "ylabel"],
-    _label_kwargs
-)
+def set_label(**presetting):
+    return plot_action(
+        _label_setter,
+        generate_arg_and_kwags(get_value("")),
+        ["xlabel", "ylabel"],
+        _label_kwargs
+    )(**presetting)
 
 
-def line_plotter(df: pd.DataFrame, x, y, *arg, **kwargs)->AxPlot:
+def _line_plotter(df: pd.DataFrame, x, y, *arg, **kwargs)->AxPlot:
     _x = get_subset()(df, x)
     _y = get_subset()(df, y)
 
@@ -411,15 +436,16 @@ def line_plotter(df: pd.DataFrame, x, y, *arg, **kwargs)->AxPlot:
     return plot
 
 
-line = plot_action(
-    line_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["x", "y"],
-    _line_kwargs
-)
+def line(**presetting):
+    return plot_action(
+        _line_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["x", "y"],
+        _line_kwargs
+    )(**presetting)
 
 
-def scatter_plotter(df: pd.DataFrame, x, y, *arg, s_name=None, c_name=None, **kwargs)->AxPlot:
+def _scatter_plotter(df: pd.DataFrame, x, y, *arg, s_name=None, c_name=None, **kwargs)->AxPlot:
     if c_name is not None:
         kwargs.update({"c": get_subset(False)(df, c_name)})
     if s_name is not None:
@@ -433,15 +459,16 @@ def scatter_plotter(df: pd.DataFrame, x, y, *arg, s_name=None, c_name=None, **kw
     return plot
 
 
-scatter = plot_action(
-    scatter_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["x", "y"],
-    {**_scatter_kwargs, "c_name": None, "s_name": None}
-)
+def scatter(**presetting):
+        return plot_action(
+        _scatter_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["x", "y"],
+        {**_scatter_kwargs, "c_name": None, "s_name": None}
+    )(**presetting)
 
 
-def vlines_plotter(df: pd.DataFrame, x, y, *arg, lower=0, **kwargs)->AxPlot:
+def _vlines_plotter(df: pd.DataFrame, x, y, *arg, lower=0, **kwargs)->AxPlot:
     _x = get_subset()(df, x)
     _y = get_subset()(df, y)
 
@@ -453,16 +480,17 @@ def vlines_plotter(df: pd.DataFrame, x, y, *arg, lower=0, **kwargs)->AxPlot:
     return plot
 
 
-vlines = plot_action(
-    vlines_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["x", "y"],
-    {**_vhlines_kwargs, "lower": 0}
-)
+def vlines(**presetting):
+    return plot_action(
+        _vlines_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["x", "y"],
+        {**_vhlines_kwargs, "lower": 0}
+    )(**presetting)
 
 
-def xband_plotter(df: pd.DataFrame, x, y, *arg, xlim=None, ypos=None, **kwargs)->AxPlot:
-    lim = get_lim(get_subset()(df, x), xlim)
+def _xband_plotter(df: pd.DataFrame, x, y, *arg, xlim=None, ypos=None, **kwargs)->AxPlot:
+    lim = _get_lim(get_subset()(df, x), xlim)
 
     def plot(ax):
         if type(ypos) is not list or len(ypos) < 2:
@@ -477,8 +505,8 @@ def xband_plotter(df: pd.DataFrame, x, y, *arg, xlim=None, ypos=None, **kwargs)-
     return plot
 
 
-def yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)->AxPlot:
-    lim = get_lim(get_subset()(df, y), ylim)
+def _yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)->AxPlot:
+    lim = _get_lim(get_subset()(df, y), ylim)
 
     def plot(ax):
         if xpos is None:
@@ -497,22 +525,24 @@ def yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)-
     return plot
 
 
-xband = plot_action(
-    xband_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["x", "y"],
-    {**_fill_kwargs, "xlim": None, "ypos": None}
-)
+def xband(**presetting):
+    return plot_action(
+        _xband_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["x", "y"],
+        {**_fill_kwargs, "xlim": None, "ypos": None}
+    )(**presetting)
 
-yband = plot_action(
-    yband_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["x", "y"],
-    {**_fill_kwargs, "ylim": None, "xpos": None}
-)
+def yband(**presetting):
+    return plot_action(
+        _yband_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["x", "y"],
+        {**_fill_kwargs, "ylim": None, "xpos": None}
+    )(**presetting)
 
 
-def velocity_plotter(df: pd.DataFrame, x, ex, ey, *arg, **kwargs)->AxPlot:
+def _velocity_plotter(df: pd.DataFrame, x, ex, ey, *arg, **kwargs)->AxPlot:
     _x = get_subset()(df, x)
     _y = [0. for i in _x],
     _ex = get_subset()(df, ex)
@@ -524,14 +554,15 @@ def velocity_plotter(df: pd.DataFrame, x, ex, ey, *arg, **kwargs)->AxPlot:
     return plot
 
 
-velocity = plot_action(
-    velocity_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["x", "ex", "ey"],
-    _velocity_kwargs
-)
+def velocity(**presetting):
+    return plot_action(
+        _velocity_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["x", "ex", "ey"],
+        _velocity_kwargs
+    )(**presetting)
 
-def box_plotter(df:pd.DataFrame,ys:Union[str,List[str]],*arg,**kwargs)->AxPlot:
+def _box_plotter(df:pd.DataFrame,ys:Union[str,List[str]],*arg,**kwargs)->AxPlot:
     """
     Generate box plots for indicated columns.
     """
@@ -573,14 +604,17 @@ _box_kwargs = {
     "meanprops": None
 }
 
-box = plot_action(
-    box_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["y"],
-    _box_kwargs
-)
+default_kwargs.update({"box":_box_kwargs})
 
-def factor_box_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
+def box(**presetting):
+    return plot_action(
+        _box_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["y"],
+        _box_kwargs
+    )(**presetting)
+
+def _factor_box_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
     """
     Generate box plots grouped by a factor column in DataFrame.
 
@@ -598,12 +632,13 @@ def factor_box_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
     return plot
 
 
-factor_box = plot_action(
-    factor_box_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["y", "f"],
-    _box_kwargs
-)
+def factor_box(**presetting):
+    return plot_action(
+        _factor_box_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["y", "f"],
+        _box_kwargs
+    )(**presetting)
 
 
 _violin_kwargs = {
@@ -613,47 +648,136 @@ _violin_kwargs = {
     "showextrema":True,
     "showmedians":False,
     "points":100,
-    "bw_method":None
-}
+    "bw_method":None,
 
-def factor_violin_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
+    "scale" : "width", # "width" | "count"
+
+    "bodies": None,
+}
+"""
+bodies:{
+    "facecolor" : "#2196f3",
+    "edgecolor" : "#005588",
+    "alpha" : 0.5
+}
+"""
+
+default_kwargs.update({"violin":_violin_kwargs})
+
+def _factor_violin_plotter(
+    df:pd.DataFrame,y,f,*arg,
+    bodies=None,
+    widths = 0.5,
+    scale = "width",
+    **kwargs)->AxPlot:
+
     factor = df[f].cat.categories
-    dataset = [df[df[f] == fname][y].dropna() for fname in factor]
-    hasLegalLength = pip(
+    data_without_nan = [df[df[f] == fname][y].dropna() for fname in factor]
+
+    subset_hasLegalLength = pip(
         it.filtering(lambda iv: len(iv[1]) > 0),
-    )(enumerate(dataset))
-    print([iv[0] for iv in hasLegalLength])
+        list
+    )(enumerate(data_without_nan))
+
+    dataset = [iv[1].values for iv in subset_hasLegalLength]
+    positions = [iv[0] for iv in subset_hasLegalLength]
+
+    if scale is "count":
+        count = [len(d) for d in dataset]
+        variance = [np.var(d) for d in dataset]
+        max_count = np.max(count)
+        _widths = [c/(max_count) for c,v in zip(count,variance)]
+    else:
+        _widths = widths
+
     def plot(ax):
-        ax.violinplot(
-            dataset=[iv[1] for iv in hasLegalLength],
-            positions=[iv[0] for iv in hasLegalLength],
+        parts = ax.violinplot(
+            dataset=dataset,
+            positions=positions,
+            widths = _widths,
             **kwargs
         )
+
+        # Customize style for each part of violine
+        if bodies is not None:
+            for p in parts["bodies"]:
+                p.set_facecolor(bodies.get("facecolor","#2196f3"))
+                p.set_edgecolor(bodies.get("edgecolor", "#005588"))
+                p.set_alpha(bodies.get("alpha",0.5))
+
         if kwargs.get("vert",True):
             ax.set_xticks(list(range(0, len(factor))))
-            ax.set_xticklabels(*factor)
+            ax.set_xticklabels(factor)
+            ax.set_xlim([-1,len(factor)])
         else:
             ax.set_yticks(list(range(0, len(factor))))
-            ax.set_yticklabels(*factor)
+            ax.set_yticklabels(factor)
+            ax.set_ylim([-1,len(factor)])
 
         return ax
     return plot
 
-factor_violin = plot_action(
-    factor_violin_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["y","f"],
-    _violin_kwargs
-)
 
-"""
-plot.text(
-    dataframe,
 
-)
-"""
+def factor_violin(**presetting):
+    """
+    factor_violine
+    --------------
+    Plot violin plots for pandas.Series.
+    The serieses are subset filtered by a factor.
 
-def selector_or_literal(df, s):
+    Usage
+    -----
+    plot.factor_violin(**preset_kwargs)(
+        df,{
+            "y":"column name for violin plot",
+            "f":"column name for factor"
+        }
+    )(matplotlib.pyplot.subplot())
+
+    Default preset_kwargs are:
+        {
+            "vert": True,
+            "widths" :0.5,
+            "showmeans":False,
+            "showextrema":True,
+            "showmedians":False,
+            "points":100,
+            "bw_method":None,
+            "scale" : "width",
+            "bodies": None,
+        }
+
+    If scale is "width", each violin has the same width.
+    Else of scale is "count", each violin has the width proportional
+        to its data size.
+
+    "bodies" is used for styling parts of violin.
+    Default is:
+        {
+            "facecolor": "#2196f3",
+            "edgecolor": "#005588",
+            "alpha": 0.5
+        }
+    """
+
+
+    """
+    plot.text(
+        dataframe,
+
+    )
+    """
+
+    return plot_action(
+        _factor_violin_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["y","f"],
+        _violin_kwargs
+    )(**presetting)
+
+
+def __selector_or_literal(df, s):
     if s is None:
         return df.index
     elif callable(s):
@@ -683,6 +807,8 @@ _text_kwargs={
     "wrap":False
 }
 
+default_kwargs.update({"text":_text_kwargs})
+
 def Icoordinate_transform(ax,xcoordinate:Optional[str],ycoordinate:Optional[str]):
     """
     Select coordinate transform method for x and y axis.
@@ -693,13 +819,13 @@ def Icoordinate_transform(ax,xcoordinate:Optional[str],ycoordinate:Optional[str]
         ax.transAxes if ycoordinate is "axes" else ax.transData
     )
 
-def text_plotter(df:pd.DataFrame, xpos,ypos,text,*arg,
+def _text_plotter(df:pd.DataFrame, xpos,ypos,text,*arg,
     xcoordinate=None,
     ycoordinate=None,
     **kwargs):
-    _x = selector_or_literal(df, xpos)
-    _y = selector_or_literal(df, ypos)
-    _text = selector_or_literal(df, text)
+    _x = __selector_or_literal(df, xpos)
+    _y = __selector_or_literal(df, ypos)
+    _text = __selector_or_literal(df, text)
 
     def plot(ax):
         for x, y, t in zip(_x, _y, _text):
@@ -708,10 +834,10 @@ def text_plotter(df:pd.DataFrame, xpos,ypos,text,*arg,
         return ax
     return plot
 
-text = plot_action(
-    text_plotter,
-    generate_arg_and_kwags(get_value()),
-    ["xpos","ypos","text"],
-    _text_kwargs
-)
-
+def text(**presetting):
+    return plot_action(
+        _text_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["xpos","ypos","text"],
+        _text_kwargs
+    )(**presetting)
