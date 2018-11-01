@@ -66,7 +66,8 @@ class Subplot(ISubplot):
         }
 
     def set_title(self, ax):
-        ax.set_title(self.title, **self.global_title)
+        if self.title is not None:
+            ax.set_title(self.title, **self.global_title)
         return ax
 
     def plot(self, ax, test=False):
