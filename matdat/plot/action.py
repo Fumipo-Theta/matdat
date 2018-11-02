@@ -501,14 +501,29 @@ def _xband_plotter(df: pd.DataFrame, x, y, *arg, xlim=None, ypos=None, **kwargs)
     lim = _get_lim(get_subset()(df, x), xlim)
 
     def plot(ax):
-        if type(ypos) is not list or len(ypos) < 2:
-            print("ypos must be list with having length >= 2.")
+        if ypos is None:
             return ax
-        ax.fill(
-            [lim[0], lim[1], lim[1], lim[0]],
-            [ypos[0], ypos[0], ypos[1], ypos[1]],
-            **kwargs
-        )
+
+        if type(ypos) not in [
+            list, tuple, np.ndarray,
+            pd.core.indexes.datetimes.DatetimeIndex,
+            pd.core.series.Series
+            ]:
+
+            _kwargs = dict(
+                filter(lambda kv: kv[0] in _axline_kwargs, kwargs.items())
+            )
+            ax.axhline(ypos, **_kwargs)
+
+        elif len(ypos) <= 0:
+            print("ypos must be list like object with having length >= 1.")
+
+        else:
+            ax.fill(
+                [lim[0], lim[1], lim[1], lim[0]],
+                [ypos[0], ypos[0], ypos[1], ypos[1]],
+                **kwargs
+            )
         return ax
     return plot
 
@@ -521,7 +536,12 @@ def _yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)
         if xpos is None:
             return ax
 
-        if type(xpos) is not list:
+        if type(xpos) not in [
+            list, tuple, np.ndarray,
+            pd.core.indexes.datetimes.DatetimeIndex,
+            pd.core.series.Series
+            ]:
+
             _kwargs = dict(
                 filter(lambda kv: kv[0] in _axline_kwargs, kwargs.items())
             )
@@ -529,7 +549,6 @@ def _yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)
 
         elif len(xpos) <= 0:
             print("xpos must be list like object with having length >= 1.")
-            return ax
 
         else:
             ax.fill(
