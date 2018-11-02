@@ -649,20 +649,34 @@ def box(**presetting):
         _box_kwargs
     )(**presetting)
 
-def _factor_box_plotter(df:pd.DataFrame,y,f,*arg,**kwargs)->AxPlot:
+
+def get_factor(df,f,factor):
+    return df[f].astype(
+        'category').cat.categories if factor is None else factor
+
+def _factor_box_plotter(df:pd.DataFrame,y,f,*arg,factor=None,**kwargs)->AxPlot:
     """
     Generate box plots grouped by a factor column in DataFrame.
 
     """
-    factor = df[f].cat.categories
+    _factor = get_factor(df,f,factor)
 
     def plot(ax):
         ax.boxplot(
-            [df[df[f] == fname][y].dropna() for fname in factor],
+            [df[df[f] == fname][y].dropna() for fname in _factor],
             labels=factor,
-            positions=range(0, len(factor)),
+            positions=range(0, len(_factor)),
             **kwargs
         )
+
+        if kwargs.get("vert", True):
+            ax.set_xticks(list(range(0, len(_factor))))
+            ax.set_xticklabels(_factor)
+            ax.set_xlim([-1, len(_factor)])
+        else:
+            ax.set_yticks(list(range(0, len(_factor))))
+            ax.set_yticklabels(_factor)
+            ax.set_ylim([-1, len(_factor)])
         return ax
     return plot
 
@@ -672,7 +686,7 @@ def factor_box(**presetting):
         _factor_box_plotter,
         generate_arg_and_kwags(get_value()),
         ["y", "f"],
-        _box_kwargs
+        {**_box_kwargs, "factor":None}
     )(**presetting)
 
 
@@ -704,10 +718,11 @@ def _factor_violin_plotter(
     bodies=None,
     widths = 0.5,
     scale = "width",
+    factor=None,
     **kwargs)->AxPlot:
 
-    factor = df[f].cat.categories
-    data_without_nan = [df[df[f] == fname][y].dropna() for fname in factor]
+    _factor = get_factor(df,f,factor)
+    data_without_nan = [df[df[f] == fname][y].dropna() for fname in _factor]
 
     subset_hasLegalLength = pip(
         it.filtering(lambda iv: len(iv[1]) > 0),
@@ -726,6 +741,10 @@ def _factor_violin_plotter(
         _widths = widths
 
     def plot(ax):
+        if len(dataset) < 1:
+            print("No data for violin plot")
+            return ax
+
         parts = ax.violinplot(
             dataset=dataset,
             positions=positions,
@@ -741,13 +760,13 @@ def _factor_violin_plotter(
                 p.set_alpha(bodies.get("alpha",0.5))
 
         if kwargs.get("vert",True):
-            ax.set_xticks(list(range(0, len(factor))))
-            ax.set_xticklabels(factor)
-            ax.set_xlim([-1,len(factor)])
+            ax.set_xticks(list(range(0, len(_factor))))
+            ax.set_xticklabels(_factor)
+            ax.set_xlim([-1,len(_factor)])
         else:
-            ax.set_yticks(list(range(0, len(factor))))
-            ax.set_yticklabels(factor)
-            ax.set_ylim([-1,len(factor)])
+            ax.set_yticks(list(range(0, len(_factor))))
+            ax.set_yticklabels(_factor)
+            ax.set_ylim([-1,len(_factor)])
 
         return ax
     return plot
@@ -808,7 +827,7 @@ def factor_violin(**presetting):
         _factor_violin_plotter,
         generate_arg_and_kwags(get_value()),
         ["y","f"],
-        _violin_kwargs
+        {**_violin_kwargs,"factor":None}
     )(**presetting)
 
 

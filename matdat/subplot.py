@@ -54,7 +54,7 @@ class Subplot(ISubplot):
         self.global_limit = {}
         self.global_label = {
             "fontsize": 16,
-            **style.pop("label", {})
+            **_style.pop("label", {})
         }
         self.global_tick_params = {
             "labelsize": 14,
