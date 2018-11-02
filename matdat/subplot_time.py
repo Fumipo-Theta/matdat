@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.dates as mdates
 from .subplot import Subplot
 from .csv_reader import CsvReader
+from func_helper import identity
 
 
 class SubplotTime(Subplot):
@@ -58,9 +59,17 @@ class SubplotTime(Subplot):
         return f
 
     def setIndex(self, i):
-        return CsvReader.setTimeSeriesIndex(
-            *self.index_name[i]
-        )
+        if type(self.index_name[i]) is not list:
+            return CsvReader.setTimeSeriesIndex(
+                self.index_name[i]
+            )
+
+        if len(self.index_name[i]) is 0:
+            return identity
+        else:
+            return CsvReader.setTimeSeriesIndex(
+                *self.index_name[i]
+            )
 
     def read(self, i):
 

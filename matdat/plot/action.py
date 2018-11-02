@@ -273,6 +273,13 @@ _velocity_kwargs = {
     "headlength": 10
 }
 
+_axline_kwargs = {
+    "alpha" : 0.5,
+    "color" : "green",
+    "linewidth" : None,
+    "linestyle" : "-"
+}
+
 default_kwargs.update({
     "tick_params": _tick_params_kwargs,
     "axis_label": _label_kwargs,
@@ -282,7 +289,8 @@ default_kwargs.update({
     "hlines": _vhlines_kwargs,
     "scatter": _scatter_kwargs,
     "fill": _fill_kwargs,
-    "velocity" : _velocity_kwargs
+    "velocity" : _velocity_kwargs,
+    "axline" : _axline_kwargs
 })
 
 def _get_lim(df:pd.DataFrame, lim_list:Optional[list]):
@@ -509,18 +517,26 @@ def _yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)
     lim = _get_lim(get_subset()(df, y), ylim)
 
     def plot(ax):
+
         if xpos is None:
             return ax
 
-        if len(xpos) < 2:
-            print("xpos must be list like object with having length >= 2.")
+        if type(xpos) is not list:
+            _kwargs = dict(
+                filter(lambda kv: kv[0] in _axline_kwargs, kwargs.items())
+            )
+            ax.axvline(xpos, **_kwargs)
+
+        elif len(xpos) <= 0:
+            print("xpos must be list like object with having length >= 1.")
             return ax
 
-        ax.fill(
-            [xpos[0], xpos[0], xpos[1], xpos[1]],
-            [lim[0], lim[1], lim[1], lim[0]],
-            **kwargs
-        )
+        else:
+            ax.fill(
+                [xpos[0], xpos[0], xpos[1], xpos[1]],
+                [lim[0], lim[1], lim[1], lim[0]],
+                **kwargs
+            )
         return ax
     return plot
 
