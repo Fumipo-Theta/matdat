@@ -261,9 +261,10 @@ class Figure:
 
     def save(self, directory, fileName, ext="png"):
         saver = Figure.__IFigureSaver(ext)
-        return saver(directory, fileName)
+        return saver(directory, fileName)()
 
     @staticmethod
     def __IFigureSaver(ext):
-        if re.match(r"\.[pP](ng|NG)$", ext):
+        if re.match(r"[pP](ng|NG)$", ext):
+            print("save as png")
             return actionSavePNG

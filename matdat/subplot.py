@@ -39,6 +39,7 @@ class Subplot(ISubplot):
         return subplot
 
     def __init__(self, style={}, title=None):
+        _style = {**style}
 
         self.data = []
         self.dataInfo = []
@@ -48,7 +49,7 @@ class Subplot(ISubplot):
         self.option = []
         self.title = title
         self.global_title = {
-            **style.pop("title", {})
+            **_style.pop("title", {})
         }
         self.global_limit = {}
         self.global_label = {
@@ -57,12 +58,12 @@ class Subplot(ISubplot):
         }
         self.global_tick_params = {
             "labelsize": 14,
-            **style.pop("tick", {})
+            **_style.pop("tick", {})
         }
         self.length = 0
         self.style = {
             "xTickRotation": 0,
-            **style
+            **_style
         }
 
     def set_title(self, ax):
@@ -150,7 +151,7 @@ class Subplot(ISubplot):
                  tick={},
                  label={},
                  transformer=identity,
-                 **kwargs):
+                 **_kwargs):
         """
         Parameters
         ----------
@@ -165,7 +166,7 @@ class Subplot(ISubplot):
                 transformer: df -> df | list|tuple[df->df]
 
         """
-
+        kwargs = {**_kwargs}
         self.data.append(data)
 
         _dataInfo = {**dataInfo}
