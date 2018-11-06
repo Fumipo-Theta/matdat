@@ -69,7 +69,7 @@ def plot_action(plotter: PlotAction, arg_kwarg_generator, arg_names, default_kwa
 
 
 def as_DataFrame(d: DataSource) -> pd.DataFrame:
-    if type(d) in [pd.DataFrame]:
+    if type(d) in [pd.DataFrame, pd.Series]:
         return d
     elif type(d) in [list, dict, np.ndarray]:
         return pd.DataFrame(d)
@@ -101,17 +101,24 @@ def generate_arg_and_kwags(arg_func):
 
 
 def get_subset(use_index=True):
-    def f(df: pd.DataFrame, k):
+    def f(df: Union[pd.DataFrame,pd.Series], k):
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
         if type(df) in [pd.DataFrame]:
             if type(k) is not list:
-                return df[k] if k not in ["", "index", None] else df.index
+                return df[k] if k not in ["index", None] else df.index
             else:
                 return df[k]
+
+        elif type(df) is pd.Series:
+            if k in ["index",None]:
+                return df.index
+            else:
+                return df
+
         else:
-            raise TypeError("df must be pandas.DataFrame.")
+            raise TypeError("df must be pandas.DataFrame or pandas.Series.")
     return f
 
 
@@ -498,7 +505,6 @@ def vlines(**presetting):
 
 
 def _xband_plotter(df: pd.DataFrame, x, y, *arg, xlim=None, ypos=None, **kwargs)->AxPlot:
-    lim = _get_lim(get_subset()(df, x), xlim)
 
     def plot(ax):
         if ypos is None:
@@ -520,8 +526,9 @@ def _xband_plotter(df: pd.DataFrame, x, y, *arg, xlim=None, ypos=None, **kwargs)
 
         else:
             ax.fill(
-                [lim[0], lim[1], lim[1], lim[0]],
+                [0, 1, 1, 0],
                 [ypos[0], ypos[0], ypos[1], ypos[1]],
+                transform = Icoordinate_transform(ax, "axes", "data"),
                 **kwargs
             )
         return ax
@@ -529,7 +536,6 @@ def _xband_plotter(df: pd.DataFrame, x, y, *arg, xlim=None, ypos=None, **kwargs)
 
 
 def _yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)->AxPlot:
-    lim = _get_lim(get_subset()(df, y), ylim)
 
     def plot(ax):
 
@@ -551,9 +557,11 @@ def _yband_plotter(df: pd.DataFrame, x, y, *arg, ylim=None, xpos=None, **kwargs)
             print("xpos must be list like object with having length >= 1.")
 
         else:
+
             ax.fill(
                 [xpos[0], xpos[0], xpos[1], xpos[1]],
-                [lim[0], lim[1], lim[1], lim[0]],
+                [0, 1, 1, 0],
+                transform=Icoordinate_transform(ax, "data", "axes"),
                 **kwargs
             )
         return ax

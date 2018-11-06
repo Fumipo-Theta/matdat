@@ -22,7 +22,7 @@ class ISubplot:
         elif type(data_source) == dict:
             return DictLoader()
 
-        elif type(data_source) == pd.DataFrame:
+        elif type(data_source) in [pd.Series, pd.DataFrame]:
             return DataFrameLoader()
 
         else:

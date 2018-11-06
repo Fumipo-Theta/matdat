@@ -132,6 +132,21 @@ pip(
     )
 )(plt.subplot())
 
+moc_df["y"].diff()
+
+ax = pip(
+    plot.scatter()(
+        moc_df["x","y"].diff(1),
+        x="index",
+        y = "y"
+    ),
+    plot.line()(
+        moc_df["y"].diff(),
+        x="x",
+        y = "y"
+    )
+)(plt.subplot())
+
 # +
 ax = pip(
     plot.velocity()(
