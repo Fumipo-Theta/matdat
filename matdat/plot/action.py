@@ -658,21 +658,31 @@ def box(**presetting):
     )(**presetting)
 
 
-def get_factor(df,f,factor):
-    return df[f].astype(
-        'category').cat.categories if factor is None else factor
+def Iget_factor(df,f,factor):
+    d = f(df) if callable(f) else df[f]
+    if type(factor) is list:
+        return (d, factor)
+    elif callable(factor):
+        return factor(d)
+    else:
+        return (d,d.astype('category').cat.categories)
 
 def _factor_box_plotter(df:pd.DataFrame,y,f,*arg,factor=None,**kwargs)->AxPlot:
     """
     Generate box plots grouped by a factor column in DataFrame.
 
     """
-    _factor = get_factor(df,f,factor)
+    _factor_series, _factor = Iget_factor(df,f,factor)
+    _factor_detector = pd.Categorical(
+        _factor_series, ordered=True, categories=_factor)
+
+    _group = df.groupby(_factor_detector)
+    _data_without_nan = [df.loc[_group.groups[fname]][y].dropna() for fname in _factor]
 
     def plot(ax):
         ax.boxplot(
-            [df[df[f] == fname][y].dropna() for fname in _factor],
-            labels=factor,
+            _data_without_nan,
+            labels=_factor,
             positions=range(0, len(_factor)),
             **kwargs
         )
@@ -728,17 +738,23 @@ def _factor_violin_plotter(
     scale = "width",
     factor=None,
     **kwargs)->AxPlot:
+    """
+    factorが与えられたときはfactorでgroupbyする.
+    与えられなかったときはdf[f]でgroupbyする.
+    """
+    _factor_series, _factor = Iget_factor(df,f,factor)
+    _factor_detector = pd.Categorical(_factor_series,ordered=True,categories=_factor)
 
-    _factor = get_factor(df,f,factor)
-    data_without_nan = [df[df[f] == fname][y].dropna() for fname in _factor]
+    _group = df.groupby(_factor_detector)
+    _data_without_nan = [df.loc[_group.groups[fname]][y].dropna() for fname in _factor]
 
-    subset_hasLegalLength = pip(
+    _subset_hasLegalLength = pip(
         it.filtering(lambda iv: len(iv[1]) > 0),
         list
-    )(enumerate(data_without_nan))
+    )(enumerate(_data_without_nan))
 
-    dataset = [iv[1].values for iv in subset_hasLegalLength]
-    positions = [iv[0] for iv in subset_hasLegalLength]
+    dataset = [iv[1].values for iv in _subset_hasLegalLength]
+    positions = [iv[0] for iv in _subset_hasLegalLength]
 
     if scale is "count":
         count = [len(d) for d in dataset]
@@ -902,4 +918,39 @@ def text(**presetting):
         generate_arg_and_kwags(get_value()),
         ["xpos","ypos","text"],
         _text_kwargs
+    )(**presetting)
+
+
+_hist_kwargs = {
+    "bins":None,
+    "range":None,
+    "density":None,
+    "weights":None,
+    "cumulative":False,
+    "bottom":None,
+    "histtype":'bar',
+    "align":'mid',
+    "orientation":'vertical',
+    "rwidth":None,
+    "log":False,
+    "color":"#2196f3",
+    "label":None,
+    "stacked":False,
+    "normed":None,
+}
+
+def _hist_plotter(df:pd.DataFrame,y,*arg,**kwargs):
+    _y = get_subset()(df, y)
+
+    def plot(ax):
+        ax.hist(_y,**kwargs)
+        return ax
+    return plot
+
+def hist(**presetting):
+    return plot_action(
+        _hist_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["y"],
+        _hist_kwargs
     )(**presetting)

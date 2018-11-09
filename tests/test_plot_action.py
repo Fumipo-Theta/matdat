@@ -40,6 +40,7 @@ moc = {
     } 
 
 moc_df = pd.DataFrame(moc)
+moc_df
 
 # +
 moclist = list(
@@ -134,16 +135,13 @@ pip(
 
 moc_df["y"].diff()
 
+plt.hist(moc_df["y"])
+
 ax = pip(
-    plot.scatter()(
-        moc_df["x","y"].diff(1),
-        x="index",
-        y = "y"
-    ),
-    plot.line()(
-        moc_df["y"].diff(),
-        x="x",
-        y = "y"
+    plot.hist()(
+        moc_df,
+        y="y",
+        color="#2196f3"
     )
 )(plt.subplot())
 
