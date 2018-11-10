@@ -67,7 +67,8 @@ np.min(moc_df[list(("x"))].min())
 pip(
     plot.line()(moc,{
         "x" : "x",
-        "y" : ("y")
+        "y" : ("y"),
+        
     }),
     plot.scatter()(moc,{
         "y" : ("x","y","z"),
@@ -113,7 +114,9 @@ pip(
     ),
     plot.set_tick_parameters()(
         moc,
-        labelsize=20
+        axis="x",
+        labelsize=20,
+        rotation=90
     ),
     plot.set_label()(
         moc,
@@ -130,6 +133,9 @@ pip(
             "y":["y","z"],
             "ylim" : None
         }
+    ),
+    plot.axis_scale()(
+        {}
     )
 )(plt.subplot())
 
@@ -137,6 +143,8 @@ moc_df["y"].diff()
 
 plt.hist(moc_df["y"])
 
+
+# +
 ax = pip(
     plot.hist()(
         moc_df,
@@ -144,6 +152,8 @@ ax = pip(
         color="#2196f3"
     )
 )(plt.subplot())
+
+ax.tick_params(axis="x",rotation=90)
 
 # +
 ax = pip(

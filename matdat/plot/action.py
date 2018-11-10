@@ -200,9 +200,17 @@ def get_values_by_keys(k: list, default=None)->Callable[[dict], list]:
 
 default_kwargs={}
 
-_tick_params_kwargs = {
-    "axis": "both",
+_tick_params_each = {
     "labelsize": 12,
+    "rotation" : 0,
+    "which" : "both",
+    "direction" : "out",
+    "color" : "black",
+    "labelcolor" : "black"
+}
+
+_tick_params_kwargs = {
+    **_tick_params_each,
     "labelbottom": True,
     "labelleft" : True,
     "labeltop" : False,
@@ -400,9 +408,12 @@ def set_grid(**presetting):
     )(**presetting)
 
 
-def _tick_params_setter(*arg, **kwargs)->AxPlot:
+def _tick_params_setter(df, axis, *arg, **kwargs)->AxPlot:
     def plot(ax):
-        ax.tick_params(**kwargs)
+        if axis is "both":
+            ax.tick_params(axis=axis,**kwargs)
+        else:
+            ax.tick_params(axis=axis,**dict(filter(lambda kv: kv[0] in _tick_params_each,kwargs.items())))
         return ax
     return plot
 
@@ -411,10 +422,26 @@ def set_tick_parameters(**presetting):
     return plot_action(
         _tick_params_setter,
         generate_arg_and_kwags(get_value()),
-        [],
+        ["axis"],
         _tick_params_kwargs
     )(**presetting)
 
+def _axis_scale(*arg,xscale=None,yscale=None):
+    def plot(ax):
+        if xscale is not None:
+            ax.set_xscale(xscale)
+        if yscale is not None:
+            ax.set_yscale(yscale)
+        return ax
+    return plot
+
+def axis_scale(**presetting):
+    return plot_action(
+        _axis_scale,
+        generate_arg_and_kwags(get_value()),
+        [],
+        {"xscale":None,"yscale":None}
+    )(**presetting)
 
 def _label_setter(df: pd.DataFrame, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
     def plot(ax):
@@ -938,6 +965,8 @@ _hist_kwargs = {
     "stacked":False,
     "normed":None,
 }
+
+default_kwargs.update({"hist": _hist_kwargs})
 
 def _hist_plotter(df:pd.DataFrame,y,*arg,**kwargs):
     _y = get_subset()(df, y)

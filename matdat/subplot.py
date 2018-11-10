@@ -56,10 +56,28 @@ class Subplot(ISubplot):
             "fontsize": 16,
             **_style.pop("label", {})
         }
-        self.global_tick_params = {
-            "labelsize": 14,
-            **_style.pop("tick", {})
+
+        self.global_scale = {
+            "xscale": None,
+            "yscale": None
         }
+
+        self.global_tick_params = {
+            "both": {
+                "axis": "both",
+                "labelsize": 14,
+                **_style.pop("tick", {})
+            },
+            "x": {
+                "axis": "x",
+                **_style.pop("xtick", {})
+            },
+            "y": {
+                "axis": "y",
+                **_style.pop("xtick", {})
+            }
+        }
+
         self.length = 0
         self.style = {
             "xTickRotation": 0,
@@ -100,7 +118,12 @@ class Subplot(ISubplot):
 
         return pip(
             *actions,
-            plot.set_tick_parameters()({}, self.global_tick_params),
+            plot.axis_scale()({},self.global_scale),
+            plot.set_tick_parameters()({}, self.global_tick_params["both"]),
+            plot.set_tick_parameters()(
+                {}, {**self.global_tick_params["both"], **self.global_tick_params["x"]}),
+            plot.set_tick_parameters()(
+                {}, {**self.global_tick_params["both"], **self.global_tick_params["y"]}),
             plot.set_xlim()({}, self.global_limit),
             plot.set_ylim()({}, self.global_limit),
             plot.set_label()({}, self.global_label),
@@ -148,7 +171,11 @@ class Subplot(ISubplot):
                  plot=[],
                  option={},
                  limit={},
+                 xscale=None,
+                 yscale=None,
                  tick={},
+                 xtick={},
+                 ytick={},
                  label={},
                  transformer=identity,
                  **_kwargs):
@@ -179,12 +206,22 @@ class Subplot(ISubplot):
 
         self.dataInfo.append(_dataInfo)
 
+        self.global_label.update(label)
         for kw in ["xlabel", "ylabel"]:
             if kw in kwargs:
                 self.global_label[kw] = kwargs.pop(kw)
-        self.global_label.update(label)
 
-        self.global_tick_params.update(tick)
+        self.global_scale.update({
+            "xscale" : xscale,
+            "yscale" : yscale
+        })
+
+        self.global_tick_params["both"].update(tick)
+        for kw in ["labelbottom", "labeltop", "labelleft", "labelright", "bottom", "top", "left", "right"]:
+            if kw in kwargs:
+                self.global_tick_params["both"][kw] = kwargs.pop(kw)
+        self.global_tick_params["x"].update(xtick)
+        self.global_tick_params["y"].update(ytick)
 
         self.global_limit.update(limit)
         for kw in ["xlim", "ylim"]:
