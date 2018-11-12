@@ -747,13 +747,25 @@ _violin_kwargs = {
     "scale" : "width", # "width" | "count"
 
     "bodies": None,
+    "cmeans": None
 }
 """
+https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.violin.html
+
 bodies:{
     "facecolor" : "#2196f3",
     "edgecolor" : "#005588",
     "alpha" : 0.5
 }
+https://matplotlib.org/api/collections_api.html#matplotlib.collections.PolyCollection
+
+cmeans:{
+    "edgecolor",
+    "linestyle",
+    "linewidth",
+    "alpha"
+}
+https://matplotlib.org/api/collections_api.html#matplotlib.collections.LineCollection
 """
 
 default_kwargs.update({"violin":_violin_kwargs})
@@ -761,6 +773,7 @@ default_kwargs.update({"violin":_violin_kwargs})
 def _factor_violin_plotter(
     df:pd.DataFrame,y,f,*arg,
     bodies=None,
+    cmeans=None,
     widths = 0.5,
     scale = "width",
     factor=None,
@@ -810,6 +823,13 @@ def _factor_violin_plotter(
                 p.set_edgecolor(bodies.get("edgecolor", "#005588"))
                 p.set_alpha(bodies.get("alpha",0.5))
 
+        if cmeans is not None:
+                p = parts["cmeans"]
+                p.set_edgecolor(cmeans.get("edgecolor", "#005588"))
+                p.set_linestyle(cmeans.get("linestyle", "-"))
+                p.set_linewidth(cmeans.get("linewidth",1))
+                p.set_alpha(cmeans.get("alpha",0.5))
+
         if kwargs.get("vert",True):
             ax.set_xticks(list(range(0, len(_factor))))
             ax.set_xticklabels(_factor)
@@ -851,6 +871,7 @@ def factor_violin(**presetting):
             "bw_method":None,
             "scale" : "width",
             "bodies": None,
+            "cmeans": None
         }
 
     If scale is "width", each violin has the same width.
@@ -864,14 +885,6 @@ def factor_violin(**presetting):
             "edgecolor": "#005588",
             "alpha": 0.5
         }
-    """
-
-
-    """
-    plot.text(
-        dataframe,
-
-    )
     """
 
     return plot_action(
