@@ -245,21 +245,21 @@ _line2d_kwargs = {
 
 _line_kwargs = {
     **_line2d_kwargs,
-    "c": "#2196f3",
+    "c": None,
     "linestyle": "-",
     "linewidth": 1,
     "alpha": 1
 }
 
 _vhlines_kwargs = {
-    "color": "#2196f3",
+    "color": None,
     "linestyle": "-",
     "linewidth": 1,
     "alpha": 1
 }
 
 _scatter_kwargs = {
-    "c": "#2196f3",
+    "c": None,
     "s": None,
     "cmap": None,
     "norm": None,
@@ -307,6 +307,28 @@ default_kwargs.update({
     "velocity" : _velocity_kwargs,
     "axline" : _axline_kwargs
 })
+
+from cycler import cycler
+
+_color_cycler = cycler(color=[
+    "#2196f3",
+    "green",
+    "red",
+    "orange"
+])
+_default_cycler=_color_cycler
+
+
+def set_cycler(cycler=None):
+    def setter(ax):
+        if cycler is 'default':
+            return ax
+        elif cycler is None:
+            ax.set_prop_cycle(_default_cycler)
+        else:
+            ax.set_prop_cycle(cycler)
+        return ax
+    return setter
 
 def _get_lim(df:pd.DataFrame, lim_list:Optional[list]):
     try:
@@ -685,7 +707,11 @@ def box(**presetting):
     )(**presetting)
 
 
-def Iget_factor(df,f,factor):
+def Iget_factor(
+    df:pd.DataFrame,
+    f: Union[str,Callable[[pd.DataFrame],pd.Series]],
+    factor:Optional[Union[list, Callable[[pd.DataFrame],pd.Series]]]
+    )->Tuple[pd.Series, list]:
     d = f(df) if callable(f) else df[f]
     if type(factor) is list:
         return (d, factor)
@@ -694,12 +720,12 @@ def Iget_factor(df,f,factor):
     else:
         return (d,d.astype('category').cat.categories)
 
-def _factor_box_plotter(df:pd.DataFrame,y,f,*arg,factor=None,**kwargs)->AxPlot:
+def _factor_box_plotter(df:pd.DataFrame,x,y,*arg,xfactor=None,**kwargs)->AxPlot:
     """
     Generate box plots grouped by a factor column in DataFrame.
 
     """
-    _factor_series, _factor = Iget_factor(df,f,factor)
+    _factor_series, _factor = Iget_factor(df,x,xfactor)
     _factor_detector = pd.Categorical(
         _factor_series, ordered=True, categories=_factor)
 
@@ -730,8 +756,8 @@ def factor_box(**presetting):
     return plot_action(
         _factor_box_plotter,
         generate_arg_and_kwags(get_value()),
-        ["y", "f"],
-        {**_box_kwargs, "factor":None}
+        ["x", "y"],
+        {**_box_kwargs, "xfactor":None}
     )(**presetting)
 
 
@@ -771,18 +797,18 @@ https://matplotlib.org/api/collections_api.html#matplotlib.collections.LineColle
 default_kwargs.update({"violin":_violin_kwargs})
 
 def _factor_violin_plotter(
-    df:pd.DataFrame,y,f,*arg,
+    df:pd.DataFrame,x,y,*arg,
     bodies=None,
     cmeans=None,
     widths = 0.5,
     scale = "width",
-    factor=None,
+    xfactor=None,
     **kwargs)->AxPlot:
     """
     factorが与えられたときはfactorでgroupbyする.
     与えられなかったときはdf[f]でgroupbyする.
     """
-    _factor_series, _factor = Iget_factor(df,f,factor)
+    _factor_series, _factor = Iget_factor(df,x,xfactor)
     _factor_detector = pd.Categorical(_factor_series,ordered=True,categories=_factor)
 
     _group = df.groupby(_factor_detector)
@@ -856,7 +882,7 @@ def factor_violin(**presetting):
     plot.factor_violin(**preset_kwargs)(
         df,{
             "y":"column name for violin plot",
-            "f":"column name for factor"
+            "x":"column name for factor"
         }
     )(matplotlib.pyplot.subplot())
 
@@ -890,8 +916,8 @@ def factor_violin(**presetting):
     return plot_action(
         _factor_violin_plotter,
         generate_arg_and_kwags(get_value()),
-        ["y","f"],
-        {**_violin_kwargs,"factor":None}
+        ["x","y"],
+        {**_violin_kwargs,"xfactor":None}
     )(**presetting)
 
 
@@ -937,12 +963,12 @@ def Icoordinate_transform(ax,xcoordinate:Optional[str],ycoordinate:Optional[str]
         ax.transAxes if ycoordinate is "axes" else ax.transData
     )
 
-def _text_plotter(df:pd.DataFrame, xpos,ypos,text,*arg,
+def _text_plotter(df:pd.DataFrame, x,y,text,*arg,
     xcoordinate=None,
     ycoordinate=None,
     **kwargs):
-    _x = __selector_or_literal(df, xpos)
-    _y = __selector_or_literal(df, ypos)
+    _x = __selector_or_literal(df, x)
+    _y = __selector_or_literal(df, y)
     _text = __selector_or_literal(df, text)
 
     def plot(ax):
@@ -956,7 +982,7 @@ def text(**presetting):
     return plot_action(
         _text_plotter,
         generate_arg_and_kwags(get_value()),
-        ["xpos","ypos","text"],
+        ["x","y","text"],
         _text_kwargs
     )(**presetting)
 
@@ -995,4 +1021,129 @@ def hist(**presetting):
         generate_arg_and_kwags(get_value()),
         ["y"],
         _hist_kwargs
+    )(**presetting)
+
+
+def _factor_bar_plotter(
+    df:pd.DataFrame,
+    x,  # factor1 selector
+    y: str,  # stack factor selector
+    agg,  # aggregate
+    *arg,
+    xfactor=None, # explicit factor list
+    yfactor=None, # explicit factor list
+    norm=False,
+    vert=True,
+    legend={},
+    **kwargs):
+
+    """
+    1. stacking bar plotのstackしていくgroupingをつくる
+    """
+    stack_series, stack_factor = Iget_factor(df,y,yfactor)
+    stack_group = df.groupby(
+        pd.Categorical(
+            stack_series,
+            ordered=True,
+            categories=stack_factor
+        )
+    )
+
+    """
+    2. stack groupごとにそれぞれfactorごとにgroupingする.
+        * すべてのstack groupごとにx_factorの長さが同じである必要があるので,
+          全データに基づくcommon_x_factorを記録しておく.
+    3.
+
+    ax.bar(ind, bar_lengths_for_each_x_factor)
+    """
+
+    stack_bars= []
+    for stack_name in stack_factor:
+        subset = df.loc[stack_group.groups[stack_name]]
+
+        x_factor_series, x_factor = Iget_factor(subset, x, xfactor)
+
+        x_group = subset.groupby(
+            pd.Categorical(
+                x_factor_series,
+                ordered=True,
+                categories=x_factor
+            )
+        )
+
+        subset_for_x_factor = [
+            subset.loc[x_group.groups[xfname]]\
+            for xfname in x_factor
+        ]
+
+        stack_heights = pip(
+            it.mapping(lambda df: df.agg(agg).values),
+            it.mapping(lambda arr: arr[0] if len(arr) > 0 else 0 ),
+            list
+        )(subset_for_x_factor)
+
+        stack_bars.append(stack_heights)
+
+    if norm:
+        sum = pip(
+            it.mapping(np.sum),
+            list
+        )(zip(*stack_bars))
+
+        stack_bars = pip(
+            it.mapping(lambda bars: pip(
+                it.mapping(lambda t: 0 if t[1] in [0,None,np.nan] else t[0]/t[1]),
+                list
+            )(zip(bars,sum))),
+            list
+        )(stack_bars)
+
+    ind = list(range(len(x_factor)))
+
+    def plot(ax):
+        prev_top = stack_bars[0]
+        for i, bar in enumerate(stack_bars):
+            if vert:
+                if i is 0:
+                    ax.bar(ind,bar,**kwargs)
+                else:
+                    ax.bar(
+                        ind, bar, bottom=prev_top, **kwargs)
+                    prev_top = [a+b for a, b in zip(prev_top, bar)]
+            else:
+                if i is 0:
+                    ax.barh(ind,bar,**kwargs)
+                else:
+                    ax.barh(
+                        ind, bar, left=prev_top, **kwargs)
+                    prev_top = [a+b for a, b in zip(prev_top, bar)]
+
+
+        ax.legend(stack_factor,**legend)
+
+        if vert:
+            ax.set_xticks(ind)
+            ax.set_xticklabels(x_factor)
+            ax.set_xlim([-1,len(x_factor)])
+        else:
+            ax.set_yticks(ind)
+            ax.set_yticklabels(x_factor)
+            ax.set_ylim([-1,len(x_factor)])
+        return ax
+    return plot
+
+
+def factor_bar(**presetting):
+    return plot_action(
+        _factor_bar_plotter,
+        generate_arg_and_kwags(get_value()),
+        ["x","y","agg"],
+        {
+            "xfactor":None,
+            "yfactor":None,
+            "norm":False,
+            "vert":True,
+            "legend":{}
+        }
     )(**presetting)

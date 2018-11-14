@@ -51,6 +51,7 @@ class Subplot(ISubplot):
         self.global_title = {
             **_style.pop("title", {})
         }
+        self.global_cycler = None
         self.global_limit = {}
         self.global_label = {
             "fontsize": 16,
@@ -117,8 +118,9 @@ class Subplot(ISubplot):
         )
 
         return pip(
+            plot.set_cycler("default"),
             *actions,
-            plot.axis_scale()({},self.global_scale),
+            plot.axis_scale()({}, self.global_scale),
             plot.set_tick_parameters()({}, self.global_tick_params["both"]),
             plot.set_tick_parameters()(
                 {}, {**self.global_tick_params["both"], **self.global_tick_params["x"]}),
@@ -177,6 +179,7 @@ class Subplot(ISubplot):
                  xtick={},
                  ytick={},
                  label={},
+                 cycler=None,
                  transformer=identity,
                  **_kwargs):
         """
@@ -212,8 +215,8 @@ class Subplot(ISubplot):
                 self.global_label[kw] = kwargs.pop(kw)
 
         self.global_scale.update({
-            "xscale" : xscale,
-            "yscale" : yscale
+            "xscale": xscale,
+            "yscale": yscale
         })
 
         self.global_tick_params["both"].update(tick)
@@ -232,6 +235,8 @@ class Subplot(ISubplot):
 
         _option = {**option, **kwargs}
         self.option.append(_option)
+
+        self.global_cycler = cycler
 
         self.dataTransformer.append(
             transformer if type(transformer) in [list, tuple] else [transformer])

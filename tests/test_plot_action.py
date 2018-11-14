@@ -23,6 +23,9 @@
 # ---
 
 # +
+
+import matplotlib as mpl
+
 import matplotlib.pyplot as plt
 import func_helper.func_helper.iterator as it
 
@@ -31,6 +34,8 @@ import pandas as pd
 import numpy as np
 from func_helper import pip
 from matdat import Figure, Subplot
+
+from cycler import cycler
 
 # +
 moc = {
@@ -139,7 +144,54 @@ pip(
     )
 )(plt.subplot())
 
-moc_df["y"].diff()
+plt.plot(moc_df["x"],moc_df["y"])
+plt.plot(moc_df["x"],moc_df["z"])
+
+# +
+
+
+figure = Figure()
+
+figure.add_subplot(
+    Subplot.create()\
+    .register(
+        moc_df,
+        x="x",
+        y=("y","z","x"),
+        c=None,
+        plot=[plot.scatter(),plot.line()]
+    )
+)
+
+fig,axs = figure.show(size=(8,6))
+
+
+
+# +
+
+figure = Figure()
+
+figure.add_subplot(
+    Subplot.create()\
+    .register(
+        moc_df,
+        x="x",
+        y="y",
+        c=None,
+        plot=[plot.scatter(),plot.line()]
+    )\
+    .register(
+        moc_df,
+        x="x",
+        y="z",
+        c=None,
+        plot=[plot.scatter()]
+    )
+)
+
+fig,axs = figure.show(size=(8,6))
+
+# -
 
 plt.hist(moc_df["y"])
 
@@ -149,7 +201,6 @@ ax = pip(
     plot.hist()(
         moc_df,
         y="y",
-        color="#2196f3"
     )
 )(plt.subplot())
 
@@ -200,11 +251,30 @@ figure.add_subplot(
         moc,
         x="x",
         y="y",
-        plot=[plot.line()]
+        plot=[plot.scatter(),plot.line()]
     )
 )
 
 fig, axs = figure.show(size=(8,6))
+# -
+
+ind = (0,1,2)
+a = [-1,2,0]
+b = np.array([2,3,1])
+plt.bar(ind,a)
+plt.bar(ind,b,bottom=a)
+
+ind = (0,1,2)
+a = [-1,2,0]
+b = np.array([2,3,1])
+c = np.array([1,1,1])
+plt.barh(ind,a)
+plt.barh(ind,b,left=a)
+plt.barh(ind,c,left=a+b)
+
+ind = np.array(range(0,len(moc_df)))
+plt.bar(ind,moc_df["y"].values)
+plt.bar(ind,moc_df["z"].values,bottom=moc_df["y"].values)
 
 # +
 print(plot.get_values_by_keys(["x","y","z"])({
@@ -244,24 +314,6 @@ def plot_(plot_settings, plotter):
 
 
 ax = plot_(plot_settings, plot.line_plotter)(plt.subplot())
-
-# +
-
-ax = plot.line(linestyle=["-","--"])(moc,{
-    "y" : ["x","y","z"],
-    "x" : "x",
-    "color" : ["red","green","blue"]
-})(plt.subplot())
-
-ax.legend()
 # -
-
-ax = plot.scatter(linestyle=["-","--"])(moc,{
-    "y" : ["x","y","z"],
-    #"x" : "x",
-    "color" : "white",
-    "edgecolors" : ["red","green","blue"],
-    "s" : 100
-})(plt.subplot())
 
 
