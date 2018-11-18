@@ -6,10 +6,12 @@ from func_helper import pip, tee, mapping, filtering, identity
 from IPython.display import display
 from tqdm import tqdm
 
+from .i_lazy_reader import ILazyReader
+
 matchCsv = r"\.[cC](sv|SV)$"
 
 
-class CsvReader:
+class CsvReader(ILazyReader):
     """
     指定したパスのcsvファイルを読み込み, pandas.DataFrameへ変換する.
 
@@ -88,6 +90,7 @@ class CsvReader:
             "chunksize": 100000,
             **read_csv_kwd
         }
+
         if (re.search(r"\.csv$", self.path, re.IGNORECASE) != None):
             self.reader = CsvReader.readCsv(
                 self.path, self.is_verbose, **arg)
@@ -146,7 +149,7 @@ class CsvReader:
         """
         column = columnName[0] if type(columnName[0]) == list else columnName
 
-        def f(df):
+        def f(df: pd.DataFrame)->pd.DataFrame:
             df["datetime"] = pd.to_datetime(df[column[0]]) \
                 if (len(column) == 1) \
                 else pd.to_datetime(

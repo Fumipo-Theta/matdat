@@ -1,7 +1,9 @@
 from .i_data_loader import IDataLoader
 from ..csv_reader import CsvReader
+from ..excel_reader import ExcelReader
 from ..get_path import PathList
 import pandas as pd
+import re
 
 
 class TableLoader(IDataLoader):
@@ -11,7 +13,7 @@ class TableLoader(IDataLoader):
     def read(self, path_like, meta={}, transformers=[]):
         paths = TableLoader.toPathList(path_like)
 
-        reader = CsvReader()
+        reader = TableLoader.IReader(paths[0])
         dfs = []
         for path in paths:
             reader.setPath(path)
@@ -20,6 +22,17 @@ class TableLoader(IDataLoader):
             dfs.append(reader.df)
 
         return pd.concat(dfs, sort=True) if len(dfs) > 0 else []
+
+    @staticmethod
+    def IReader(path):
+        if (re.search(r"\.csv$", path, re.IGNORECASE) != None):
+            return CsvReader()
+
+        elif (re.search(r"\.xlsx?$", path, re.IGNORECASE) != None):
+            return ExcelReader()
+
+        else:
+            raise SystemError(f"Invalid file type: {path}")
 
     @staticmethod
     def toPathList(pathLike):
