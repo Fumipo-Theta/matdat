@@ -13,9 +13,9 @@ class TableLoader(IDataLoader):
     def read(self, path_like, meta={}, transformers=[]):
         paths = TableLoader.toPathList(path_like)
 
-        reader = TableLoader.IReader(paths[0])
         dfs = []
         for path in paths:
+            reader = TableLoader.IReader(path)
             reader.setPath(path)
             reader.read(**meta)
             reader.assemble(*transformers)
