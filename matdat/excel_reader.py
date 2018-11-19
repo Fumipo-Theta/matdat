@@ -80,7 +80,6 @@ class ExcelReader(ILazyReader):
             *preprocesses
         ) if preprocesses else identity
 
-        print(self.path)
         self.df = preprocessor(self.reader)
 
         return self

@@ -733,6 +733,9 @@ def _factor_box_plotter(df:pd.DataFrame,x,y,*arg,xfactor=None,**kwargs)->AxPlot:
     _data_without_nan = [df.loc[_group.groups[fname]][y].dropna() for fname in _factor]
 
     def plot(ax):
+        if len(_data_without_nan) is 0:
+            print("No data for box plot")
+            return ax
         ax.boxplot(
             _data_without_nan,
             labels=_factor,
@@ -831,7 +834,7 @@ def _factor_violin_plotter(
         _widths = widths
 
     def plot(ax):
-        if len(dataset) < 1:
+        if len(dataset) is 0:
             print("No data for violin plot")
             return ax
 
