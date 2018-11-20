@@ -5,6 +5,11 @@ from ..get_path import PathList
 import pandas as pd
 import re
 
+ext = {
+    "csv": r'\.[cC](sv|SV)$',
+    "excel": r"^(?!.*\~\$).*\.xlsx?$"
+}
+
 
 class TableLoader(IDataLoader):
     def __init__(self):

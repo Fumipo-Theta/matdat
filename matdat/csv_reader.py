@@ -2,7 +2,8 @@ import pandas as pd
 import chardet
 from chardet.universaldetector import UniversalDetector
 import re
-from func_helper import pip, tee, mapping, filtering, identity
+from func_helper import pip, tee, identity
+import func_helper.func_helper.iterator as it
 from IPython.display import display
 from tqdm import tqdm
 
@@ -56,7 +57,7 @@ class CsvReader(ILazyReader):
             if self.is_verbose:
                 pip(
                     enumerate,
-                    mapping(lambda t: (t[0], str(t[1], encoding=encoding))),
+                    it.mapping(lambda t: (t[0], str(t[1], encoding=encoding))),
                     list,
                     display
                 )(lines)
@@ -126,38 +127,6 @@ class CsvReader(ILazyReader):
     def head(self, n: int = 1):
         self.showPath()
         return self.df.head(n)
-
-    @staticmethod
-    def setTimeSeriesIndex(*columnName):
-        """
-        Set time series index to pandas.DataFrame
-        datatime object is created from a column or two columns of
-            date and time.
-        The column "datetime" is temporally created,
-            then it is set as index.
-
-        Parameters
-        ----------
-        columnName: Union[str,List[str]]
-            They can be multiple strings of column name or
-                list of strings.
-
-        Returns
-        -------
-        Callable[[pandas.DataFrame], pandas.DataFrame]
-
-        """
-        column = columnName[0] if type(columnName[0]) == list else columnName
-
-        def f(df: pd.DataFrame)->pd.DataFrame:
-            df["datetime"] = pd.to_datetime(df[column[0]]) \
-                if (len(column) == 1) \
-                else pd.to_datetime(
-                    df[column[0]] + " "+df[column[1]])
-
-            df.set_index("datetime", inplace=True)
-            return df
-        return f
 
     def assemble(self, *preprocesses):
         """

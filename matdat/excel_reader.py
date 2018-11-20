@@ -43,38 +43,6 @@ class ExcelReader(ILazyReader):
 
         return pd.read_excel(path, **kwargs)
 
-    @staticmethod
-    def setTimeSeriesIndex(*columnName):
-        """
-        Set time series index to pandas.DataFrame
-        datatime object is created from a column or two columns of
-            date and time.
-        The column "datetime" is temporally created,
-            then it is set as index.
-
-        Parameters
-        ----------
-        columnName: Union[str,List[str]]
-            They can be multiple strings of column name or
-                list of strings.
-
-        Returns
-        -------
-        Callable[[pandas.DataFrame], pandas.DataFrame]
-
-        """
-        column = columnName[0] if type(columnName[0]) == list else columnName
-
-        def f(df: pd.DataFrame)->pd.DataFrame:
-            df["datetime"] = pd.to_datetime(df[column[0]]) \
-                if (len(column) == 1) \
-                else pd.to_datetime(
-                    df[column[0]] + " "+df[column[1]])
-
-            df.set_index("datetime", inplace=True)
-            return df
-        return f
-
     def assemble(self, *preprocesses: DataFrame_transformer):
         preprocessor = pip(
             *preprocesses

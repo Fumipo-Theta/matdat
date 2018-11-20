@@ -3,6 +3,7 @@ import matplotlib.dates as mdates
 from .subplot import Subplot
 from .csv_reader import CsvReader
 from func_helper import identity
+import func_helper.func_helper.dataframe as dataframe
 
 
 class SubplotTime(Subplot):
@@ -60,14 +61,14 @@ class SubplotTime(Subplot):
 
     def setIndex(self, i):
         if type(self.index_name[i]) is not list:
-            return CsvReader.setTimeSeriesIndex(
+            return dataframe.setTimeSeriesIndex(
                 self.index_name[i]
             )
 
         if len(self.index_name[i]) is 0:
             return identity
         else:
-            return CsvReader.setTimeSeriesIndex(
+            return dataframe.setTimeSeriesIndex(
                 *self.index_name[i]
             )
 
