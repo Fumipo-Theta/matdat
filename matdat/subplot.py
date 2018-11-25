@@ -6,6 +6,8 @@ import matdat.matdat.plot as plot
 from .get_path import PathList, getFileList
 from .i_subplot import ISubplot
 
+def arg_filter(ref_keys):
+    return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
 
 class Subplot(ISubplot):
     """
@@ -118,7 +120,7 @@ class Subplot(ISubplot):
         )
 
         return pip(
-            plot.set_cycler("default"),
+            plot.set_cycler(self.global_cycler),
             *actions,
             plot.axis_scale()({}, self.global_scale),
             plot.set_tick_parameters()({}, self.global_tick_params["both"]),
@@ -168,17 +170,23 @@ class Subplot(ISubplot):
         else:
             return self.option[i]
 
+    def add(self,*arg,**kwargs):
+        "ailias of register()"
+        return self.register(*arg,**kwargs)
+
     def register(self, data,
                  dataInfo={},
                  plot=[],
                  option={},
-                 limit={},
+                 xlim=None,
+                 ylim=None,
                  xscale=None,
                  yscale=None,
                  tick={},
                  xtick={},
                  ytick={},
-                 label={},
+                 xlabel=None,
+                 ylabel=None,
                  cycler=None,
                  transformer=identity,
                  **_kwargs):
@@ -199,45 +207,67 @@ class Subplot(ISubplot):
         kwargs = {**_kwargs}
         self.data.append(data)
 
+        # kwargs in read data source
         _dataInfo = {**dataInfo}
         for kw in ["header"]:
             if kw in kwargs:
                 _dataInfo[kw] = kwargs.pop(kw)
 
+        # index name of data source
         self.index_name.append(kwargs.get(
             "index", []) if "index" not in _dataInfo else _dataInfo.pop("index"))
-
         self.dataInfo.append(_dataInfo)
 
-        self.global_label.update(label)
-        for kw in ["xlabel", "ylabel"]:
-            if kw in kwargs:
-                self.global_label[kw] = kwargs.pop(kw)
+        # axis label
+        self.global_label.update({
+            **arg_filter(["label"])(kwargs),
+            **({"xlabel":xlabel} if xlabel else {}),
+            **({"yalebl":ylabel} if ylabel else {})
+        })
 
+        # scale
         self.global_scale.update({
             "xscale": xscale,
             "yscale": yscale
         })
 
-        self.global_tick_params["both"].update(tick)
-        for kw in ["labelbottom", "labeltop", "labelleft", "labelright", "bottom", "top", "left", "right"]:
-            if kw in kwargs:
-                self.global_tick_params["both"][kw] = kwargs.pop(kw)
+        # tick
+        self.global_tick_params["both"].update(
+            **tick,
+            **arg_filter([
+                 "labelbottom",
+                 "labeltop",
+                 "labelleft",
+                 "labelright",
+                 "bottom",
+                 "top",
+                 "left",
+                 "right"
+            ])(kwargs)
+        )
+
         self.global_tick_params["x"].update(xtick)
         self.global_tick_params["y"].update(ytick)
 
-        self.global_limit.update(limit)
-        for kw in ["xlim", "ylim"]:
-            if kw in kwargs:
-                self.global_limit[kw] = kwargs.pop(kw)
+        # axis limit
+        self.global_limit.update({
+            **kwargs.get("limit",{}),
+            **({"xlim":xlim} if xlim else {} ),
+            **({"ylim":ylim} if ylim else {} )
+        })
 
+        # plot
         self.plotMethods.append(plot)
 
+        # plot option
         _option = {**option, **kwargs}
         self.option.append(_option)
 
-        self.global_cycler = cycler
+        # cycler
+        if cycler:
+            self.global_cycler = cycler
 
+        # transformer
         self.dataTransformer.append(
             transformer if type(transformer) in [list, tuple] else [transformer])
 
@@ -248,26 +278,18 @@ class Subplot(ISubplot):
         self.preset = preset
         return self
 
-    def usePreset(self, name, fileSelector=[], plot=[], option={}, **arg):
+    def usePreset(self, name, fileSelector=[], plot=[], plotOverwrite=[], option={}, **arg):
         preset = self.preset[name]
         return self.register(
             data=getFileList(*fileSelector)(preset["directory"]),
             dataInfo=preset["dataInfo"],
-            plot=[*preset["plot"], *
-                  plot] if "plotOverwrite" not in arg else arg["plotOverwrite"],
+            plot=[*preset["plot"], *plot] if not plotOverwrite else plotOverwrite,
 
-            limit={
-                "xlim": preset["option"].get("xlim", None),
-                "ylim": preset["option"].get("ylim", None),
-                **arg.pop("limit", {})
-            },
-            label={
-                "xlabel": preset["option"].get("xlabel", None),
-                "ylabel": preset["option"].get("ylabel", None),
-                **arg.pop("label", {})
-            },
-            option={**preset["option"], **option},
-            ** arg
+            **{
+                **preset["option"],
+                **option,
+                **arg
+            }
         )
 
     def setIndex(self, i):

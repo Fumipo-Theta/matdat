@@ -308,15 +308,6 @@ default_kwargs.update({
     "axline" : _axline_kwargs
 })
 
-from cycler import cycler
-
-_color_cycler = cycler(color=[
-    "#2196f3",
-    "green",
-    "red",
-    "orange"
-])
-_default_cycler=_color_cycler
 
 
 def set_cycler(cycler=None):
@@ -324,7 +315,7 @@ def set_cycler(cycler=None):
         if cycler is 'default':
             return ax
         elif cycler is None:
-            ax.set_prop_cycle(_default_cycler)
+            return ax
         else:
             ax.set_prop_cycle(cycler)
         return ax
@@ -1106,28 +1097,32 @@ def _factor_bar_plotter(
         )(stack_bars)
 
     ind = list(range(len(x_factor)))
+    plot_arg = {
+        **kwargs,
+        "tick_label": kwargs.get("tick_label", x_factor)
+    }
 
     def plot(ax):
         prev_top = stack_bars[0]
         for i, bar in enumerate(stack_bars):
             if vert:
                 if i is 0:
-                    ax.bar(ind,bar,**kwargs)
+                    ax.bar(ind,bar,**plot_arg)
                 else:
                     ax.bar(
-                        ind, bar, bottom=prev_top, **kwargs)
+                        ind, bar, bottom=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
             else:
                 if i is 0:
-                    ax.barh(ind,bar,**kwargs)
+                    ax.barh(ind,bar,**plot_arg)
                 else:
                     ax.barh(
-                        ind, bar, left=prev_top, **kwargs)
+                        ind, bar, left=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
 
 
         ax.legend(stack_factor,**legend)
-
+        """
         if vert:
             ax.set_xticks(ind)
             ax.set_xticklabels(x_factor)
@@ -1136,11 +1131,32 @@ def _factor_bar_plotter(
             ax.set_yticks(ind)
             ax.set_yticklabels(x_factor)
             ax.set_ylim([-1,len(x_factor)])
+        """
         return ax
     return plot
 
 
 def factor_bar(**presetting):
+    """
+    plot.bar(**presetting)(df, option, **kwargs)(ax)
+
+    df: dict, pandas.DataFrame, numpy.ndarray
+
+    option: dict
+        x:
+        y:
+        agg:
+        **other_option
+
+    presetting, other_option,kwargs:
+        xfactor:
+        yfactor:
+        norm: bool
+        vert: bool
+        legend: dict
+        align: str
+        width:
+    """
     return plot_action(
         _factor_bar_plotter,
         generate_arg_and_kwags(get_value()),
@@ -1212,27 +1228,31 @@ def _bar_plotter(
         )(stack_bars)
 
     ind = list(range(len(x_factor)))
+    plot_arg = {
+        **kwargs,
+        "tick_label": kwargs.get("tick_label", x_factor)
+    }
 
     def plot(ax):
         prev_top = stack_bars[0]
         for i, bar in enumerate(stack_bars):
             if vert:
                 if i is 0:
-                    ax.bar(ind, bar, **kwargs)
+                    ax.bar(ind, bar, **plot_arg)
                 else:
                     ax.bar(
-                        ind, bar, bottom=prev_top, **kwargs)
+                        ind, bar, bottom=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
             else:
                 if i is 0:
-                    ax.barh(ind, bar, **kwargs)
+                    ax.barh(ind, bar, **plot_arg)
                 else:
                     ax.barh(
-                        ind, bar, left=prev_top, **kwargs)
+                        ind, bar, left=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
 
         ax.legend(stack_factor, **legend)
-
+        """
         if vert:
             ax.set_xticks(ind)
             ax.set_xticklabels(x_factor)
@@ -1241,16 +1261,38 @@ def _bar_plotter(
             ax.set_yticks(ind)
             ax.set_yticklabels(x_factor)
             ax.set_ylim([-1, len(x_factor)])
+        """
         return ax
     return plot
 
 
 def bar(**presetting):
+    """
+    plot.bar(**presetting)(df, option, **kwargs)(ax)
+
+    df: dict, pandas.DataFrame, numpy.ndarray
+
+    option: dict
+        x:
+        y:
+        agg:
+        **other_option
+
+    presetting, other_option,kwargs:
+        xfactor:
+        norm: bool
+        vert: bool
+        legend: dict
+        align: str
+        width:
+    """
     return plot_action(
         _bar_plotter,
         generate_arg_and_kwags(get_value()),
         ["x", "y", "agg"],
         {
+            "width" : 0.8,
+            "align" : "center",
             "xfactor": None,
             "norm": False,
             "vert": True,
