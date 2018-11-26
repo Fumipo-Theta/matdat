@@ -19,98 +19,73 @@ pip install git+https://github.com/Fumipo-Theta/matdat.git
 ### Import
 
 ```python
-from matdat import Figure, Subplot, Subplottime
+from matdat import Figure, Subplot, SubplotTime
 ```
 
 #### Subplot and SubplotTime
 
+They are extended from abstruct base class ISubplot, which has public methods: `add` and `plot`.
+SubplotTime is extended from Subplot.
+You can use SubplotTime when reading external file of time series data.
+
 Instance of these classes store:
-    1. data for plot or the way to read data
-    2. plot option
-    3. option in plot
-    4. the way to plot
-    5. the limit of axis range
+    1. data source
+    2. plot actions
+    3. settings for plot actions
+    4. the limit of axis range
+    5. the style of axis labels and ticks
 
-Subplot and SubplotTime can use dictionary, pandas.DataFrame, and path to csv files
-    as data source.
-The data is transformed to pandas.DataFrame internaly.
-The additional parameter "dataInfo" is needed when you set path to csv files, in which index of header row and column names used as time series index.
-
-When path to csv files are set, the file is not read immidiately.
-
-The parameter "option" defines the name of columns used in plotting, range of axis, and label of axis.
-
-The parameter plot defines the way to plot the data,
-
+These instance draw plot on ax subplot of matplotlib by `plot` method.
 
 ```python
-ax_style = {
-    "label_size" : 20,
-    "tick_size" : 14
-}
+# plot action with styling is reusable.
+scatter = plot_action.scatter(s=2,c="blue")
 
-sub_a = Subplot(ax_style)
-sub_a.register(
-    paths_to_csv_files,
-    dataInfo = {
-        "header" : 5
-    },
-    option = {
-        "x" : "column_of_x",
-        "xlim" : [-100, 100],
-        "xlabel" : "X axis",
-        "y" : "column_of_y",
-        "ylim" : [0, 100],
-        "ylabel" : "Y axis"
-    },
-    plotActions = [
-        linePlot({"lineColor": "red"}),
-        scatterPlot(),
-        showGrid("both")
-    ],
-    transform = lambda d: d["column_of_y"] = 0 if d["confidence"] < 0.05 else d["column_of_y"]
-)
-
-sub_b = Subplot(ax_style)
-sub_b.register(
-    {"x": list_x, "y": list_y},
-    option={
-        "x": "x",
-        "y": "y"
-    },
-    plot=[linePlot()]
-)
-sub_b.register(
+# subplot with data and plot actions is reusable
+subplot = Subplot(title="subplot title",style={"title":{"fontsize":24}})\
+.add(
     dataframe,
-    option={
-        "x" : "column_x",
-        "y" : "column_y"
-    },
-    plot=[scatterPlot()]
+    plot=[plot_action.line(linewidth=1.5),scatter],
+    x="x column name",
+    y="y column name",
+    xlim=[-10,10],
+    label={"fontsize":20},
+    xlabel="x",
+    ylabel="y",
+    tick={"labelsize":14},
+    xtick={"rotation":45}
+)\
+.add(
+    data_file_path,
+    dataInfo={"header":0},
+    plot=[scatter],
+    x="x column name",
+    y="y column name"
 )
 
+ax = subplot.plot(matplotlib.pyplot.subplot())
 ```
 
-Point free style:
+Subplot and SubplotTime can use dictionary, pandas.DataFrame, and path to csv and excel files as data source.
+The data is transformed into pandas.DataFrame internaly.
+The additional dict parameter "dataInfo" is needed when you set path to files.
+The keys and values of the dict must be compatible parameter for read method of pandas such as `pandas.read_csv`.
 
-```python
-sub_a = SubplotTime.create(ax_style)\
-    .register()\
-    .register()
-```
+When path to csv files are set, the file is read and hold just when `plot` method is called.
+
+The setting parameters for plot action define the name of columns used in plotting, range of axis, and label of axis.
+
+The parameter plot is list of plot actions.
+
 
 #### Figure
 
-Figure stores Subplot or SubplotTime, and trigger plotting.
-When `show()` method is called,
+Figure stores ISubplot instances.
+When `show` method is called,
 matplotlib.axes._subplots.AxesSubplot is created,
-then data is read,
-and finally the data is plotted on axes.
+then Isubplot instances read data and plots on axes.
 
-The data source can be dictionaly containing lists, pandas.DataFrame, and list of path to csv files.
-All data type converted to pands.DataFrame internally.
-
-In plotting, subgrids formed by matpos package can be used to define layout.
+In `show` method, subgrids formed by matpos package can be used to define layout.
 
 The most simple plot is `show` method with the same size subplots.
 
@@ -144,24 +119,26 @@ You can also use dictionary defining parameters in show().
 
 ```python
 setting = {
-    "size" : [(8,6), (4,6), (8,6), (4,6)],
+    "size" : [(400,300), (400,300), (300,300), (300,300)],
     "column" : 2,
-    "margin" : (1,0.5),
-    "padding" : padding
+    "margin" : (50,25),
+    "padding" : {"left":50,"bottom":25,"top":25,"right":25},
+    "unit" : "px",
+    "dpi" : 100
 }
 
 figure, axs = fig.show(setting)
 ```
 
-And more, you can make complex layout by using subgrids by MatPos.
+And more, you can make complex layout by using subgrids by Matpos.
 
 ```python
-mp = MatPos()
+mp = MatPos(unit="cm")
 
-a = mp.from_left_top(mp,(4,3))
-b = mp.add_right(a, (2,2), margin=1)
-c = mp.add_bottom(a, (4,1), margin=0.5)
-d = mp.add_bottom(d, (4,1), margin=0.5)
+a = mp.from_left_top(mp,(12,8))
+b = mp.add_right(a, (8,8), margin=1)
+c = mp.add_bottom(a, (12,6), margin=0.5)
+d = mp.add_bottom(d, (12,6), margin=0.5)
 
 figure, axs = fig.show(mp,[a,b,c,d],padding=padding)
 ```
@@ -172,8 +149,8 @@ The axs is dictionary of Axsubplot
 axs = {
    "a" : matplotlib.axes._subplot.Axsubplot,
    "b" : matplotlib.axes._subplot.Axsubplot,
-   2 : matplotlib.axes._subplot.Axsubplot,
    3 : matplotlib.axes._subplot.Axsubplot,
+   4 : matplotlib.axes._subplot.Axsubplot,
  }
 ```
 

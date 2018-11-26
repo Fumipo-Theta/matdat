@@ -220,9 +220,9 @@ class Subplot(ISubplot):
 
         # axis label
         self.global_label.update({
-            **arg_filter(["label"])(kwargs),
+            **(kwargs.pop("label") if "label" in kwargs else {}),
             **({"xlabel":xlabel} if xlabel else {}),
-            **({"yalebl":ylabel} if ylabel else {})
+            **({"ylabel":ylabel} if ylabel else {})
         })
 
         # scale

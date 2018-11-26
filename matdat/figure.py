@@ -1,18 +1,24 @@
-import pandas as pd
 import re
 from func_helper import pip, identity
 from .save_plot import actionSavePNG
 from .i_subplot import ISubplot
 from matpos import Matpos, FigureSizing
 
-import matplotlib.pyplot as plt
-
 
 class Figure:
     """
-    複数行・複数列のサブプロットからなる図を作成するためのクラス.
-    プロットデータとプロット方法を定義したSubplotを登録し,
-        最後にレイアウトを指定して図を生成する.
+    The class for managing multiple subplots.
+    The instance register some instance of ISubplot.
+    When generating image, you can indicate layout of the subplots.
+
+    Parameters
+    ----------
+    None
+
+    Methods
+    -------
+    add_subplot(subplot:ISubplot)
+    show(*arg,**kwargs)
 
     Example
     -------
@@ -90,6 +96,13 @@ class Figure:
     # Distance between plot areas of subplots is, 1 inch for horizontal
     #   direction and also 1 inch for vertical direction.
 
+    # The unit of length can be also "mm", "cm", or "px".
+    # The dpi parameter can be used.
+
+    # If you want to plot by size of 300 x 200 px and dpi is 72:
+
+    axes = figure.show(size=(300,200), column=2, margin=(50,50), padding = {"left": 50, "right": 10}, unit="px", dpi=72)
+
     # ========================================
     # Free layout mode with subgrids by MatPos
     #
@@ -125,11 +138,10 @@ class Figure:
 
     def __init__(self, *arg, **kwargs):
         self.subplots = []
-        self.length = 0
         self.axIdentifier = []
 
     def get_length(self):
-        return self.length
+        return len(self.subplots)
 
     def add_subplot(self, subplot, identifier=None):
         """
@@ -142,8 +154,7 @@ class Figure:
 
         self.subplots.append(subplot)
         self.axIdentifier.append(
-            identifier if identifier != None else self.length+1)
-        self.length = self.length + 1
+            identifier if identifier != None else self.get_length())
         return self
 
     def show(self, *arg, **kwargs):
@@ -160,7 +171,7 @@ class Figure:
                 None
 
             Custom layout mode
-                matpos: MatPos
+                matpos: Matpos
                 subgrids: Subgrids
 
         **kwargs
@@ -169,10 +180,13 @@ class Figure:
             margin: tuple[float]
             padding: dict
             test: bool
-            **compatible to matplotlib.figure.Figure
+            unit: str: "inches", "cm", "mm", or "px"
+            dpi: int
+            ** and other parameters compatible to matplotlib.figure.Figure
 
         Return
         ------
+        fig: matplotlib.figure.Figure
         axs: dict[str:matplotlib.axes._subplots.Axsubplot]
 
 
@@ -213,30 +227,23 @@ class Figure:
                 raise TypeError(
                     "The first arguments must be MatPos, Tuple, or List")
 
-    def __show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, **kwargs):
-        matpos = Matpos()
+    def __show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, unit="inches", dpi=72, **kwargs):
+        matpos = Matpos(unit=unit, dpi=dpi)
         sgs = matpos.add_grid(sizes, column, margin)
 
-        return self.__show_custom(matpos, sgs, padding, test, **kwargs)
+        return self.__show_custom(matpos, sgs, padding, test, dpi=dpi, **kwargs)
 
     def __show_custom(self, matpos, subgrids, padding={}, test=False, **kwargs):
-        fig, empty_axes = Figure.generate_figure_and_axes(
-            matpos, subgrids, padding, **kwargs)
-        axes = Figure.plot_on_axes(empty_axes, self.subplots, test)
-        return (fig, dict(zip(self.axIdentifier, axes)))
-
-    @staticmethod
-    def generate_figure_and_axes(matpos, subgrids, padding, **kwargs):
-        return matpos.figure_and_axes(
+        fig, empty_axes = matpos.figure_and_axes(
             subgrids, padding=padding, **kwargs
         )
 
-    @staticmethod
-    def plot_on_axes(axes, subplots, test):
-        return pip(
+        axes = pip(
             Figure.__applyForEach(test),
             list
-        )(zip(axes, subplots))
+        )(zip(empty_axes, self.subplots))
+
+        return (fig, dict(zip(self.axIdentifier, axes)))
 
     @staticmethod
     def __applyForEach(test=False):
@@ -254,10 +261,6 @@ class Figure:
                 axesAndSubplots
             )
         return f
-
-    def showIdentifier(self):
-        print("Identifier of axes are: ")
-        print(self.axIdentifier)
 
     def save(self, directory, fileName, ext="png"):
         saver = Figure.__IFigureSaver(ext)

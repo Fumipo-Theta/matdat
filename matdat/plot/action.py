@@ -224,7 +224,13 @@ _tick_params_kwargs = {
 
 
 _label_kwargs = {
-    "fontsize": 16
+    "alpha" : 1,
+    "color":"black",
+    "family": ["Noto Sans CJK JP", "sans-serif"],
+    #"fontname" : "sans-serif",
+    "fontsize": 16,
+    "fontstyle":"normal",
+
 }
 
 _grid_kwargs = {
