@@ -58,7 +58,30 @@ figure.add_subplot(
         xlabel="x 日本語",
         ylabel=r"$f(x) \frac{\infty}{b}$",
         y=("y","z"),
+        plot=[plot.scatter(),plot.line()]
+    )
+
+)
+
+figure.add_subplot(
+    Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":["serif"]}}},title="(a)")\
+    .add(
+        moc,
+        x="x",
+        label = {"family":["serif"],"fontstyle":"italic","color":"blue"},
+        xlabel="x 日本語",
+        ylabel=r"$f(x) \frac{\infty}{b}$",
+        y=("y","z"),
         plot=[plot.scatter()]
+    )\
+    .add(
+        moc,
+        x="x",
+        label = {"family":["serif"],"fontstyle":"italic","color":"blue"},
+        xlabel="x 日本語",
+        ylabel=r"$f(x) \frac{\infty}{b}$",
+        y=("y","z"),
+        plot=[plot.line()]
     )
 
 )
@@ -70,24 +93,28 @@ figure.add_subplot(
         x="x",
         xlabel="日本語",
         xlim=[0,10],
-        plot=[plot.scatter(y="y",c="red"),plot.scatter(y="z")]
+        plot=[plot.scatter(y="y",c="red"),plot.scatter(y="z"), 
+              ]
     )\
 )
 
-fig, axs = figure.show(size=(400,400),column = 2,margin=50,padding={"left":100},unit="px",dpi=100)
+fig, axs = figure.show(size=(400,400),column = 2,margin=(100,100),padding={"left":100},unit="px",dpi=100)
 axs[1].legend(["${(x-10)}^2$","$x-10$"])
-fig?
+
 ```
 
 ```python
 figure = Figure()
+
+scatter = plot.scatter(c="red")
 
 figure.add_subplot(
     Subplot.create()\
     .add(
         moc,
         x="x",
-        plot=[plot.scatter(y="y"),plot.scatter(y="z")]
+        y="y",
+        plot=[scatter]
     )
 )
 
@@ -101,12 +128,16 @@ import matplotlib.pyplot as plt
 ```
 
 ```python
-
+plt.plot?
 ```
 
 ```python
 ax = plt.subplot()
 ax.set_title("x",fontsize=20,fontstyle="normal",family=["serif"])
+ax.plot([0.1,0.8],[0.1,0.8],)
+ax.annotate("Here",[0.4,0.6],xytext=[0.5,0.5],arrowprops={"arrowstyle":"->"},fontsize=16)
+ax.set_xlim([0,1])
+ax.set_ylim([0,1])
 ```
 
 ## contour

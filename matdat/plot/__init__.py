@@ -24,4 +24,15 @@ text
 """
 
 from .action import *
+from .axes_style import set_cycler, set_xlim, set_ylim, set_grid, set_tick_parameters, axis_scale, set_label
+from .scatter import scatter
+from .line import line
+from .vhlines import vlines
+from .band import xband, yband
+from .velocity import velocity
+from .box import box, factor_box
+from .violin import factor_violin
+from .text import text
+from .hist import hist
+from .bar import bar, factor_bar
 from .cycler import *
