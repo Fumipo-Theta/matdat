@@ -44,16 +44,16 @@ class SubplotTime(Subplot):
         })
 
     def plot(self, ax, test=False):
-        if ("xlim" in self.global_limit):
-            self.global_limit["xlim"] = pd.to_datetime(
-                self.global_limit["xlim"])
+        if ("xlim" in self.axes_style and type(self.axes_style["xlim"]) is not pd.core.indexes.datetimes.DatetimeIndex):
+            self.axes_style["xlim"] = pd.to_datetime(
+                self.axes_style["xlim"])
         return super().plot(ax, test)
 
     def setXaxisFormat(self):
         def f(ax):
             ax.xaxis.set_major_formatter(
                 mdates.DateFormatter(
-                    self.style["xFmt"]
+                    self.axes_style["style"]["xFmt"]
                 )
             )
             return ax
@@ -63,14 +63,14 @@ class SubplotTime(Subplot):
 
         def filterX():
             x = self.option[i].get("x", None)
-            lim = self.global_limit.get("xlim")
+            lim = self.axes_style.get("xlim", [])
             if len(lim) is 0:
                 lim = lim+[None, None]
             elif len(lim) is 1:
                 lim = lim + [None]
 
             return lambda df: dataframe.filter_between(
-                *pd.to_datetime(lim)
+                *(pd.to_datetime(lim) if type(lim) is not pd.core.indexes.datetimes.DatetimeIndex else lim)
             )(df, x)
 
         def setIndex():

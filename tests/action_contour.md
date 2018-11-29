@@ -49,8 +49,7 @@ set_titleのfontfamilyがうまく変更されない?
 全てそのフォントで表示されてしまう.
 """
 
-figure.add_subplot(
-    Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":["serif"]}}},title="(a)")\
+integrated = Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":["serif"]}}},title="(a)")\
     .add(
         moc,
         x="x",
@@ -61,10 +60,7 @@ figure.add_subplot(
         plot=[plot.scatter(),plot.line()]
     )
 
-)
-
-figure.add_subplot(
-    Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":["serif"]}}},title="(a)")\
+separated = Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":["serif"]}}},title="(a)")\
     .add(
         moc,
         x="x",
@@ -84,6 +80,17 @@ figure.add_subplot(
         plot=[plot.line()]
     )
 
+
+figure.add_subplot(
+    integrated
+)
+
+figure.add_subplot(
+    separated
+)
+
+figure.add_subplot(
+    integrated.tee(option={"y":"z"})
 )
 
 figure.add_subplot(
@@ -101,6 +108,26 @@ figure.add_subplot(
 fig, axs = figure.show(size=(400,400),column = 2,margin=(100,100),padding={"left":100},unit="px",dpi=100)
 axs[1].legend(["${(x-10)}^2$","$x-10$"])
 
+```
+
+```python
+def mix_dict(target:dict, mix_dict:dict, consume:bool=False)->dict:
+    d = {}
+    for key in target.keys():
+        if type(target[key]) is dict:
+            d[key] = {**target[key], **(mix_dict.pop(key,{}) if consume else mix_dict.get(key,{}))}
+        else:
+            d[key] = mix_dict.pop(
+                key, target[key]) if consume else mix_dict.get(key, target[key])
+    return d, mix_dict
+    
+mix_dict(
+    {"title":{},"label":{}},{},True
+)
+```
+
+```python
+integrated.tee(label={"family":"sans-serif"}).axes_style
 ```
 
 ```python
