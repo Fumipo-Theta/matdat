@@ -6,8 +6,10 @@ import matdat.matdat.plot as plot
 from .get_path import PathList, getFileList
 from .i_subplot import ISubplot
 
+
 def arg_filter(ref_keys):
     return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
+
 
 class Subplot(ISubplot):
     """
@@ -170,9 +172,9 @@ class Subplot(ISubplot):
         else:
             return self.option[i]
 
-    def add(self,*arg,**kwargs):
+    def add(self, *arg, **kwargs):
         "ailias of register()"
-        return self.register(*arg,**kwargs)
+        return self.register(*arg, **kwargs)
 
     def register(self, data,
                  dataInfo={},
@@ -221,8 +223,8 @@ class Subplot(ISubplot):
         # axis label
         self.global_label.update({
             **(kwargs.pop("label") if "label" in kwargs else {}),
-            **({"xlabel":xlabel} if xlabel else {}),
-            **({"ylabel":ylabel} if ylabel else {})
+            **({"xlabel": xlabel} if xlabel else {}),
+            **({"ylabel": ylabel} if ylabel else {})
         })
 
         # scale
@@ -235,14 +237,14 @@ class Subplot(ISubplot):
         self.global_tick_params["both"].update(
             **tick,
             **arg_filter([
-                 "labelbottom",
-                 "labeltop",
-                 "labelleft",
-                 "labelright",
-                 "bottom",
-                 "top",
-                 "left",
-                 "right"
+                "labelbottom",
+                "labeltop",
+                "labelleft",
+                "labelright",
+                "bottom",
+                "top",
+                "left",
+                "right"
             ])(kwargs)
         )
 
@@ -251,9 +253,9 @@ class Subplot(ISubplot):
 
         # axis limit
         self.global_limit.update({
-            **kwargs.get("limit",{}),
-            **({"xlim":xlim} if xlim else {} ),
-            **({"ylim":ylim} if ylim else {} )
+            **kwargs.get("limit", {}),
+            **({"xlim": xlim} if xlim is not None else {}),
+            **({"ylim": ylim} if ylim is not None else {})
         })
 
         # plot
