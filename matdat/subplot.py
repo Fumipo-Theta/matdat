@@ -6,6 +6,7 @@ import matdat.matdat.plot as plot
 from .get_path import PathList, getFileList
 from .i_subplot import ISubplot
 
+
 def arg_filter(ref_keys):
     return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
 
@@ -201,9 +202,9 @@ class Subplot(ISubplot):
         else:
             return self.option[i]
 
-    def add(self,*arg,**kwargs):
+    def add(self, *arg, **kwargs):
         "ailias of register()"
-        return self.register(*arg,**kwargs)
+        return self.register(*arg, **kwargs)
 
 
     def register(self, data,
@@ -253,8 +254,8 @@ class Subplot(ISubplot):
         # axis label
         self.axes_style["label"].update({
             **(kwargs.pop("label") if "label" in kwargs else {}),
-            **({"xlabel":xlabel} if xlabel else {}),
-            **({"ylabel":ylabel} if ylabel else {})
+            **({"xlabel": xlabel} if xlabel else {}),
+            **({"ylabel": ylabel} if ylabel else {})
         })
 
         # scale
@@ -267,14 +268,14 @@ class Subplot(ISubplot):
         self.axes_style["tick"].update(
             **tick,
             **arg_filter([
-                 "labelbottom",
-                 "labeltop",
-                 "labelleft",
-                 "labelright",
-                 "bottom",
-                 "top",
-                 "left",
-                 "right"
+                "labelbottom",
+                "labeltop",
+                "labelleft",
+                "labelright",
+                "bottom",
+                "top",
+                "left",
+                "right"
             ])(kwargs)
         )
 
