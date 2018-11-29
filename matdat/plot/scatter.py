@@ -19,7 +19,6 @@ def _scatter_plotter(df: DataSource, x, y, *arg, s_name=None, c_name=None, **kwa
 def scatter(**presetting):
     return plot_action(
         _scatter_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y"],
         {**default_kwargs.get("scatter"), "c_name": None, "s_name": None}
     )(**presetting)

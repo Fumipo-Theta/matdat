@@ -1,6 +1,6 @@
 import pandas as pd
 from func_helper import identity, pip
-
+import func_helper.func_helper.dataframe as dataframe
 from .plot_action import set_xlim, set_ylim, setStyle
 import matdat.matdat.plot as plot
 from .get_path import PathList, getFileList
@@ -156,13 +156,28 @@ class Subplot(ISubplot):
             transformers = None
         else:
             transformers = [
-                self.setIndex(i),
-                self.filterX(i),
+                *self.default_transformers(i),
                 *self.dataTransformer[i]
             ]
 
         return loader.read(self.data[i], meta=self.dataInfo[i],
                            transformers=transformers)
+
+    def default_transformers(self,i):
+        x = self.option[i].get("x",None)
+        lim = self.global_limit.get("xlim")
+        if len(lim) is 0:
+            lim = lim+[None,None]
+        elif len(lim) is 1:
+            lim = lim + [None]
+
+        filterX = lambda df: dataframe.filter_between(
+            *lim
+        )(df,x)
+
+        return [filterX]
+
+
 
     def get_option(self, i):
         if self.isTest():
@@ -291,20 +306,6 @@ class Subplot(ISubplot):
                 **arg
             }
         )
-
-    def setIndex(self, i):
-        return identity
-
-    def filterX(self, i):
-        if ("xlim" in self.option[i]):
-            xlim = self.option[i]["xlim"]
-            if ("x" in self.option[i]):
-                x = self.option[i]["x"]
-                return lambda df: df[(xlim[0] <= df[x]) & (df[x] <= xlim[1])]
-            else:
-                return lambda df: df[(xlim[0] <= df.index) & (df.index <= xlim[1])]
-        else:
-            return identity
 
     @staticmethod
     def __noDataAx(ax):

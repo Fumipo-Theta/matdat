@@ -88,7 +88,6 @@ def set_xlim(**presetting):
     """
     return plot_action(
         _xlim_setter,
-        generate_arg_and_kwags(get_value()),
         ["x"],
         {"xlim": None},
     )(**presetting)
@@ -97,7 +96,6 @@ def set_xlim(**presetting):
 def set_ylim(**presetting):
     return plot_action(
         _ylim_setter,
-        generate_arg_and_kwags(get_value()),
         ["y"],
         {"ylim": None},
     )(**presetting)
@@ -113,7 +111,6 @@ def _grid_setter(*arg, **kwargs)->AxPlot:
 def set_grid(**presetting):
     return plot_action(
         _grid_setter,
-        generate_arg_and_kwags(get_value()),
         [],
         default_kwargs.get("grid")
     )(**presetting)
@@ -133,7 +130,6 @@ def _tick_params_setter(df, axis, *arg, **kwargs)->AxPlot:
 def set_tick_parameters(**presetting):
     return plot_action(
         _tick_params_setter,
-        generate_arg_and_kwags(get_value()),
         ["axis"],
         default_kwargs.get("tick_params")
     )(**presetting)
@@ -152,7 +148,6 @@ def _axis_scale(*arg, xscale=None, yscale=None):
 def axis_scale(**presetting):
     return plot_action(
         _axis_scale,
-        generate_arg_and_kwags(get_value()),
         [],
         {"xscale": None, "yscale": None}
     )(**presetting)
@@ -177,7 +172,6 @@ def _label_setter(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxP
 def set_label(**presetting):
     return plot_action(
         _label_setter,
-        generate_arg_and_kwags(get_value("")),
         ["xlabel", "ylabel"],
         default_kwargs.get("axis_label")
     )(**presetting)

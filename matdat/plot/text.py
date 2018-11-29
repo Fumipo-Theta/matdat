@@ -21,7 +21,6 @@ def _text_plotter(df: DataSource, x, y, text, *arg,
 def text(**presetting):
     return plot_action(
         _text_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y", "text"],
         default_kwargs.get("text")
     )(**presetting)

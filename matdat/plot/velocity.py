@@ -17,7 +17,6 @@ def _velocity_plotter(df: DataSource, x, ex, ey, *arg, **kwargs)->AxPlot:
 def velocity(**presetting):
     return plot_action(
         _velocity_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "ex", "ey"],
         {**default_kwargs.get("quiver"),
             "scale": 1,

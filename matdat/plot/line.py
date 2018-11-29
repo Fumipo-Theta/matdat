@@ -15,7 +15,6 @@ def _line_plotter(df: DataSource, x, y, *arg, **kwargs)->AxPlot:
 def line(**presetting):
     return plot_action(
         _line_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y"],
         default_kwargs.get("line")
     )(**presetting)

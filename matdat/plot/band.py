@@ -73,7 +73,6 @@ def _yband_plotter(df: DataSource, x, y, *arg, ylim=None, xpos=None, **kwargs)->
 def xband(**presetting):
     return plot_action(
         _xband_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y"],
         {**default_kwargs.get("fill"), "xlim": None, "ypos": None}
     )(**presetting)
@@ -82,7 +81,6 @@ def xband(**presetting):
 def yband(**presetting):
     return plot_action(
         _yband_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y"],
         {**default_kwargs.get("fill"), "ylim": None, "xpos": None}
     )(**presetting)

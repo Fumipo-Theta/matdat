@@ -14,7 +14,6 @@ def _hist_plotter(df: DataSource, y, *arg, **kwargs):
 def hist(**presetting):
     return plot_action(
         _hist_plotter,
-        generate_arg_and_kwags(get_value()),
         ["y"],
         default_kwargs.get("hist")
     )(**presetting)

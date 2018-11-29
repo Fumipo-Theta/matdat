@@ -24,7 +24,6 @@ def _box_plotter(df: DataSource, ys: Union[str, List[str]], *arg, **kwargs)->AxP
 def box(**presetting):
     return plot_action(
         _box_plotter,
-        generate_arg_and_kwags(get_value()),
         ["y"],
         default_kwargs.get("box")
     )(**presetting)
@@ -69,7 +68,6 @@ def _factor_box_plotter(df: DataSource, x, y, *arg, xfactor=None, **kwargs)->AxP
 def factor_box(**presetting):
     return plot_action(
         _factor_box_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y"],
         {**default_kwargs.get("box"), "xfactor": None}
     )(**presetting)

@@ -23,14 +23,11 @@ class SubplotTime(Subplot):
                     "index" : ["datetime"]
                 },
                 plot=[scatterPlot(),linePlot()],
-                option={
-                    "y" : "Salinity",
-                    "ylim" : [25,35],
-                    "yLabel" : "Salinity"
-                },
-                limit={
-                    "xlim" : ["2018/08/10 00:00:00","2018/08/19 00:00:00"]
-                }
+                y="Salinity",
+                ylim= [25,35],
+                ylabel= "Salinity",
+                xlim= ["2018/08/10 00:00:00","2018/08/19 00:00:00"]
+
             )
     )
     """
@@ -41,7 +38,10 @@ class SubplotTime(Subplot):
         return subplot
 
     def __init__(self, style={}):
-        super().__init__({"xFmt": "%m/%d", **style})
+        super().__init__({
+            "xFmt": "%m/%d",
+            **style
+        })
 
     def plot(self, ax, test=False):
         if ("xlim" in self.global_limit):
@@ -59,18 +59,34 @@ class SubplotTime(Subplot):
             return ax
         return f
 
-    def setIndex(self, i):
-        if type(self.index_name[i]) is not list:
-            return dataframe.setTimeSeriesIndex(
-                self.index_name[i]
-            )
+    def default_transformers(self, i):
 
-        if len(self.index_name[i]) is 0:
-            return identity
-        else:
-            return dataframe.setTimeSeriesIndex(
-                *self.index_name[i]
-            )
+        def filterX():
+            x = self.option[i].get("x", None)
+            lim = self.global_limit.get("xlim")
+            if len(lim) is 0:
+                lim = lim+[None, None]
+            elif len(lim) is 1:
+                lim = lim + [None]
+
+            return lambda df: dataframe.filter_between(
+                *pd.to_datetime(lim)
+            )(df, x)
+
+        def setIndex():
+            if type(self.index_name[i]) is not list:
+                return dataframe.setTimeSeriesIndex(
+                    self.index_name[i]
+                )
+
+            if len(self.index_name[i]) is 0:
+                return identity
+            else:
+                return dataframe.setTimeSeriesIndex(
+                    *self.index_name[i]
+                )
+
+        return [setIndex(), filterX()]
 
     def read(self, i):
 

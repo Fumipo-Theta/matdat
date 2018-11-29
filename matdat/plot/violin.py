@@ -126,7 +126,6 @@ def factor_violin(**presetting):
 
     return plot_action(
         _factor_violin_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y"],
         {**default_kwargs.get("violin"), "xfactor": None}
     )(**presetting)

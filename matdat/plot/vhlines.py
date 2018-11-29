@@ -17,7 +17,6 @@ def _vlines_plotter(df: DataSource, x, y, *arg, lower=0, **kwargs)->AxPlot:
 def vlines(**presetting):
     return plot_action(
         _vlines_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y"],
         {**default_kwargs.get("vlines"), "lower": 0}
     )(**presetting)

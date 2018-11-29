@@ -12,7 +12,7 @@ AxPlot = Callable[[Ax], Ax]
 PlotAction = Callable[..., AxPlot]
 
 
-def plot_action(plotter: PlotAction, arg_kwarg_generator, arg_names, default_kwargs={}):
+def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
     """
     Generate plot action by hashable object and some parameters, which takes
         matplotlib.pyplot.Axes.subplot and return it.
@@ -22,9 +22,6 @@ def plot_action(plotter: PlotAction, arg_kwarg_generator, arg_names, default_kwa
 
     Parameters
     ----------
-    arg_kwarg_generator: pandas.DataFrame, dict, dict -> list[tuple[list,dict]]
-    arg_filter: dict -> dict
-    kwarg_filter: dict -> dict
     plotter: *arg,**kwargs -> ax -> ax
     default: dict
 
@@ -55,7 +52,7 @@ def plot_action(plotter: PlotAction, arg_kwarg_generator, arg_names, default_kwa
                 {**default_kwargs, **setting, **setting_kwargs, **option, **kwargs})
             # print(list_of_entry)
 
-            arg_and_kwarg = arg_kwarg_generator(
+            arg_and_kwarg = generate_arg_and_kwags()(
                 as_DataFrame(data_source),
                 list(map(arg_filter, list_of_entry)),
                 list(map(kwarg_filter, list_of_entry))
@@ -77,10 +74,9 @@ def as_DataFrame(d: DataSource) -> pd.DataFrame:
         raise TypeError(f"{type(d)} is not available for data source.")
 
 
-def generate_arg_and_kwags(arg_func):
+def generate_arg_and_kwags():
     """
     Setup positional arguments and keyword arguments for plotter.
-    Positional arguments can be preprocessed by arg_func.
     """
     def gen_func(
         df: DataSource,
@@ -471,7 +467,6 @@ def _annotate_plotter(df, from_pos, to_pos, text, *arg, textdict={}, **kwargs) -
 def annotate(**presetting):
     return plot_action(
         _annotate_plotter,
-        generate_arg_and_kwags(get_value()),
         ["from_pos", "to_pos", "text"],
         {**_quiver_kwargs, "textdict": _text_kwargs}
     )(**presetting)

@@ -148,7 +148,6 @@ def factor_bar(**presetting):
 
     return plot_action(
         _factor_bar_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y", "agg"],
         {
             **default_kwargs.get("bar"),
@@ -275,7 +274,6 @@ def bar(**presetting):
     """
     return plot_action(
         _bar_plotter,
-        generate_arg_and_kwags(get_value()),
         ["x", "y", "agg"],
         {
             **default_kwargs.get("bar"),
