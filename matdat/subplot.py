@@ -47,12 +47,11 @@ class Subplot(ISubplot):
     )
     """
     @staticmethod
-    def create(style={}, title=None):
-        subplot = Subplot(style, title)
+    def create(**style):
+        subplot = Subplot(**style)
         return subplot
 
-    def __init__(self, style={}, title=None):
-        _style = {**style}
+    def __init__(self, **style):
 
         self.data = []
         self.dataInfo = []
@@ -60,51 +59,44 @@ class Subplot(ISubplot):
         self.dataTransformer = []
         self.plotMethods = []
         self.option = []
-        self.title = title
+        self.title = None
 
-        self.axes_style={
+        default_axes_style={
             "title": {
-
+                "fontsize" : 16
             },
             "cycler" : None,
             "xlim" : [],
             "ylim" : [],
             "label": {
                 "fontsize": 16,
-
             },
             "scale":{
                 "xscale" : None,
                 "yscale" : None,
-
             },
             "tick": {
-                "axis": "both",
                 "labelsize": 14,
-
             },
-            "xtick": {
-                "axis": "x",
-
-            },
-            "ytick": {
-                "axis": "y",
-
-            },
+            "xtick": {},
+            "ytick": {},
         }
 
-        self.axes_style, rest_style = mix_dict(self.axes_style,_style, True)
+        self.axes_style, rest_style = mix_dict(default_axes_style,style, True)
         self.axes_style["style"] = {
             "xTickRotation" : 0,
             **rest_style
         }
 
-        print(self.axes_style)
+        #print(self.axes_style)
 
         self.length = 0
 
+    def set_title(self,title):
+        self.title=title
+        return self
 
-    def set_title(self, ax):
+    def show_title(self, ax):
         if self.title is not None:
             ax.set_title(self.title, **self.axes_style.get("title",{}))
         return ax
@@ -140,16 +132,16 @@ class Subplot(ISubplot):
             plot.set_cycler(self.axes_style["cycler"]),
             *actions,
             plot.axis_scale()({}, self.axes_style["scale"]),
-            plot.set_tick_parameters()({}, self.axes_style["tick"]),
-            plot.set_tick_parameters()(
+            plot.set_tick_parameters(axis="both")({}, self.axes_style["tick"]),
+            plot.set_tick_parameters(axis="x")(
                 {}, {**self.axes_style["tick"], **self.axes_style["xtick"]}),
-            plot.set_tick_parameters()(
+            plot.set_tick_parameters(axis="y")(
                 {}, {**self.axes_style["tick"], **self.axes_style["ytick"]}),
             plot.set_xlim()({}, {"xlim":self.axes_style["xlim"]}),
             plot.set_ylim()({}, {"ylim":self.axes_style["ylim"]}),
             plot.set_label()({}, self.axes_style["label"]),
             self.setXaxisFormat(),
-            self.set_title
+            self.show_title
         )(ax)
 
     def __getPlotAction(self, i):
@@ -181,16 +173,17 @@ class Subplot(ISubplot):
                            transformers=transformers)
 
     def default_transformers(self,i):
-        x = self.option[i].get("x",None)
-        lim = self.axes_style.get("xlim")
-        if len(lim) is 0:
-            lim = lim+[None,None]
-        elif len(lim) is 1:
-            lim = lim + [None]
+        def filterX(df):
+            x = self.option[i].get("x",None)
+            lim = self.axes_style.get("xlim")
+            if len(lim) is 0 or lim is None:
+                return df
+            elif len(lim) is 1:
+                lim = lim + [None]
 
-        filterX = lambda df: dataframe.filter_between(
-            *lim
-        )(df,x)
+            return dataframe.filter_between(
+                *lim
+            )(df,x)
 
         return [filterX]
 
@@ -307,47 +300,52 @@ class Subplot(ISubplot):
         self.length = self.length+1
         return self
 
-    def tee(self,title=None,
-        option = None,
+    def tee(self,
+        *option,
         **style_kwargs
         ):
-        new_subplot = Subplot.create(style={
-            **self.axes_style,
-            **style_kwargs,
-        },title=title if title is not None else self.title)
+        """
+        Parameters
+        ----------
+        *option: *dict
+            Keys and values must be compatible to parameters
+                for register() or add() method.
+        title: str
+        **style_kwargs:
+            Overwrite style of axes
+            ----------------------
+            title: dict
+            cycler: cycler
+            xlim: list
+            ylim: list
+            label: dict
+            scale: dict
+            tick: dict
+            xtick: dict
+            ytick: dict
 
-        if type(option) in [list,tuple]:
-            for i in range(len(self.data)):
-                new_subplot.add(
-                    self.data[i],
-                    dataInfo=self.dataInfo[i],
-                    index=self.index_name[i],
-                    option=option[i] if i < len(option) else self.option[i],
-                    plot=self.plotMethods[i]
-                )
+            xTickRotation
+            xFmt
+        """
 
-        elif type(option) is dict:
-            for i in range(len(self.data)):
+        new_subplot = Subplot.create(
+            **{**self.axes_style,
+            **style_kwargs}
+        )
+
+        for i in range(len(self.data)):
                 new_subplot.add(
-                    self.data[i],
-                    dataInfo=self.dataInfo[i],
-                    index=self.index_name[i],
-                    option=option if i is 0 else self.option[i],
-                    plot=self.plotMethods[i]
-                )
-        else:
-            for i in range(len(self.data)):
-                new_subplot.add(
-                    self.data[i],
-                    dataInfo=self.dataInfo[i],
-                    index=self.index_name[i],
-                    option=self.option[i],
-                    plot=self.plotMethods[i]
+                    **{
+                        "data" : self.data[i],
+                        "dataInfo":self.dataInfo[i],
+                        "index":self.index_name[i],
+                        "plot": self.plotMethods[i],
+                        **self.option[i],
+                        **(option[i] if len(option) > i and type(option[i]) is dict else {}),
+                    }
                 )
 
         return new_subplot
-
-
 
 
     def setPreset(self, preset):

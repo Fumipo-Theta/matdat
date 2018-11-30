@@ -49,7 +49,8 @@ set_titleのfontfamilyがうまく変更されない?
 全てそのフォントで表示されてしまう.
 """
 
-integrated = Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":["serif"]}}},title="(a)")\
+integrated = Subplot.create(title={"fontsize":20,"fontdict":{"family":["serif"]}})\
+    .set_title("(a)")\
     .add(
         moc,
         x="x",
@@ -60,9 +61,10 @@ integrated = Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":[
         plot=[plot.scatter(),plot.line()]
     )
 
-separated = Subplot.create(style={"title":{"fontsize":20,"fontdict":{"family":["serif"]}}},title="(a)")\
+separated = Subplot.create(title={"fontsize":20,"fontdict":{"family":["serif"]}})\
+    .set_title("(a)")\
     .add(
-        moc,
+        data=moc,
         x="x",
         label = {"family":["serif"],"fontstyle":"italic","color":"blue"},
         xlabel="x 日本語",
@@ -89,21 +91,24 @@ figure.add_subplot(
     separated
 )
 
+# integrated は一つしかプロットを登録していないので, 2つめのオプションは適用されない.
 figure.add_subplot(
-    integrated.tee(option={"y":"z"})
+    integrated.tee({"y":"y"},{"y":"z","ylabel":"tee from integrated","ylim":[-20,100]})
+)
+
+# 1つ目のオプションは適用される
+figure.add_subplot(
+    integrated.tee({
+        "data" : moc.assign(y=moc.x**3),
+        "ylabel":"tee from integrated",
+        "ylim":[-20,100]
+    })
 )
 
 figure.add_subplot(
-    Subplot.create(title="(b)")\
-    .add(
-        moc,
-        x="x",
-        xlabel="日本語",
-        xlim=[0,10],
-        plot=[plot.scatter(y="y",c="red"),plot.scatter(y="z"), 
-              ]
-    )\
+    separated.tee({"y":"y"},{"y":"z", "ylabel":"tee from separated"},ylim=[-10,100])
 )
+
 
 fig, axs = figure.show(size=(400,400),column = 2,margin=(100,100),padding={"left":100},unit="px",dpi=100)
 axs[1].legend(["${(x-10)}^2$","$x-10$"])
@@ -111,23 +116,31 @@ axs[1].legend(["${(x-10)}^2$","$x-10$"])
 ```
 
 ```python
-def mix_dict(target:dict, mix_dict:dict, consume:bool=False)->dict:
-    d = {}
-    for key in target.keys():
-        if type(target[key]) is dict:
-            d[key] = {**target[key], **(mix_dict.pop(key,{}) if consume else mix_dict.get(key,{}))}
-        else:
-            d[key] = mix_dict.pop(
-                key, target[key]) if consume else mix_dict.get(key, target[key])
-    return d, mix_dict
-    
-mix_dict(
-    {"title":{},"label":{}},{},True
+abstract_subplot_xyz = Subplot.create()\
+.register(
+    data={},
+    x="x",
+    y="y",
+    plot=[plot.scatter(),plot.line()]
+)\
+.register(
+    data={},
+    x="x",
+    y="z",
+    xlabel="x",
+    ylabel="y and z",
+    plot=[plot.scatter(),plot.line()]
 )
+
+xyz_for_moc = abstract_subplot_xyz.tee({"data":moc},{"data":moc}).set_title("xyz in moc")
+xyz_for_moc2 = abstract_subplot_xyz.tee({"data":moc.assign(y=moc.x)},{"data":moc.assign(y=moc.x)},).set_title("xyz in moc2")
 ```
 
 ```python
-integrated.tee(label={"family":"sans-serif"}).axes_style
+figure = Figure()
+figure.add_subplot(xyz_for_moc)
+figure.add_subplot(xyz_for_moc2)
+figure.show(size=(8,8),column=2)
 ```
 
 ```python

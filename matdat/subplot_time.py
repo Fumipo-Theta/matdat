@@ -33,12 +33,12 @@ class SubplotTime(Subplot):
     """
 
     @staticmethod
-    def create(style={}):
-        subplot = SubplotTime(style)
+    def create(**style):
+        subplot = SubplotTime(**style)
         return subplot
 
-    def __init__(self, style={}):
-        super().__init__({
+    def __init__(self, **style):
+        super().__init__(**{
             "xFmt": "%m/%d",
             **style
         })
@@ -64,8 +64,8 @@ class SubplotTime(Subplot):
         def filterX():
             x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim", [])
-            if len(lim) is 0:
-                lim = lim+[None, None]
+            if len(lim) is 0 or lim is None:
+                return identity
             elif len(lim) is 1:
                 lim = lim + [None]
 
