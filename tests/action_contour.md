@@ -49,7 +49,7 @@ set_titleのfontfamilyがうまく変更されない?
 全てそのフォントで表示されてしまう.
 """
 
-integrated = Subplot.create(title={"fontsize":20,"fontdict":{"family":["serif"]}})\
+integrated = Subplot.create({"label":{"fontsize":12}},title={"fontsize":20,"fontdict":{"family":["serif"]}})\
     .set_title("(a)")\
     .add(
         moc,

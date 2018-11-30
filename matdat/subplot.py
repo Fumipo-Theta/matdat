@@ -47,11 +47,11 @@ class Subplot(ISubplot):
     )
     """
     @staticmethod
-    def create(**style):
-        subplot = Subplot(**style)
+    def create(*style_dict,**style):
+        subplot = Subplot(*style_dict,**style)
         return subplot
 
-    def __init__(self, **style):
+    def __init__(self, *style_dict, **style):
 
         self.data = []
         self.dataInfo = []
@@ -82,7 +82,8 @@ class Subplot(ISubplot):
             "ytick": {},
         }
 
-        self.axes_style, rest_style = mix_dict(default_axes_style,style, True)
+        _style, _ = mix_dict(style_dict[0],style) if len(style_dict) > 0 else mix_dict(style,{})
+        self.axes_style, rest_style = mix_dict(default_axes_style,_style, True)
         self.axes_style["style"] = {
             "xTickRotation" : 0,
             **rest_style

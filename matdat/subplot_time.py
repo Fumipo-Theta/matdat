@@ -33,12 +33,12 @@ class SubplotTime(Subplot):
     """
 
     @staticmethod
-    def create(**style):
-        subplot = SubplotTime(**style)
+    def create(*style_dict, **style):
+        subplot = SubplotTime(*style_dict, **style)
         return subplot
 
-    def __init__(self, **style):
-        super().__init__(**{
+    def __init__(self, *style_dict, **style):
+        super().__init__(*style_dict, **{
             "xFmt": "%m/%d",
             **style
         })
