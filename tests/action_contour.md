@@ -43,6 +43,34 @@ moc.head()
 ```python
 figure = Figure()
 
+figure.add_subplot(
+    Subplot.create()\
+    .add(
+        moc,
+        x="x",
+        y="y",
+        plot=[plot.scatter()]
+    )
+)
+
+figure.add_subplot(
+    Subplot.create()\
+    .add(
+        moc,
+        x="x",
+        y="y",
+        c="red",
+        grid={"axis":"both"},
+        plot=[plot.scatter(),plot.line()]
+    )
+)
+
+figure.show(size=(8,8),column=2)
+```
+
+```python
+figure = Figure()
+
 """
 set_titleのfontfamilyがうまく変更されない?
 日本語を表示するには日本語対応のttcフォントを指定する必要があるが, 日本語もasciiも
@@ -186,7 +214,8 @@ subplot= Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"})\
         x="x",
         y="x",
         #xlim=[-5,25],
-        plot=[plot.line(),plot.set_grid(axis="both")],
+        grid={"axis":"both"},
+        plot=[plot.line(),],
         second_axis=True,
     )
 

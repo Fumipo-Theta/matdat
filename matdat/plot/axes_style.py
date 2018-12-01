@@ -101,9 +101,11 @@ def set_ylim(**presetting):
     )(**presetting)
 
 
-def _grid_setter(*arg, **kwargs)->AxPlot:
+def _grid_setter(*arg, axis=None, **kwargs)->AxPlot:
     def plot(ax):
-        ax.grid(**kwargs)
+        if axis is None:
+            return ax
+        ax.grid(axis=axis, **kwargs)
         return ax
     return plot
 

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.transforms
-from typing import Union, List, Tuple,TypeVar, Callable, NewType, Optional
+from typing import Union, List, Tuple, TypeVar, Callable, NewType, Optional
 from func_helper import pip
 import func_helper.func_helper.iterator as it
 
@@ -97,7 +97,7 @@ def generate_arg_and_kwags():
 
 
 def get_subset(use_index=True):
-    def f(df: Union[pd.DataFrame,pd.Series], k):
+    def f(df: Union[pd.DataFrame, pd.Series], k):
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
@@ -108,7 +108,7 @@ def get_subset(use_index=True):
                 return df[k]
 
         elif type(df) is pd.Series:
-            if k in ["index",None]:
+            if k in ["index", None]:
                 return df.index
             else:
                 return df
@@ -180,8 +180,10 @@ def filter_dict(k: list) -> Callable[[dict], dict]:
         filter(lambda kv: (kv[0] in k) and kv[1] is not None, d.items())
     )
 
-def translate_table(table_dict:dict):
-    return lambda d: {table_dict.get(k,k):v for k,v in d.items()}
+
+def translate_table(table_dict: dict):
+    return lambda d: {table_dict.get(k, k): v for k, v in d.items()}
+
 
 def get_values_by_keys(k: list, default=None)->Callable[[dict], list]:
     """
@@ -236,43 +238,43 @@ def Icoordinate_transform(ax, xcoordinate: Optional[str], ycoordinate: Optional[
         ax.transAxes if ycoordinate is "axes" else ax.transData
     )
 
-default_kwargs={}
+
+default_kwargs = {}
 
 _tick_params_each = {
     "labelsize": 12,
-    "rotation" : 0,
-    "which" : "both",
-    "direction" : "in",
-    "color" : "black",
-    "labelcolor" : "black"
+    "rotation": 0,
+    "which": "both",
+    "direction": "in",
+    "color": "black",
+    "labelcolor": "black"
 }
 
 _tick_params_kwargs = {
     **_tick_params_each,
     "labelbottom": None,
-    "labelleft" : None,
-    "labeltop" : None,
-    "labelright":None,
-    "bottom" : None,
-    "left" : None,
-    "top" : None,
-    "right":None
+    "labelleft": None,
+    "labeltop": None,
+    "labelright": None,
+    "bottom": None,
+    "left": None,
+    "top": None,
+    "right": None
 }
 
 
-
 _label_kwargs = {
-    "alpha" : 1,
-    "color":"black",
+    "alpha": 1,
+    "color": "black",
     "family": ["Noto Sans CJK JP", "sans-serif"],
-    #"fontname" : "sans-serif",
+    # "fontname" : "sans-serif",
     "fontsize": 16,
-    "fontstyle":"normal",
+    "fontstyle": "normal",
 
 }
 
 _grid_kwargs = {
-    "axis" : "both",
+    "axis": None,
     "color": 'gray',
     "linestyle": ':',
     "linewidth": 1,
@@ -324,21 +326,21 @@ _fill_kwargs = {
 }
 
 _quiver_kwargs = {
-    "scale" : 1,
-    "scale_units" : "dots",
-    "alpha" : 1,
-    "color" : "black",
-    "width" : 1,
+    "scale": 1,
+    "scale_units": "dots",
+    "alpha": 1,
+    "color": "black",
+    "width": 1,
     "headwidth": 0.1,
     "headlength": 0.2
 }
 
 
 _axline_kwargs = {
-    "alpha" : 0.5,
-    "color" : "green",
-    "linewidth" : None,
-    "linestyle" : "-"
+    "alpha": 0.5,
+    "color": "green",
+    "linewidth": None,
+    "linestyle": "-"
 }
 
 _box_kwargs = {
@@ -434,7 +436,7 @@ _hist_kwargs = {
 _bar_kwargs = {
     "norm": False,
     "vert": True,
-    #"width": 0.8,
+    # "width": 0.8,
     "align": "center",
 }
 
@@ -455,8 +457,9 @@ default_kwargs.update({
     "violin": _violin_kwargs,
     "text": _text_kwargs,
     "hist": _hist_kwargs,
-    "bar" : _bar_kwargs,
+    "bar": _bar_kwargs,
 })
+
 
 def _annotate_plotter(df, from_pos, to_pos, text, *arg, textdict={}, **kwargs) -> AxPlot:
     def plot(ax):

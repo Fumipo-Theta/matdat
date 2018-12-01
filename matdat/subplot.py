@@ -10,15 +10,18 @@ from .i_subplot import ISubplot
 def arg_filter(ref_keys):
     return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
 
-def mix_dict(target:dict, mix_dict:dict, consume:bool=False)->dict:
+
+def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
     d = {}
     for key in target.keys():
         if type(target[key]) is dict:
-            d[key] = {**target[key], **(mix_dict.pop(key,{}) if consume else mix_dict.get(key,{}))}
+            d[key] = {
+                **target[key], **(mix_dict.pop(key, {}) if consume else mix_dict.get(key, {}))}
         else:
             d[key] = mix_dict.pop(
                 key, target[key]) if consume else mix_dict.get(key, target[key])
     return d, mix_dict
+
 
 class Subplot(ISubplot):
     """
@@ -27,7 +30,7 @@ class Subplot(ISubplot):
 
     Example
     -------
-    fig=Figure(figureStyle):
+    fig=Figure():
 
     fig.add_subplot(
         Subplot.create(axStyle)\
@@ -36,19 +39,17 @@ class Subplot(ISubplot):
                 dataInfo={
                     "header": 3
                 },
-                plot=[scatterPlot(),linePlot()],
-                option={
-                    "xlim" : ["2018/08/10 00:00:00","2018/08/19 00:00:00"],
-                    "y" : "Salinity",
-                    "ylim" : [25,35],
-                    "yLabel" : "Salinity"
-                }
+                plot=[plot.scatter(),plot.line()],
+                xlim=["2018/08/10 00:00:00","2018/08/19 00:00:00"],
+                y="Salinity",
+                ylim=[25,35],
+                ylabel="Salinity"
             )
     )
     """
     @staticmethod
-    def create(*style_dict,**style):
-        subplot = Subplot(*style_dict,**style)
+    def create(*style_dict, **style):
+        subplot = Subplot(*style_dict, **style)
         return subplot
 
     def __init__(self, *style_dict, **style):
@@ -62,60 +63,63 @@ class Subplot(ISubplot):
         self.is_second_axes = []
         self.title = None
 
-        default_axes_style={
+        default_axes_style = {
             "title": {
-                "fontsize" : 16
+                "fontsize": 16
             },
-            "cycler" : None,
-            "xlim" : [],
-            "ylim" : [],
+            "cycler": None,
+            "xlim": [],
+            "ylim": [],
             "label": {
                 "fontsize": 16,
             },
-            "scale":{
-                "xscale" : None,
-                "yscale" : None,
+            "scale": {
+                "xscale": None,
+                "yscale": None,
             },
             "tick": {
                 "labelsize": 14,
             },
             "xtick": {},
             "ytick": {},
+            "grid": {}
         }
 
-        _style, _ = mix_dict(style_dict[0],style) if len(style_dict) > 0 else mix_dict(style,{})
-        self.axes_style, rest_style = mix_dict(default_axes_style,_style, True)
+        _style, _ = mix_dict(style_dict[0], style) if len(
+            style_dict) > 0 else mix_dict(style, {})
+        self.axes_style, rest_style = mix_dict(
+            default_axes_style, _style, True)
         self.axes_style["style"] = {
-            "xTickRotation" : 0,
+            "xTickRotation": 0,
             **rest_style
         }
 
         self.diff_second_axes_style = {
-            "title":{},
-            "cycler":None,
-            "xlim":[],
-            "ylim":[],
-            "label":{},
-            "scale":{},
-            "tick":{},
-            "xtick":{},
-            "ytick":{},
-            "style":{}
+            "title": {},
+            "cycler": None,
+            "xlim": [],
+            "ylim": [],
+            "label": {},
+            "scale": {},
+            "tick": {},
+            "xtick": {},
+            "ytick": {},
+            "grid": {},
+            "style": {}
         }
 
-
-        #print(self.axes_style)
+        # print(self.axes_style)
 
         self.length = 0
         self.plotter = Subplot.Iplotter()
 
-    def set_title(self,title):
-        self.title=title
+    def set_title(self, title):
+        self.title = title
         return self
 
     def show_title(self, ax):
         if self.title is not None:
-            ax.set_title(self.title, **self.axes_style.get("title",{}))
+            ax.set_title(self.title, **self.axes_style.get("title", {}))
         return ax
 
     def plot(self, ax, test=False):
@@ -140,11 +144,9 @@ class Subplot(ISubplot):
 
         self.set_test_mode(test)
 
-
-
         actions1 = map(
             self.__getPlotAction,
-            filter(lambda i: not self.is_second_axes[i],range(self.length))
+            filter(lambda i: not self.is_second_axes[i], range(self.length))
         )
 
         ax1 = pip(
@@ -152,7 +154,6 @@ class Subplot(ISubplot):
             self.show_title,
             self.setXaxisFormat()
         )(ax)
-
 
         if any(self.is_second_axes):
             actions2 = map(
@@ -167,14 +168,14 @@ class Subplot(ISubplot):
             )
 
             _ax = self.plotter(
-                [],style2
+                [], style2
             )(ax1.twiny())
 
             ax2 = self.plotter(
                 actions2,
                 style2
             )(_ax.twinx())
-            return (ax1,ax2)
+            return (ax1, ax2)
         else:
             return ax1
 
@@ -194,6 +195,7 @@ class Subplot(ISubplot):
                 plot.set_xlim()({}, {"xlim": style["xlim"]}),
                 plot.set_ylim()({}, {"ylim": style["ylim"]}),
                 plot.set_label()({}, style["label"]),
+                plot.set_grid()({}, style["grid"])
             )
         return plotter
 
@@ -218,6 +220,7 @@ class Subplot(ISubplot):
             transformers = None
         else:
             transformers = [
+
                 *self.default_transformers(i),
                 *self.dataTransformer[i]
             ]
@@ -225,9 +228,9 @@ class Subplot(ISubplot):
         return loader.read(self.data[i], meta=self.dataInfo[i],
                            transformers=transformers)
 
-    def default_transformers(self,i):
+    def default_transformers(self, i):
         def filterX(df):
-            x = self.option[i].get("x",None)
+            x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim")
             if len(lim) is 0 or lim is None:
                 return df
@@ -236,11 +239,9 @@ class Subplot(ISubplot):
 
             return dataframe.filter_between(
                 *lim
-            )(df,x)
+            )(df, x)
 
         return [filterX]
-
-
 
     def get_option(self, i):
         if self.isTest():
@@ -251,7 +252,6 @@ class Subplot(ISubplot):
     def add(self, *arg, **kwargs):
         "ailias of register()"
         return self.register(*arg, **kwargs)
-
 
     def register(self, data,
                  dataInfo={},
@@ -266,6 +266,7 @@ class Subplot(ISubplot):
                  ytick={},
                  xlabel=None,
                  ylabel=None,
+                 grid={},
                  cycler=None,
                  transformer=identity,
                  second_axis=False,
@@ -298,18 +299,17 @@ class Subplot(ISubplot):
             "index", []) if "index" not in _dataInfo else _dataInfo.pop("index"))
         self.dataInfo.append(_dataInfo)
 
-
         update_axes_style = {
-            "label" : {
+            "label": {
                 **(kwargs.pop("label") if "label" in kwargs else {}),
                 **({"xlabel": xlabel} if xlabel else {}),
                 **({"ylabel": ylabel} if ylabel else {})
             },
-            "scale" : {
+            "scale": {
                 "xscale": xscale,
                 "yscale": yscale
             },
-            "tick":{
+            "tick": {
                 **tick,
                 **arg_filter([
                     "labelbottom",
@@ -322,12 +322,13 @@ class Subplot(ISubplot):
                     "right"
                 ])(kwargs)
             },
-            "xtick" : xtick,
-            "ytick" : ytick,
+            "xtick": xtick,
+            "ytick": ytick,
+            "grid": grid,
             **kwargs.get("limit", {}),
-            **({"xlim": xlim} if xlim else {}),
-            **({"ylim": ylim} if ylim else {}),
-            **({"cycler" : cycler} if cycler else {})
+            **({"xlim": xlim} if xlim is not None else {}),
+            **({"ylim": ylim} if ylim is not None else {}),
+            **({"cycler": cycler} if cycler else {})
         }
 
         if not second_axis:
@@ -358,9 +359,9 @@ class Subplot(ISubplot):
         return self
 
     def tee(self,
-        *option,
-        **style_kwargs
-        ):
+            *option,
+            **style_kwargs
+            ):
         """
         Method for extends a subplot to the another subplot.
         Without any option, a subplot instance is copied to
@@ -393,26 +394,25 @@ class Subplot(ISubplot):
 
         new_subplot = Subplot.create(
             **{**self.axes_style,
-            **style_kwargs}
+               **style_kwargs}
         )
 
         new_subplot.diff_second_axes_style = {**self.diff_second_axes_style}
 
         for i in range(len(self.data)):
-                new_subplot.add(
-                    **{
-                        "data" : self.data[i],
-                        "dataInfo":self.dataInfo[i],
-                        "index":self.index_name[i],
-                        "plot": self.plotMethods[i],
-                        "second_axis" : self.is_second_axes[i],
-                        **self.option[i],
-                        **(option[i] if len(option) > i and type(option[i]) is dict else {}),
-                    }
-                )
+            new_subplot.add(
+                **{
+                    "data": self.data[i],
+                    "dataInfo": self.dataInfo[i],
+                    "index": self.index_name[i],
+                    "plot": self.plotMethods[i],
+                    "second_axis": self.is_second_axes[i],
+                    **self.option[i],
+                    **(option[i] if len(option) > i and type(option[i]) is dict else {}),
+                }
+            )
 
         return new_subplot
-
 
     def setPreset(self, preset):
         self.preset = preset
