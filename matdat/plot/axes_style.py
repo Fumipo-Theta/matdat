@@ -175,3 +175,11 @@ def set_label(**presetting):
         ["xlabel", "ylabel"],
         default_kwargs.get("axis_label")
     )(**presetting)
+
+
+def twinx():
+    def set_data(*arg):
+        def plot(ax):
+            return ax.twinx()
+        return plot
+    return set_data

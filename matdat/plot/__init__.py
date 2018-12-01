@@ -24,7 +24,7 @@ text
 """
 
 from .action import *
-from .axes_style import set_cycler, set_xlim, set_ylim, set_grid, set_tick_parameters, axis_scale, set_label
+from .axes_style import *
 from .scatter import scatter
 from .line import line
 from .vhlines import vlines

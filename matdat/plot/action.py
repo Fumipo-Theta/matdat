@@ -249,14 +249,14 @@ _tick_params_each = {
 
 _tick_params_kwargs = {
     **_tick_params_each,
-    "labelbottom": True,
-    "labelleft" : True,
-    "labeltop" : False,
-    "labelright":False,
-    "bottom" : True,
-    "left" : True,
-    "top" : False,
-    "right":False
+    "labelbottom": None,
+    "labelleft" : None,
+    "labeltop" : None,
+    "labelright":None,
+    "bottom" : None,
+    "left" : None,
+    "top" : None,
+    "right":None
 }
 
 

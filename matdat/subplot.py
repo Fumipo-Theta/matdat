@@ -306,6 +306,12 @@ class Subplot(ISubplot):
         **style_kwargs
         ):
         """
+        Method for extends a subplot to the another subplot.
+        Without any option, a subplot instance is copied to
+        the new one.
+        On the other hand, with option, part of properties of
+        the old subplot can be over written.
+
         Parameters
         ----------
         *option: *dict

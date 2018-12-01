@@ -164,6 +164,30 @@ figure.show(mp,[a])
 ```
 
 ```python
+Iplot = Subplot.create(label={"fontsize":20}).register({})
+
+Iscatter_plot = Iplot.tee({"plot":[plot.scatter(s=5)], "xlabel":"x"})
+
+```
+
+```python
+figure = Figure()
+
+figure.add_subplot(
+    Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"})\
+    .register(
+        data=moc,
+        x="x",
+        y="z",
+        ylabel="second y",
+        plot=[plot.twinx(),plot.line()]
+    )
+)
+
+figure.show(size=(8,6))
+```
+
+```python
 import matplotlib.pyplot as plt
 ```
 
