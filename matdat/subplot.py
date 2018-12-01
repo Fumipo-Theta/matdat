@@ -59,6 +59,7 @@ class Subplot(ISubplot):
         self.dataTransformer = []
         self.plotMethods = []
         self.option = []
+        self.is_second_axes = []
         self.title = None
 
         default_axes_style={
@@ -89,9 +90,24 @@ class Subplot(ISubplot):
             **rest_style
         }
 
+        self.diff_second_axes_style = {
+            "title":{},
+            "cycler":None,
+            "xlim":[],
+            "ylim":[],
+            "label":{},
+            "scale":{},
+            "tick":{},
+            "xtick":{},
+            "ytick":{},
+            "style":{}
+        }
+
+
         #print(self.axes_style)
 
         self.length = 0
+        self.plotter = Subplot.Iplotter()
 
     def set_title(self,title):
         self.title=title
@@ -124,26 +140,62 @@ class Subplot(ISubplot):
 
         self.set_test_mode(test)
 
-        actions = map(
+
+
+        actions1 = map(
             self.__getPlotAction,
-            range(self.length)
+            filter(lambda i: not self.is_second_axes[i],range(self.length))
         )
 
-        return pip(
-            plot.set_cycler(self.axes_style["cycler"]),
-            *actions,
-            plot.axis_scale()({}, self.axes_style["scale"]),
-            plot.set_tick_parameters(axis="both")({}, self.axes_style["tick"]),
-            plot.set_tick_parameters(axis="x")(
-                {}, {**self.axes_style["tick"], **self.axes_style["xtick"]}),
-            plot.set_tick_parameters(axis="y")(
-                {}, {**self.axes_style["tick"], **self.axes_style["ytick"]}),
-            plot.set_xlim()({}, {"xlim":self.axes_style["xlim"]}),
-            plot.set_ylim()({}, {"ylim":self.axes_style["ylim"]}),
-            plot.set_label()({}, self.axes_style["label"]),
-            self.setXaxisFormat(),
-            self.show_title
+        ax1 = pip(
+            self.plotter(actions1, self.axes_style),
+            self.show_title,
+            self.setXaxisFormat()
         )(ax)
+
+
+        if any(self.is_second_axes):
+            actions2 = map(
+                self.__getPlotAction,
+                filter(
+                    lambda i: self.is_second_axes[i], range(self.length))
+            )
+
+            style2, _ = mix_dict(
+                self.axes_style,
+                self.diff_second_axes_style
+            )
+
+            _ax = self.plotter(
+                [],style2
+            )(ax1.twiny())
+
+            ax2 = self.plotter(
+                actions2,
+                style2
+            )(_ax.twinx())
+            return (ax1,ax2)
+        else:
+            return ax1
+
+    @staticmethod
+    def Iplotter():
+        def plotter(actions, style):
+            return pip(
+                plot.set_cycler(style["cycler"]),
+                *actions,
+                plot.axis_scale()({}, style["scale"]),
+                plot.set_tick_parameters(axis="both")(
+                    {}, style["tick"]),
+                plot.set_tick_parameters(axis="x")(
+                    {}, {**style["tick"], **style["xtick"]}),
+                plot.set_tick_parameters(axis="y")(
+                    {}, {**style["tick"], **style["ytick"]}),
+                plot.set_xlim()({}, {"xlim": style["xlim"]}),
+                plot.set_ylim()({}, {"ylim": style["ylim"]}),
+                plot.set_label()({}, style["label"]),
+            )
+        return plotter
 
     def __getPlotAction(self, i):
         df = self.read(i)
@@ -216,6 +268,7 @@ class Subplot(ISubplot):
                  ylabel=None,
                  cycler=None,
                  transformer=identity,
+                 second_axis=False,
                  **_kwargs):
         """
         Parameters
@@ -245,43 +298,48 @@ class Subplot(ISubplot):
             "index", []) if "index" not in _dataInfo else _dataInfo.pop("index"))
         self.dataInfo.append(_dataInfo)
 
-        # axis label
-        self.axes_style["label"].update({
-            **(kwargs.pop("label") if "label" in kwargs else {}),
-            **({"xlabel": xlabel} if xlabel else {}),
-            **({"ylabel": ylabel} if ylabel else {})
-        })
 
-        # scale
-        self.axes_style["scale"].update({
-            "xscale": xscale,
-            "yscale": yscale
-        })
+        update_axes_style = {
+            "label" : {
+                **(kwargs.pop("label") if "label" in kwargs else {}),
+                **({"xlabel": xlabel} if xlabel else {}),
+                **({"ylabel": ylabel} if ylabel else {})
+            },
+            "scale" : {
+                "xscale": xscale,
+                "yscale": yscale
+            },
+            "tick":{
+                **tick,
+                **arg_filter([
+                    "labelbottom",
+                    "labeltop",
+                    "labelleft",
+                    "labelright",
+                    "bottom",
+                    "top",
+                    "left",
+                    "right"
+                ])(kwargs)
+            },
+            "xtick" : xtick,
+            "ytick" : ytick,
+            **kwargs.get("limit", {}),
+            **({"xlim": xlim} if xlim else {}),
+            **({"ylim": ylim} if ylim else {}),
+            **({"cycler" : cycler} if cycler else {})
+        }
 
-        # tick
-        self.axes_style["tick"].update(
-            **tick,
-            **arg_filter([
-                "labelbottom",
-                "labeltop",
-                "labelleft",
-                "labelright",
-                "bottom",
-                "top",
-                "left",
-                "right"
-            ])(kwargs)
-        )
-
-        self.axes_style["xtick"].update(xtick)
-        self.axes_style["ytick"].update(ytick)
-
-        # axis limit
-        self.axes_style.update({
-            **kwargs.get("limit",{}),
-            **({"xlim":xlim} if xlim else {} ),
-            **({"ylim":ylim} if ylim else {} )
-        })
+        if not second_axis:
+            self.axes_style, _ = mix_dict(
+                self.axes_style,
+                update_axes_style
+            )
+        else:
+            self.diff_second_axes_style, _ = mix_dict(
+                self.diff_second_axes_style,
+                update_axes_style
+            )
 
         # plot
         self.plotMethods.append(plot)
@@ -290,13 +348,11 @@ class Subplot(ISubplot):
         _option = {**option, **kwargs}
         self.option.append(_option)
 
-        # cycler
-        if cycler:
-            self.axes_style["cycler"] = cycler
-
         # transformer
         self.dataTransformer.append(
             transformer if type(transformer) in [list, tuple] else [transformer])
+
+        self.is_second_axes.append(second_axis)
 
         self.length = self.length+1
         return self
@@ -340,6 +396,8 @@ class Subplot(ISubplot):
             **style_kwargs}
         )
 
+        new_subplot.diff_second_axes_style = {**self.diff_second_axes_style}
+
         for i in range(len(self.data)):
                 new_subplot.add(
                     **{
@@ -347,6 +405,7 @@ class Subplot(ISubplot):
                         "dataInfo":self.dataInfo[i],
                         "index":self.index_name[i],
                         "plot": self.plotMethods[i],
+                        "second_axis" : self.is_second_axes[i],
                         **self.option[i],
                         **(option[i] if len(option) > i and type(option[i]) is dict else {}),
                     }

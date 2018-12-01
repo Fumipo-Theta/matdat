@@ -272,6 +272,7 @@ _label_kwargs = {
 }
 
 _grid_kwargs = {
+    "axis" : "both",
     "color": 'gray',
     "linestyle": ':',
     "linewidth": 1,

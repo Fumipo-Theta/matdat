@@ -154,7 +154,7 @@ figure.add_subplot(
         moc,
         x="x",
         y="y",
-        plot=[scatter]
+        plot=[scatter,plot.set_grid(axis="both")]
     )
 )
 
@@ -166,25 +166,39 @@ figure.show(mp,[a])
 ```python
 Iplot = Subplot.create(label={"fontsize":20}).register({})
 
-Iscatter_plot = Iplot.tee({"plot":[plot.scatter(s=5)], "xlabel":"x"})
+Iscatter_plot = Iplot.tee({"plot":[plot.scatter(s=5)], "xlabel":"x", "ylabel":"first y"})
 
 ```
 
 ```python
 figure = Figure()
-
-figure.add_subplot(
-    Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"})\
+subplot= Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"})\
     .register(
         data=moc,
         x="x",
         y="z",
         ylabel="second y",
-        plot=[plot.twinx(),plot.line()]
+        plot=[plot.line()],
+        second_axis=True,
+    )\
+    .register(
+        data=moc,
+        x="x",
+        y="x",
+        #xlim=[-5,25],
+        plot=[plot.line(),plot.set_grid(axis="both")],
+        second_axis=True,
     )
+
+figure.add_subplot(
+    subplot
 )
 
 figure.show(size=(8,6))
+```
+
+```python
+subplot.diff_second_axes_style
 ```
 
 ```python
