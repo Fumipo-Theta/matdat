@@ -27,16 +27,24 @@ from matdat import Figure, Subplot
 import matdat.matdat.plot as plot
 from matdat.matdat.plot import plot_action, generate_arg_and_kwags, get_value, get_subset
 from matpos import Matpos
-from func_helper import pip
+from func_helper import pip, over_args
+import func_helper.func_helper.dictionary as d
+import func_helper.func_helper.iterator as it
+
+import numpy as np
 ```
 
 ```python
 import pandas as pd
-moc = pd.DataFrame({
-    "x" : range(0,21),
-    "y" : [(x-10)*(x-10) for x in range(0,21)],
-    "z" : [(x-10) for x in range(0,21)]
-})
+moc = pd.DataFrame(
+    d.over_iterator(
+        {
+            "x" : lambda x: x,
+            "y" : lambda x: (x-10)**2,
+            "z" : lambda x: x-10
+        }
+    )(range(0,21))
+)
 moc.head()
 ```
 
@@ -49,6 +57,10 @@ figure.add_subplot(
         moc,
         x="x",
         y="y",
+        s=lambda df: df["y"].apply(lambda v:v+5),
+        c=lambda df: df["y"],
+        marker="x",
+        vmax=50,
         plot=[plot.scatter()]
     )
 )
@@ -56,12 +68,28 @@ figure.add_subplot(
 figure.add_subplot(
     Subplot.create()\
     .add(
-        moc,
+        d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
         x="x",
         y="y",
-        c="red",
+        c=lambda df: np.abs(df["y"]),
+        s=None,
+        
         grid={"axis":"both"},
-        plot=[plot.scatter(),plot.line()]
+        plot=[plot.scatter(marker="o"),plot.line()]
+    )
+)
+
+figure.add_subplot(
+    Subplot.create()\
+    .add(
+        d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
+        x="x",
+        y="y",
+        c="black",
+        s=None,
+        
+        grid={"axis":"both","linestyle":"--"},
+        plot=[plot.scatter(marker="o"),plot.line()]
     )
 )
 

@@ -117,6 +117,14 @@ def get_subset(use_index=True):
             raise TypeError("df must be pandas.DataFrame or pandas.Series.")
     return f
 
+def get_literal_or_series(input:Union[int,float,str,list,tuple,Callable[[DataSource],DataSource]], df: DataSource)->Union[int,float,str,list,tuple,DataSource]:
+
+    if callable(input):
+        return input(df)
+    else:
+        return input
+
+
 
 def get_value(default=""):
     def f(_, k, v):
@@ -273,13 +281,6 @@ _label_kwargs = {
 
 }
 
-_grid_kwargs = {
-    "axis": None,
-    "color": 'gray',
-    "linestyle": ':',
-    "linewidth": 1,
-}
-
 _line2d_kwargs = {
     "alpha": 1,
     "marker": "",
@@ -288,18 +289,27 @@ _line2d_kwargs = {
     "markerfacecolor": None,
     "markerfacecoloralt": None,
     "markersize": None,
+    "linestyle": None,
+    "linewidth": None,
+    "color": None,
+}
+
+_grid_kwargs = {
+    "axis": None,
+    **_line2d_kwargs,
+    "color": 'gray',
+    "linestyle": ':',
+    "linewidth": 1,
 }
 
 _line_kwargs = {
     **_line2d_kwargs,
-    "c": None,
     "linestyle": "-",
     "linewidth": 1,
-    "alpha": 1
 }
 
 _vhlines_kwargs = {
-    "color": None,
+    **_line2d_kwargs,
     "linestyle": "-",
     "linewidth": 1,
     "alpha": 1
@@ -337,6 +347,7 @@ _quiver_kwargs = {
 
 
 _axline_kwargs = {
+    **_line2d_kwargs,
     "alpha": 0.5,
     "color": "green",
     "linewidth": None,
