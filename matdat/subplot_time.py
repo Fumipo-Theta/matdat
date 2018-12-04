@@ -42,6 +42,7 @@ class SubplotTime(Subplot):
             "xFmt": "%m/%d",
             **style
         })
+        self.filter_x = True
 
     def plot(self, ax, test=False):
         if ("xlim" in self.axes_style and type(self.axes_style["xlim"]) is not pd.core.indexes.datetimes.DatetimeIndex):
@@ -70,8 +71,9 @@ class SubplotTime(Subplot):
                 lim = lim + [None]
 
             return lambda df: dataframe.filter_between(
-                *(pd.to_datetime(lim) if type(lim) is not pd.core.indexes.datetimes.DatetimeIndex else lim)
-            )(df, x)
+                *(pd.to_datetime(lim) if type(lim)
+                  is not pd.core.indexes.datetimes.DatetimeIndex else lim), False, False
+            )(df, x) if self.filter_x else df
 
         def setIndex():
             if type(self.index_name[i]) is not list:
@@ -102,3 +104,9 @@ class SubplotTime(Subplot):
             return data_source.set_index("x")
 
         return super().read(i)
+
+    def register(self, *arg, within_xlim=True, **kwargs):
+        return super().register(*arg, within_xlim=within_xlim, **kwargs)
+
+    def add(self, *arg, within_xlim=True, **kwargs):
+        return self.register(*arg, within_xlim=within_xlim, **kwargs)

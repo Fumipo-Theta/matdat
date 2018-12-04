@@ -1,8 +1,9 @@
 from func_helper import identity, pip
 import func_helper.func_helper.dataframe as dataframe
-import matdat.matdat.plot as plot
+import func_helper.func_helper.dictionary as dictionary
+from . import plot
+from .get_path import getFileList
 from .i_subplot import ISubplot
-
 
 
 def arg_filter(ref_keys):
@@ -59,6 +60,7 @@ class Subplot(ISubplot):
         self.plotMethods = []
         self.option = []
         self.is_second_axes = []
+        self.filter_x = False
         self.title = None
 
         default_axes_style = {
@@ -236,8 +238,8 @@ class Subplot(ISubplot):
                 lim = lim + [None]
 
             return dataframe.filter_between(
-                *lim
-            )(df, x)
+                *lim,False,False
+            )(df,x) if self.filter_x else df
 
         return [filterX]
 
@@ -251,7 +253,7 @@ class Subplot(ISubplot):
         "ailias of register()"
         return self.register(*arg, **kwargs)
 
-    def register(self, data,
+    def register(self, data={},
                  dataInfo={},
                  plot=[],
                  option={},
@@ -267,6 +269,7 @@ class Subplot(ISubplot):
                  grid={},
                  cycler=None,
                  transformer=identity,
+                 within_xlim=False,
                  second_axis=False,
                  **_kwargs):
         """
@@ -297,37 +300,39 @@ class Subplot(ISubplot):
             "index", []) if "index" not in _dataInfo else _dataInfo.pop("index"))
         self.dataInfo.append(_dataInfo)
 
-        update_axes_style = {
-            "label": {
-                **(kwargs.pop("label") if "label" in kwargs else {}),
-                **({"xlabel": xlabel} if xlabel else {}),
-                **({"ylabel": ylabel} if ylabel else {})
+        update_axes_style = dictionary.mix(
+            {
+                "label": dictionary.mix(
+                    kwargs.pop("label") if "label" in kwargs else {},
+                    {"xlabel": xlabel} if xlabel else {},
+                    {"ylabel": ylabel} if ylabel else {}
+                ),
+                "scale": {
+                    "xscale": xscale,
+                    "yscale": yscale
+                },
+                "tick": dictionary.mix(
+                    tick,
+                    arg_filter([
+                        "labelbottom",
+                        "labeltop",
+                        "labelleft",
+                        "labelright",
+                        "bottom",
+                        "top",
+                        "left",
+                        "right"
+                    ])(kwargs)
+                ),
+                "xtick": xtick,
+                "ytick": ytick,
+                "grid": grid,
             },
-            "scale": {
-                "xscale": xscale,
-                "yscale": yscale
-            },
-            "tick": {
-                **tick,
-                **arg_filter([
-                    "labelbottom",
-                    "labeltop",
-                    "labelleft",
-                    "labelright",
-                    "bottom",
-                    "top",
-                    "left",
-                    "right"
-                ])(kwargs)
-            },
-            "xtick": xtick,
-            "ytick": ytick,
-            "grid": grid,
-            **kwargs.get("limit", {}),
-            **({"xlim": xlim} if xlim is not None else {}),
-            **({"ylim": ylim} if ylim is not None else {}),
-            **({"cycler": cycler} if cycler else {})
-        }
+            kwargs.get("limit", {}),
+            {"xlim": xlim} if xlim is not None else {},
+            {"ylim": ylim} if ylim is not None else {},
+            {"cycler": cycler} if cycler else {}
+        )
 
         if not second_axis:
             self.axes_style, _ = mix_dict(
@@ -344,13 +349,14 @@ class Subplot(ISubplot):
         self.plotMethods.append(plot)
 
         # plot option
-        _option = {**option, **kwargs}
+        _option = dictionary.mix(option, kwargs)
         self.option.append(_option)
 
         # transformer
         self.dataTransformer.append(
             transformer if type(transformer) in [list, tuple] else [transformer])
 
+        self.filter_x = within_xlim
         self.is_second_axes.append(second_axis)
 
         self.length = self.length+1
@@ -391,23 +397,26 @@ class Subplot(ISubplot):
         """
 
         new_subplot = Subplot.create(
-            **{**self.axes_style,
-               **style_kwargs}
+            **mix_dict(self.axes_style,
+                       style_kwargs)[0]
         )
 
         new_subplot.diff_second_axes_style = {**self.diff_second_axes_style}
 
-        for i in range(len(self.data)):
+        for i in range(self.length):
             new_subplot.add(
-                **{
-                    "data": self.data[i],
-                    "dataInfo": self.dataInfo[i],
-                    "index": self.index_name[i],
-                    "plot": self.plotMethods[i],
-                    "second_axis": self.is_second_axes[i],
-                    **self.option[i],
-                    **(option[i] if len(option) > i and type(option[i]) is dict else {}),
-                }
+                **dictionary.mix(
+                    {
+                        "data": self.data[i],
+                        "dataInfo": self.dataInfo[i],
+                        "index": self.index_name[i],
+                        "plot": self.plotMethods[i],
+                        "second_axis": self.is_second_axes[i],
+                    },
+                    self.option[i],
+                    option[i] if len(option) > i and type(
+                        option[i]) is dict else {},
+                )
             )
 
         return new_subplot
@@ -416,18 +425,18 @@ class Subplot(ISubplot):
         self.preset = preset
         return self
 
-    def usePreset(self, name, fileSelector=[], plot=[], plotOverwrite=[], option={}, **arg):
+    def usePreset(self, name, fileSelector=[], plot=[], plotOverwrite=[], option={}, **kwargs):
         preset = self.preset[name]
         return self.register(
             data=getFileList(*fileSelector)(preset["directory"]),
             dataInfo=preset["dataInfo"],
             plot=[*preset["plot"], *plot] if not plotOverwrite else plotOverwrite,
 
-            **{
-                **preset["option"],
-                **option,
-                **arg
-            }
+            **dictionary.mix(
+                preset["option"],
+                option,
+                kwargs
+            )
         )
 
     @staticmethod

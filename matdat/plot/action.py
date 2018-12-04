@@ -309,7 +309,7 @@ _line_kwargs = {
 }
 
 _vhlines_kwargs = {
-    **_line2d_kwargs,
+    "color": None,
     "linestyle": "-",
     "linewidth": 1,
     "alpha": 1

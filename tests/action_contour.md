@@ -52,16 +52,18 @@ moc.head()
 figure = Figure()
 
 figure.add_subplot(
-    Subplot.create()\
+    Subplot.create(tick={"labelsize":20})\
     .add(
         moc,
         x="x",
+        xlim=[0.1,5.5],
+        within_xlim=False,
         y="y",
         s=lambda df: df["y"].apply(lambda v:v+5),
         c=lambda df: df["y"],
         marker="x",
         vmax=50,
-        plot=[plot.scatter()]
+        plot=[plot.scatter(),plot.line()]
     )
 )
 
@@ -174,13 +176,11 @@ axs[1].legend(["${(x-10)}^2$","$x-10$"])
 ```python
 abstract_subplot_xyz = Subplot.create()\
 .register(
-    data={},
     x="x",
     y="y",
     plot=[plot.scatter(),plot.line()]
 )\
 .register(
-    data={},
     x="x",
     y="z",
     xlabel="x",
@@ -220,7 +220,7 @@ figure.show(mp,[a])
 ```
 
 ```python
-Iplot = Subplot.create(label={"fontsize":20}).register({})
+Iplot = Subplot.create(label={"fontsize":24}).register({})
 
 Iscatter_plot = Iplot.tee({"plot":[plot.scatter(s=5)], "xlabel":"x", "ylabel":"first y"})
 
@@ -228,7 +228,7 @@ Iscatter_plot = Iplot.tee({"plot":[plot.scatter(s=5)], "xlabel":"x", "ylabel":"f
 
 ```python
 figure = Figure()
-subplot= Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"})\
+subplot= Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"},label={"color":"red"})\
     .register(
         data=moc,
         x="x",
@@ -245,6 +245,7 @@ subplot= Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"})\
         grid={"axis":"both"},
         plot=[plot.line(),],
         second_axis=True,
+        label={"color":"blue"}
     )
 
 figure.add_subplot(
