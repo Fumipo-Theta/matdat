@@ -68,11 +68,14 @@ class SubplotTime(Subplot):
             if len(lim) is 0 or lim is None:
                 return identity
             elif len(lim) is 1:
-                lim = lim + [None]
+                lower = lim[0]
+                upper = None
+            else:
+                lower, upper, *_ = lim
 
             return lambda df: dataframe.filter_between(
-                *(pd.to_datetime(lim) if type(lim)
-                  is not pd.core.indexes.datetimes.DatetimeIndex else lim), False, False
+                *(pd.to_datetime([lower, upper]) if type(lower)
+                  is not pd.core.indexes.datetimes.DatetimeIndex else [lower, upper]), False, False
             )(df, x) if self.filter_x else df
 
         def setIndex():

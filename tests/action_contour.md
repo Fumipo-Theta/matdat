@@ -56,8 +56,6 @@ figure.add_subplot(
     .add(
         moc,
         x="x",
-        xlim=[0.1,5.5],
-        within_xlim=False,
         y="y",
         s=lambda df: df["y"].apply(lambda v:v+5),
         c=lambda df: df["y"],
@@ -67,8 +65,7 @@ figure.add_subplot(
     )
 )
 
-figure.add_subplot(
-    Subplot.create()\
+sin_plot = Subplot.create()\
     .add(
         d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
         x="x",
@@ -79,21 +76,10 @@ figure.add_subplot(
         grid={"axis":"both"},
         plot=[plot.scatter(marker="o"),plot.line()]
     )
-)
 
-figure.add_subplot(
-    Subplot.create()\
-    .add(
-        d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
-        x="x",
-        y="y",
-        c="black",
-        s=None,
-        
-        grid={"axis":"both","linestyle":"--"},
-        plot=[plot.scatter(marker="o"),plot.line()]
-    )
-)
+figure.add_subplot(sin_plot)
+figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05])))
+figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)))
 
 figure.show(size=(8,8),column=2)
 ```

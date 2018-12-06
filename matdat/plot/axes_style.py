@@ -2,6 +2,7 @@ from .action import default_kwargs, plot_action, generate_arg_and_kwags, get_val
 from .action import DataSource, AxPlot
 from typing import Optional
 import numpy as np
+import pandas as pd
 
 
 def set_cycler(cycler=None):
@@ -36,10 +37,17 @@ def _get_lim(df: DataSource, lim_list: Optional[list]):
 
 
 def _get_lim_parameter(df: DataSource, lim_list: Optional[list]):
-    if lim_list is not None and len(lim_list) >= 2:
+    if lim_list is None:
+        return None
+    elif len(lim_list) >= 2:
         return lim_list
+    elif len(lim_list) is 1:
+        return [lim_list[0], None]
     else:
         return None
+
+
+_invalid_range = [None, pd.NaT, np.nan]
 
 
 def _xlim_setter(df: DataSource, x, *arg, xlim=None, **kwargs)->AxPlot:
@@ -54,8 +62,8 @@ def _xlim_setter(df: DataSource, x, *arg, xlim=None, **kwargs)->AxPlot:
         if lim is not None:
             now_lim = ax.get_xlim()
             next_lim = [None, None]
-            next_lim[0] = lim[0] if lim[0] is not None else now_lim[0]
-            next_lim[1] = lim[1] if lim[1] is not None else now_lim[1]
+            next_lim[0] = lim[0] if lim[0] not in _invalid_range else now_lim[0]
+            next_lim[1] = lim[1] if lim[1] not in _invalid_range else now_lim[1]
             ax.set_xlim(next_lim)
         return ax
     return plot
@@ -73,8 +81,8 @@ def _ylim_setter(df: DataSource, y, *arg, ylim=None, **kwargs)->AxPlot:
         if lim is not None:
             now_lim = ax.get_ylim()
             next_lim = [None, None]
-            next_lim[0] = lim[0] if lim[0] is not None else now_lim[0]
-            next_lim[1] = lim[1] if lim[1] is not None else now_lim[1]
+            next_lim[0] = lim[0] if lim[0] not in _invalid_range else now_lim[0]
+            next_lim[1] = lim[1] if lim[1] not in _invalid_range else now_lim[1]
             ax.set_ylim(next_lim)
         return ax
     return plot

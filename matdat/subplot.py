@@ -82,17 +82,18 @@ class Subplot(ISubplot):
             },
             "xtick": {},
             "ytick": {},
-            "grid": {}
+            "grid": {},
+            "style":{}
         }
 
         _style, _ = mix_dict(style_dict[0], style) if len(
             style_dict) > 0 else mix_dict(style, {})
         self.axes_style, rest_style = mix_dict(
             default_axes_style, _style, True)
-        self.axes_style["style"] = {
+        self.axes_style["style"].update({
             "xTickRotation": 0,
             **rest_style
-        }
+        })
 
         self.diff_second_axes_style = {
             "title": {},
@@ -219,26 +220,26 @@ class Subplot(ISubplot):
         if self.isTest():
             transformers = None
         else:
-            transformers = [
-
-                *self.default_transformers(i),
-                *self.dataTransformer[i]
-            ]
+            transformers = self.default_transformers(i)\
+                + self.dataTransformer[i]
 
         return loader.read(self.data[i], meta=self.dataInfo[i],
                            transformers=transformers)
 
-    def default_transformers(self, i):
+    def default_transformers(self, i)->list:
         def filterX(df):
             x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim")
             if len(lim) is 0 or lim is None:
                 return df
             elif len(lim) is 1:
-                lim = lim + [None]
+                lower = lim[0]
+                upper = None
+            else:
+                lower, upper, *_ = lim
 
             return dataframe.filter_between(
-                *lim,False,False
+                lower,upper,False,False
             )(df,x) if self.filter_x else df
 
         return [filterX]
@@ -396,7 +397,7 @@ class Subplot(ISubplot):
             xFmt
         """
 
-        new_subplot = Subplot.create(
+        new_subplot = self.create(
             **mix_dict(self.axes_style,
                        style_kwargs)[0]
         )
