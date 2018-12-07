@@ -15,6 +15,6 @@ def _line_plotter(df: DataSource, x: Selector, y: Selector, *arg, **kwargs)->AxP
 def line(**presetting):
     return plot_action(
         _line_plotter,
-        ["x", "y"],
+        ["data", "x", "y"],
         default_kwargs.get("line")
     )(**presetting)

@@ -49,15 +49,6 @@ moc.head()
 ```
 
 ```python
-print(moc.index.shape)
-print(moc[["x"]].shape)
-print(moc[["x","y"]].shape)
-
-for c in moc.loc[:,["x"]].iteritems():
-    print(c)
-```
-
-```python
 figure = Figure()
 
 """
@@ -101,7 +92,7 @@ subplot.add(
 figure.add_subplot(
     Subplot.create(tick={"labelsize":20})\
     .add(
-        moc,
+        (moc,d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1))),
         x="x",
         y=lambda df: df["x"] + df["y"],
         s=lambda df: df["y"] + 5,

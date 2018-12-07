@@ -28,6 +28,6 @@ def _scatter_plotter(
 def scatter(**presetting):
     return plot_action(
         _scatter_plotter,
-        ["x", "y"],
+        ["data", "x", "y"],
         {**default_kwargs.get("scatter")}
     )(**presetting)

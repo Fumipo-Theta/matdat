@@ -12,8 +12,10 @@ Ax = plt.subplot
 AxPlot = Callable[[Ax], Ax]
 PlotAction = Callable[..., AxPlot]
 Selector = Optional[Union[str, Callable[[DataSource], DataSource]]]
-LiteralOrSequence = Optional[Union[int,float,str,list,tuple,DataSource]]
-LiteralOrSequencer = Optional[Union[LiteralOrSequence, Callable[[DataSource], DataSource]]]
+LiteralOrSequence = Optional[Union[int, float, str, list, tuple, DataSource]]
+LiteralOrSequencer = Optional[Union[LiteralOrSequence,
+                                    Callable[[DataSource], DataSource]]]
+
 
 def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
     """
@@ -51,12 +53,15 @@ def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
                 }
             kwargs: parameters corresponding to items of option.
             """
+            dfs = tuple([as_DataFrame(d) for d in data_source]) if type(
+                data_source) is tuple else as_DataFrame(data_source)
+
             list_of_entry = to_flatlist(
-                {**default_kwargs, **setting, **setting_kwargs, **option, **option_kwargs})
+                {"data": dfs, **default_kwargs, **setting, **setting_kwargs, **option, **option_kwargs})
             # print(list_of_entry)
 
-            arg_and_kwarg=generate_arg_and_kwags()(
-                as_DataFrame(data_source),
+            arg_and_kwarg = generate_arg_and_kwags()(
+                # as_DataFrame(data_source),
                 list(map(arg_filter, list_of_entry)),
                 list(map(kwarg_filter, list_of_entry))
             )
@@ -82,7 +87,7 @@ def generate_arg_and_kwags():
     Setup positional arguments and keyword arguments for plotter.
     """
     def gen_func(
-        df: DataSource,
+        # df: DataSource,
         option: List[list],
         style: List[dict]
     )->List[Tuple[list, dict]]:
@@ -92,7 +97,8 @@ def generate_arg_and_kwags():
 
         arg_and_kwarg = []
         for o, s in zip(option, style):
-            arg = [df, *o]
+            #arg = [df, *o]
+            arg = [*o]
             kwargs = s
             arg_and_kwarg.append((arg, kwargs))
         return arg_and_kwarg
@@ -100,11 +106,11 @@ def generate_arg_and_kwags():
 
 
 def get_subset(use_index=True)\
-        ->Callable[[DataSource,Selector], DataSource]:
+        ->Callable[[DataSource, Selector], DataSource]:
     """
 
     """
-    def f(df: DataSource, k:Selector)->DataSource:
+    def f(df: DataSource, k: Selector)->DataSource:
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
@@ -128,7 +134,7 @@ def get_subset(use_index=True)\
 
         elif type(df) is dict:
             if type(k) is str:
-                return df.get(k,[])
+                return df.get(k, [])
             elif callable(k):
                 return k(df)
             else:
@@ -138,13 +144,13 @@ def get_subset(use_index=True)\
             raise TypeError("df must be pandas.DataFrame or pandas.Series.")
     return f
 
-def get_literal_or_series(input:LiteralOrSequencer, df: DataSource)->LiteralOrSequence:
+
+def get_literal_or_series(input: LiteralOrSequencer, df: DataSource)->LiteralOrSequence:
 
     if callable(input):
         return input(df)
     else:
         return input
-
 
 
 def get_value(default=""):
@@ -315,7 +321,7 @@ _line2d_kwargs = {
     "color": None,
 }
 
-_grid_kwargs:dict = {
+_grid_kwargs: dict = {
     "axis": None,
     **_line2d_kwargs,
     "color": 'gray',
