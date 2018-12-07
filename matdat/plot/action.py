@@ -1,16 +1,19 @@
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms
 from typing import Union, List, Tuple, TypeVar, Callable, NewType, Optional
 from func_helper import pip
 import func_helper.func_helper.iterator as it
 
-DataSource = Union[dict, pd.DataFrame, np.ndarray]
-Ax = NewType("Ax", [plt.subplot])
+DataSource = Union[dict, pd.DataFrame, pd.Series]
+Ax = plt.subplot
 AxPlot = Callable[[Ax], Ax]
 PlotAction = Callable[..., AxPlot]
-
+Selector = Optional[Union[str, Callable[[DataSource], DataSource]]]
+LiteralOrSequence = Optional[Union[int,float,str,list,tuple,DataSource]]
+LiteralOrSequencer = Optional[Union[LiteralOrSequence, Callable[[DataSource], DataSource]]]
 
 def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
     """
@@ -33,7 +36,7 @@ def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
     kwarg_filter = filter_dict(default_kwargs.keys())
 
     def presetting(setting={}, **setting_kwargs):
-        def set_data(data_source: DataSource, option: dict={}, **kwargs):
+        def set_data(data_source: DataSource, option: dict={}, **option_kwargs):
             """
             Parameters
             ----------
@@ -49,10 +52,10 @@ def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
             kwargs: parameters corresponding to items of option.
             """
             list_of_entry = to_flatlist(
-                {**default_kwargs, **setting, **setting_kwargs, **option, **kwargs})
+                {**default_kwargs, **setting, **setting_kwargs, **option, **option_kwargs})
             # print(list_of_entry)
 
-            arg_and_kwarg = generate_arg_and_kwags()(
+            arg_and_kwarg=generate_arg_and_kwags()(
                 as_DataFrame(data_source),
                 list(map(arg_filter, list_of_entry)),
                 list(map(kwarg_filter, list_of_entry))
@@ -68,7 +71,7 @@ def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
 def as_DataFrame(d: DataSource) -> pd.DataFrame:
     if type(d) in [pd.DataFrame, pd.Series]:
         return d
-    elif type(d) in [list, dict, np.ndarray]:
+    elif type(d) in [list, dict]:
         return pd.DataFrame(d)
     else:
         raise TypeError(f"{type(d)} is not available for data source.")
@@ -96,20 +99,38 @@ def generate_arg_and_kwags():
     return gen_func
 
 
-def get_subset(use_index=True):
-    def f(df: Union[pd.DataFrame, pd.Series], k):
+def get_subset(use_index=True)\
+        ->Callable[[DataSource,Selector], DataSource]:
+    """
+
+    """
+    def f(df: DataSource, k:Selector)->DataSource:
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
-        if type(df) in [pd.DataFrame]:
-            if type(k) is not list:
-                return df[k] if k not in ["index", None] else df.index
+        if type(df) is pd.DataFrame:
+            if k in ["index", None]:
+                return df.index
+            elif type(k) is str:
+                return df[k]
+            elif callable(k):
+                return k(df)
             else:
                 return df[k]
 
         elif type(df) is pd.Series:
             if k in ["index", None]:
                 return df.index
+            elif callable(k):
+                return k(df)
+            else:
+                return df
+
+        elif type(df) is dict:
+            if type(k) is str:
+                return df.get(k,[])
+            elif callable(k):
+                return k(df)
             else:
                 return df
 
@@ -117,7 +138,7 @@ def get_subset(use_index=True):
             raise TypeError("df must be pandas.DataFrame or pandas.Series.")
     return f
 
-def get_literal_or_series(input:Union[int,float,str,list,tuple,Callable[[DataSource],DataSource]], df: DataSource)->Union[int,float,str,list,tuple,DataSource]:
+def get_literal_or_series(input:LiteralOrSequencer, df: DataSource)->LiteralOrSequence:
 
     if callable(input):
         return input(df)
@@ -294,7 +315,7 @@ _line2d_kwargs = {
     "color": None,
 }
 
-_grid_kwargs = {
+_grid_kwargs:dict = {
     "axis": None,
     **_line2d_kwargs,
     "color": 'gray',

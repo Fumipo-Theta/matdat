@@ -1,8 +1,8 @@
 from .action import default_kwargs, plot_action, generate_arg_and_kwags, get_value, get_subset
-from .action import DataSource, AxPlot
+from .action import DataSource, AxPlot, Selector
 
 
-def _line_plotter(df: DataSource, x, y, *arg, **kwargs)->AxPlot:
+def _line_plotter(df: DataSource, x: Selector, y: Selector, *arg, **kwargs)->AxPlot:
     _x = get_subset()(df, x)
     _y = get_subset()(df, y)
 
