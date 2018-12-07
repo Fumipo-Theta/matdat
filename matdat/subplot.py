@@ -83,7 +83,7 @@ class Subplot(ISubplot):
             "xtick": {},
             "ytick": {},
             "grid": {},
-            "style":{}
+            "style": {}
         }
 
         _style, _ = mix_dict(style_dict[0], style) if len(
@@ -239,8 +239,8 @@ class Subplot(ISubplot):
                 lower, upper, *_ = lim
 
             return dataframe.filter_between(
-                lower,upper,False,False
-            )(df,x) if self.filter_x else df
+                lower, upper, False, False
+            )(df, x) if self.filter_x else df
 
         return [filterX]
 

@@ -49,15 +49,62 @@ moc.head()
 ```
 
 ```python
+print(moc.index.shape)
+print(moc[["x"]].shape)
+print(moc[["x","y"]].shape)
+
+for c in moc.loc[:,["x"]].iteritems():
+    print(c)
+```
+
+```python
 figure = Figure()
+
+"""
+subplot.add においてタプルで渡されたパラメータは, 
+タプルの各要素を用いて複数プロットすることと等価である.
+複数のパラメータがタプルの場合, 最長の長さのものの要素の数だけプロットされる.
+最長でないタプルのパラメータについては, その最後の要素が繰り返し用いられる.
+
+subplot.add(
+    data,
+    x="x",
+    y=("x", "y", "z"),
+    c=("black","red"),
+    plot=[plot.scatter(s=(1,2,2))]
+)
+は次と等価
+subplot.add(
+    data,
+    x="x",
+    y="x",
+    c="black",
+    plot=[plot.scatter(s=1)]
+)\
+.add(
+    data,
+    x="x",
+    y="y",
+    c="red",
+    plot=[plot.scatter(s=2)]
+)\
+.add(
+    data,
+    x="x",
+    y="z",
+    c="red",
+    plot=[plot.scatter(s=2)]
+)
+
+"""
 
 figure.add_subplot(
     Subplot.create(tick={"labelsize":20})\
     .add(
         moc,
         x="x",
-        y="y",
-        s=lambda df: df["y"].apply(lambda v:v+5),
+        y=lambda df: df["x"] + df["y"],
+        s=lambda df: df["y"] + 5,
         c=lambda df: df["y"],
         marker="x",
         vmax=50,
@@ -69,8 +116,8 @@ sin_plot = Subplot.create()\
     .add(
         d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
         x="x",
-        y="y",
-        c=lambda df: np.abs(df["y"]),
+        y=("x","y"),
+        c=("black",lambda df: np.abs(df["y"])),
         s=None,
         
         grid={"axis":"both"},
@@ -250,7 +297,7 @@ import matplotlib.pyplot as plt
 ```
 
 ```python
-plt.plot?
+type(plt.subplot())
 ```
 
 ```python
