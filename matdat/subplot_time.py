@@ -60,7 +60,7 @@ class SubplotTime(Subplot):
             return ax
         return f
 
-    def default_transformers(self, i):
+    def default_transformers(self, i)->tuple:
 
         def filterX():
             x = self.option[i].get("x", None)
@@ -78,20 +78,23 @@ class SubplotTime(Subplot):
                   is not pd.core.indexes.datetimes.DatetimeIndex else [lower, upper]), False, False
             )(df, x) if self.filter_x else df
 
-        def setIndex():
-            if type(self.index_name[i]) is not list:
+        def setIndex(index_name):
+            if type(index_name) is not list:
                 return dataframe.setTimeSeriesIndex(
-                    self.index_name[i]
+                    index_name
                 )
 
-            if len(self.index_name[i]) is 0:
+            if len(index_name) is 0:
                 return identity
             else:
                 return dataframe.setTimeSeriesIndex(
-                    *self.index_name[i]
+                    *index_name
                 )
 
-        return [setIndex(), filterX()]
+        index_names = self.index_name[i] if type(
+            self.index_name[i]) is tuple else (self.index_name[i],)
+
+        return tuple([setIndex(index_name), filterX()] for index_name in index_names)
 
     def read(self, i):
 

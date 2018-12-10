@@ -3,6 +3,9 @@ from .action import DataSource, AxPlot
 
 
 def _vlines_plotter(df: DataSource, x, y, *arg, lower=0, **kwargs)->AxPlot:
+    if len(df) is 0:
+        return lambda ax: ax
+
     _x = get_subset()(df, x)
     _y = get_subset()(df, y)
 

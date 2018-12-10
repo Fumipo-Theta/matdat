@@ -19,6 +19,9 @@ def _factor_bar_plotter(
     legend={},
         **kwargs):
 
+    if len(df) is 0:
+        return lambda ax: ax
+
     if type(y) is list:
         return _bar_plotter(df, x, y, agg, *arg, xfactor=xfactor, norm=norm, vert=vert, legend=legend, **kwargs)
 

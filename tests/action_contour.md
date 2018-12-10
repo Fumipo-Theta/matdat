@@ -49,6 +49,15 @@ moc.head()
 ```
 
 ```python
+print(moc.index.shape)
+print(moc[["x"]].shape)
+print(moc[["x","y"]].shape)
+
+for c in moc.loc[:,["x"]].iteritems():
+    print(c)
+```
+
+```python
 figure = Figure()
 
 """
@@ -92,20 +101,23 @@ subplot.add(
 figure.add_subplot(
     Subplot.create(tick={"labelsize":20})\
     .add(
-        (moc,d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1))),
+        (
+            moc,
+            d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1))
+        ),
         x="x",
-        y=lambda df: df["x"] + df["y"],
+        y=(lambda df: df["y"],"y"),
         s=lambda df: df["y"] + 5,
         c=lambda df: df["y"],
-        marker="x",
-        vmax=50,
-        plot=[plot.scatter(),plot.line()]
+        marker="o",
+        vmax=(50,None),
+        plot=[plot.scatter()]
     )
 )
 
 sin_plot = Subplot.create()\
     .add(
-        d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
+        data=d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
         x="x",
         y=("x","y"),
         c=("black",lambda df: np.abs(df["y"])),
@@ -118,6 +130,33 @@ sin_plot = Subplot.create()\
 figure.add_subplot(sin_plot)
 figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05])))
 figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)))
+
+figure.show(size=(8,8),column=2)
+```
+
+```python
+# Plotting empty data is skipped
+
+figure = Figure()
+
+
+figure.add_subplot(
+    Subplot.create(tick={"labelsize":20})\
+    .add(
+        (
+           moc,
+           []
+        ),
+        x="x",
+        y=(lambda df: df["y"],"y"),
+        s=lambda df: df["y"] + 5,
+        c=lambda df: df["y"],
+        marker="o",
+        vmax=(50,None),
+        plot=[plot.scatter()]
+    )
+)
+
 
 figure.show(size=(8,8),column=2)
 ```

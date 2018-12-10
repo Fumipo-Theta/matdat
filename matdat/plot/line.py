@@ -3,6 +3,10 @@ from .action import DataSource, AxPlot, Selector
 
 
 def _line_plotter(df: DataSource, x: Selector, y: Selector, *arg, **kwargs)->AxPlot:
+
+    if len(df) is 0:
+        return lambda ax: ax
+
     _x = get_subset()(df, x)
     _y = get_subset()(df, y)
 
@@ -15,6 +19,6 @@ def _line_plotter(df: DataSource, x: Selector, y: Selector, *arg, **kwargs)->AxP
 def line(**presetting):
     return plot_action(
         _line_plotter,
-        ["data", "x", "y"],
+        ["x", "y"],
         default_kwargs.get("line")
     )(**presetting)

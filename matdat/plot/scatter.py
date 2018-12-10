@@ -3,7 +3,7 @@ from .action import DataSource, AxPlot, Selector, LiteralOrSequencer
 
 
 def _scatter_plotter(
-    df: DataSource,
+    data: DataSource,
     x: Selector,
     y: Selector,
     *arg,
@@ -13,11 +13,14 @@ def _scatter_plotter(
     **kwargs
 )->AxPlot:
 
-    _x = get_subset()(df, x)
-    _y = get_subset()(df, y)
+    if len(data) is 0:
+        return lambda ax: ax
 
-    colors = get_literal_or_series(c, df)
-    sizes = get_literal_or_series(s, df)
+    _x = get_subset()(data, x)
+    _y = get_subset()(data, y)
+
+    colors = get_literal_or_series(c, data)
+    sizes = get_literal_or_series(s, data)
 
     def plot(ax):
         ax.scatter(_x, _y, s=sizes, c=colors, **kwargs)
@@ -28,6 +31,6 @@ def _scatter_plotter(
 def scatter(**presetting):
     return plot_action(
         _scatter_plotter,
-        ["data", "x", "y"],
+        ["x", "y"],
         {**default_kwargs.get("scatter")}
     )(**presetting)

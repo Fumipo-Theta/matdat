@@ -1,4 +1,5 @@
 from func_helper import identity, pip
+import func_helper.func_helper.iterator as it
 import func_helper.func_helper.dataframe as dataframe
 import func_helper.func_helper.dictionary as dictionary
 from . import plot
@@ -201,32 +202,57 @@ class Subplot(ISubplot):
         return plotter
 
     def __getPlotAction(self, i):
-        df = self.read(i)
+        dfs:tuple = self.read(i)
         opt = self.get_option(i)
 
-        if len(df) == 0:
+        if len(dfs) == 0 or all(map(lambda df: len(df) is 0, dfs)):
             return Subplot.__noDataAx
 
         return lambda ax: pip(
-            *[f(df, opt) for f in self.plotMethods[i]],
+            *[f(dfs, opt) for f in self.plotMethods[i]],
         )(ax)
 
-    def read(self, i):
+    def read(self, i)->tuple:
         """
         Indipendent from type of data source.
         """
-        loader = ISubplot.IDataLoader(self.data[i], self.isTest())
+        data:tuple = self.data[i] if type(self.data[i]) is tuple else (self.data[i],)
 
-        if self.isTest():
-            transformers = None
-        else:
-            transformers = self.default_transformers(i)\
-                + self.dataTransformer[i]
+        meta:tuple = self.dataInfo[i] if type(self.dataInfo[i]) is tuple else (self.dataInfo[i],)
 
-        return loader.read(self.data[i], meta=self.dataInfo[i],
-                           transformers=transformers)
+        default_transformers:tuple = self.default_transformers(i)
 
-    def default_transformers(self, i)->list:
+        data_transformers:tuple = self.dataTransformer[i] if type(self.dataTransformer[i]) is tuple else (self.dataTransformer[i],)
+
+        max_len = pip(
+            it.mapping(len),
+            it.reducing(lambda acc,e: acc if acc > e else e)(0)
+        )([data,meta,default_transformers,data_transformers])
+
+        def get_with_duplicate(it,i,default=None):
+            if len(it) is 0:
+                return default
+            return it[i] if len(it) > i else it[-1]
+
+        dfs = []
+        for j in range(max_len):
+            d = get_with_duplicate(data,j,{})
+            m = get_with_duplicate(meta,j,{})
+            def_trans=get_with_duplicate(default_transformers,j,[])
+            trans = get_with_duplicate(data_transformers,j,[])
+
+            loader = ISubplot.IDataLoader(d, self.isTest())
+
+            if self.isTest():
+                transformers = None
+            else:
+                transformers = def_trans + trans
+
+            dfs.append(loader.read(d, meta=m,
+                             transformers=transformers))
+        return tuple(dfs)
+
+    def default_transformers(self, i)->tuple:
         def filterX(df):
             x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim")
@@ -242,7 +268,9 @@ class Subplot(ISubplot):
                 lower, upper, False, False
             )(df, x) if self.filter_x else df
 
-        return [filterX]
+        data_len = len(self.data[i]) if type(self.data[i]) is tuple else 1
+
+        return tuple([filterX] for i in range(data_len))
 
     def get_option(self, i):
         if self.isTest():
@@ -256,6 +284,7 @@ class Subplot(ISubplot):
 
     def register(self, data={},
                  dataInfo={},
+                 index=None,
                  plot=[],
                  option={},
                  xlim=None,
@@ -290,16 +319,9 @@ class Subplot(ISubplot):
         kwargs = {**_kwargs}
         self.data.append(data)
 
-        # kwargs in read data source
-        _dataInfo = {**dataInfo}
-        for kw in ["header"]:
-            if kw in kwargs:
-                _dataInfo[kw] = kwargs.pop(kw)
-
         # index name of data source
-        self.index_name.append(kwargs.get(
-            "index", []) if "index" not in _dataInfo else _dataInfo.pop("index"))
-        self.dataInfo.append(_dataInfo)
+        self.index_name.append(index)
+        self.dataInfo.append(dataInfo)
 
         update_axes_style = dictionary.mix(
             {
@@ -428,9 +450,12 @@ class Subplot(ISubplot):
 
     def usePreset(self, name, fileSelector=[], plot=[], plotOverwrite=[], option={}, **kwargs):
         preset = self.preset[name]
+
         return self.register(
-            data=getFileList(*fileSelector)(preset["directory"]),
+            data=tuple(getFileList(*fileSelector)(directory)
+                       for directory in preset["directory"]) if type(preset["directory"]) is tuple else getFileList(*fileSelector)(preset["directory"]),
             dataInfo=preset["dataInfo"],
+            index=preset.get("index",None),
             plot=[*preset["plot"], *plot] if not plotOverwrite else plotOverwrite,
 
             **dictionary.mix(
