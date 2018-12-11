@@ -3,11 +3,19 @@ import func_helper.func_helper.iterator as it
 import func_helper.func_helper.dataframe as dataframe
 import func_helper.func_helper.dictionary as dictionary
 from . import plot
-from .get_path import getFileList
+from .get_path import getFileList, PathList
 from .i_subplot import ISubplot
+import pandas as pd
+from typing import List, Tuple, Callable, Union, Optional
+
+DataSource = Union[dict, pd.DataFrame, pd.Series, PathList]
+Ax = plot.Ax
+AxPlot = plot.AxPlot
+PlotAction = Callable[..., AxPlot]
+DataTransformer = Callable[[pd.DataFrame], pd.DataFrame]
 
 
-def arg_filter(ref_keys):
+def arg_filter(ref_keys: list):
     return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
 
 
@@ -124,7 +132,7 @@ class Subplot(ISubplot):
             ax.set_title(self.title, **self.axes_style.get("title", {}))
         return ax
 
-    def plot(self, ax, test=False):
+    def plot(self, ax, test=False)->Union[Ax, Tuple[Ax, Ax]]:
         """
         pyplot.axsubplot -> pyplot.axsubplot
 
@@ -182,8 +190,8 @@ class Subplot(ISubplot):
             return ax1
 
     @staticmethod
-    def Iplotter():
-        def plotter(actions, style):
+    def Iplotter()->Callable[[List[PlotAction, dict], AxPlot]]:
+        def plotter(actions: List[PlotAction], style: dict)->AxPlot:
             return pip(
                 plot.set_cycler(style["cycler"]),
                 *actions,
@@ -201,8 +209,8 @@ class Subplot(ISubplot):
             )
         return plotter
 
-    def __getPlotAction(self, i):
-        dfs:tuple = self.read(i)
+    def __getPlotAction(self, i: int)->AxPlot:
+        dfs: tuple = self.read(i)
         opt = self.get_option(i)
 
         if len(dfs) == 0 or all(map(lambda df: len(df) is 0, dfs)):
@@ -212,34 +220,37 @@ class Subplot(ISubplot):
             *[f(dfs, opt) for f in self.plotMethods[i]],
         )(ax)
 
-    def read(self, i)->tuple:
+    def read(self, i: int)->Tuple[pd.DataFrame]:
         """
         Indipendent from type of data source.
         """
-        data:tuple = self.data[i] if type(self.data[i]) is tuple else (self.data[i],)
+        data: tuple = self.data[i] if type(
+            self.data[i]) is tuple else (self.data[i],)
 
-        meta:tuple = self.dataInfo[i] if type(self.dataInfo[i]) is tuple else (self.dataInfo[i],)
+        meta: tuple = self.dataInfo[i] if type(
+            self.dataInfo[i]) is tuple else (self.dataInfo[i],)
 
-        default_transformers:tuple = self.default_transformers(i)
+        default_transformers: tuple = self.default_transformers(i)
 
-        data_transformers:tuple = self.dataTransformer[i] if type(self.dataTransformer[i]) is tuple else (self.dataTransformer[i],)
+        data_transformers: tuple = self.dataTransformer[i] if type(
+            self.dataTransformer[i]) is tuple else (self.dataTransformer[i],)
 
         max_len = pip(
             it.mapping(len),
-            it.reducing(lambda acc,e: acc if acc > e else e)(0)
-        )([data,meta,default_transformers,data_transformers])
+            it.reducing(lambda acc, e: acc if acc > e else e)(0)
+        )([data, meta, default_transformers, data_transformers])
 
-        def get_with_duplicate(it,i,default=None):
+        def get_with_duplicate(it, i, default=None):
             if len(it) is 0:
                 return default
             return it[i] if len(it) > i else it[-1]
 
         dfs = []
         for j in range(max_len):
-            d = get_with_duplicate(data,j,{})
-            m = get_with_duplicate(meta,j,{})
-            def_trans=get_with_duplicate(default_transformers,j,[])
-            trans = get_with_duplicate(data_transformers,j,[])
+            d = get_with_duplicate(data, j, {})
+            m = get_with_duplicate(meta, j, {})
+            def_trans = get_with_duplicate(default_transformers, j, [])
+            trans = get_with_duplicate(data_transformers, j, [])
 
             loader = ISubplot.IDataLoader(d, self.isTest())
 
@@ -249,7 +260,7 @@ class Subplot(ISubplot):
                 transformers = def_trans + trans
 
             dfs.append(loader.read(d, meta=m,
-                             transformers=transformers))
+                                   transformers=transformers))
         return tuple(dfs)
 
     def default_transformers(self, i)->tuple:
@@ -272,7 +283,7 @@ class Subplot(ISubplot):
 
         return tuple([filterX] for i in range(data_len))
 
-    def get_option(self, i):
+    def get_option(self, i: int)->dict:
         if self.isTest():
             return {**self.option[i], "y": "y"}
         else:
@@ -282,25 +293,26 @@ class Subplot(ISubplot):
         "ailias of register()"
         return self.register(*arg, **kwargs)
 
-    def register(self, data={},
-                 dataInfo={},
-                 index=None,
-                 plot=[],
-                 option={},
-                 xlim=None,
-                 ylim=None,
-                 xscale=None,
-                 yscale=None,
-                 tick={},
-                 xtick={},
-                 ytick={},
-                 xlabel=None,
-                 ylabel=None,
-                 grid={},
+    def register(self,
+                 data: Union[DataSource, Tuple[DataSource]]={},
+                 dataInfo: dict={},
+                 index: Union[List[str], Tuple[List[str]]]=None,
+                 plot: List[PlotAction]=[],
+                 option: dict={},
+                 xlim: Optional[list]=None,
+                 ylim: Optional[list]=None,
+                 xscale: Optional[str]=None,
+                 yscale: Optional[str]=None,
+                 tick: dict={},
+                 xtick: dict={},
+                 ytick: dict={},
+                 xlabel: Optional[dict]=None,
+                 ylabel: Optional[dict]=None,
+                 grid: dict={},
                  cycler=None,
-                 transformer=identity,
-                 within_xlim=False,
-                 second_axis=False,
+                 transformer: Union[DataTransformer, List[DataTransformer], Tuple[DataTransformer], Tuple[List[DataTransformer]]]=identity,
+                 within_xlim: bool=False,
+                 second_axis: bool=False,
                  **_kwargs):
         """
         Parameters
@@ -388,7 +400,7 @@ class Subplot(ISubplot):
     def tee(self,
             *option,
             **style_kwargs
-            ):
+            )->Subplot:
         """
         Method for extends a subplot to the another subplot.
         Without any option, a subplot instance is copied to
@@ -448,14 +460,20 @@ class Subplot(ISubplot):
         self.preset = preset
         return self
 
-    def usePreset(self, name, fileSelector=[], plot=[], plotOverwrite=[], option={}, **kwargs):
+    def usePreset(self,
+                  name,
+                  fileSelector=[],
+                  plot=[],
+                  plotOverwrite=[],
+                  option={},
+                  **kwargs):
         preset = self.preset[name]
 
         return self.register(
             data=tuple(getFileList(*fileSelector)(directory)
                        for directory in preset["directory"]) if type(preset["directory"]) is tuple else getFileList(*fileSelector)(preset["directory"]),
             dataInfo=preset["dataInfo"],
-            index=preset.get("index",None),
+            index=preset.get("index", None),
             plot=[*preset["plot"], *plot] if not plotOverwrite else plotOverwrite,
 
             **dictionary.mix(
