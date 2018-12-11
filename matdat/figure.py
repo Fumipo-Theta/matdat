@@ -146,18 +146,24 @@ class Figure:
     def get_length(self):
         return len(self.subplots)
 
-    def add_subplot(self, subplot, identifier=None):
+    def add_subplot(self, *subplot, name=[]):
         """
         subplot: Subplot
             has methods:
                plot: ax -> ax
         """
-        if not isinstance(subplot, ISubplot):
+        if any(map(lambda s: not isinstance(s, ISubplot), subplot)):
             raise TypeError("subplot must inherit ISubplot.")
 
-        self.subplots.append(subplot)
-        self.axIdentifier.append(
-            identifier if identifier != None else self.get_length())
+        for i, s in enumerate(subplot):
+            self.subplots.append(s)
+            self.axIdentifier.append(
+                name[i]
+                if type(name) is list and len(name) >= self.get_length()
+                else name+str(self.get_length())
+                if type(name) is str
+                else self.get_length()
+            )
         return self
 
     def show(self, *arg, **kwargs):

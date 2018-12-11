@@ -6,14 +6,14 @@ from . import plot
 from .get_path import getFileList, PathList
 from .i_subplot import ISubplot
 import pandas as pd
-from typing import List, Tuple, Callable, Union, Optional
+from typing import List, Tuple, Callable, Union, Optional,TypeVar
 
 DataSource = Union[dict, pd.DataFrame, pd.Series, PathList]
 Ax = plot.Ax
 AxPlot = plot.AxPlot
 PlotAction = Callable[..., AxPlot]
 DataTransformer = Callable[[pd.DataFrame], pd.DataFrame]
-
+T=TypeVar("T")
 
 def arg_filter(ref_keys):
     return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
@@ -31,7 +31,10 @@ def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
     return d, mix_dict
 
 
-def as_tuple(a):
+def wrap_by_tuple(a:Union[T,tuple])->Union[Tuple[T],tuple]:
+    """
+    Wrap not tuple parameter by tuple.
+    """
     return a if type(a) is tuple else (a,)
 
 
@@ -181,14 +184,13 @@ class Subplot(ISubplot):
                 self.diff_second_axes_style
             )
 
-            _ax = self.plotter(
-                [], style2
-            )(ax1.twiny())
+            ax2 = pip(
+                lambda ax: ax.twiny(),
+                self.plotter([],style2),
+                lambda ax: ax.twinx(),
+                self.plotter(actions2,style2)
+            )(ax1)
 
-            ax2 = self.plotter(
-                actions2,
-                style2
-            )(_ax.twinx())
             return (ax1, ax2)
         else:
             return ax1
@@ -228,13 +230,11 @@ class Subplot(ISubplot):
         """
         Indipendent from type of data source.
         """
-        data: tuple = as_tuple(self.data[i])
-
-        meta: tuple = as_tuple(self.dataInfo[i])
-
+        data: tuple = wrap_by_tuple(self.data[i])
+        meta: tuple = wrap_by_tuple(self.dataInfo[i])
         default_transformers: tuple = self.default_transformers(i)
+        data_transformers: tuple = wrap_by_tuple(self.dataTransformer[i])
 
-        data_transformers: tuple = as_tuple(self.dataTransformer[i])
         max_len = pip(
             it.mapping(len),
             it.reducing(lambda acc, e: acc if acc > e else e)(0)
@@ -289,14 +289,15 @@ class Subplot(ISubplot):
         else:
             return self.option[i]
 
-    def add(self, *arg, **kwargs):
-        "ailias of register()"
-        return self.register(*arg, **kwargs)
+    def register(self, *arg, **kwargs):
+        "ailias of self.add"
+        return self.add(*arg, **kwargs)
 
-    def register(self,
+    def add(self,
                  data: Union[DataSource, Tuple[DataSource]]={},
                  dataInfo: dict={},
-                 index: Union[List[str], Tuple[List[str]]]=None,
+                 index: Optional[Union[List[str], Tuple[List[str]]]]=None,
+                 transformer: Union[DataTransformer, List[DataTransformer], Tuple[DataTransformer], Tuple[List[DataTransformer]]]=identity,
                  plot: List[PlotAction]=[],
                  option: dict={},
                  xlim: Optional[list]=None,
@@ -306,27 +307,59 @@ class Subplot(ISubplot):
                  tick: dict={},
                  xtick: dict={},
                  ytick: dict={},
-                 xlabel: Optional[dict]=None,
-                 ylabel: Optional[dict]=None,
+                 label: dict={},
+                 xlabel: Optional[str]=None,
+                 ylabel: Optional[str]=None,
                  grid: dict={},
                  cycler=None,
-                 transformer: Union[DataTransformer, List[DataTransformer], Tuple[DataTransformer], Tuple[List[DataTransformer]]]=identity,
                  within_xlim: bool=False,
                  second_axis: bool=False,
                  **_kwargs):
         """
+        Set parameters for plotting.
+
         Parameters
         ----------
-            **kwargs:
-                header: int
-                index: str | list[str]
-                x: str
-                y: str
-                xlim: list|tuple
-                ylim: list|tuple
-                limit: dict[list|tuple]
-                transformer: df -> df | list|tuple[df->df]
+        data, optional: DataSource, Tuple[DataSource]
+            Data source as pandas.DataFrame, dict, and PathLike objects or tuple of them.
+            Default value is {}.
+        dataInfo, optional: dict
+            Dict of parameters in reading data source files.
+            Keys and values must be compatible to data loader
+            such as pandas.read_csv and pandas.read_excel.
+            Default value is {}.
+        index, optional: List[str], Tuple[List[str]]
+            List of str or tuple of it for column names used as
+            index of dataframe.
+            When list of column names is passed, values of index is made by concatenating the columns.
+            Default value is None.
+        transformer, optional: DataTransformer, List[DataTransformer], Tuple[DataTransformer], Tuple[List[DataTransformer]]
+            Functions for transforming dataframe object prior to plot.
+        plot, optional: List[PLotAction]
+            List of plot actions.
+        xlim, ylim, optional: List[int,float]
+            List of numbers for defining limit of xy axis.
+        xscale, yscale, optional: str
+            Str of type of axis scale.
+            "linear", "log" can be used.
+        tick, xtick, ytick, optional: dict
+            Dict defining style of ticks.
+        label, optional:
+            Dict defining style of axis labels.
+        xlabel, ylabel, optional: str
+            Str for x and y label of axis.
+        grid, optional: dict
+            Dict defining style of grid lines.
+        cycler, optional: cycler
+            Cycler defining cycling style of plotted symbols.
+        within_xlim, optional: bool
+            Flag whether plot only data in xlim.
+        second_axis, optinal: bool
+            Flag for plot on second axis.
 
+        **kwargs:
+            Parameters passed to PlotActions.
+            They are broad casted on all PlotActions.
         """
 
         kwargs = {**_kwargs}
@@ -339,7 +372,7 @@ class Subplot(ISubplot):
         update_axes_style = dictionary.mix(
             {
                 "label": dictionary.mix(
-                    kwargs.pop("label") if "label" in kwargs else {},
+                    label,
                     {"xlabel": xlabel} if xlabel else {},
                     {"ylabel": ylabel} if ylabel else {}
                 ),
