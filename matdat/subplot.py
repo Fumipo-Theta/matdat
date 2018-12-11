@@ -328,6 +328,7 @@ class Subplot(ISubplot):
                 transformer: df -> df | list|tuple[df->df]
 
         """
+
         kwargs = {**_kwargs}
         self.data.append(data)
 
