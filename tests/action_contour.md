@@ -290,7 +290,12 @@ figure.show(mp,[a])
 ```python
 Iplot = Subplot.create(label={"fontsize":24}).register({})
 
-Iscatter_plot = Iplot.tee({"plot":[plot.scatter(s=5)], "xlabel":"x", "ylabel":"first y"})
+Iscatter_plot = Iplot.tee({
+    "plot":[plot.scatter(s=5)], 
+    "transformer":lambda df: df.assign(x=df.x+5),
+    "xlabel":"x", 
+    "ylabel":"first y"
+})
 
 ```
 
