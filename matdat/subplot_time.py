@@ -39,7 +39,7 @@ class SubplotTime(Subplot):
 
     def __init__(self, *style_dict, **style):
         super().__init__(*style_dict, **{
-            "xFmt": "%m/%d",
+            # "xFmt": "%m/%d",
             **style
         })
         self.filter_x = True
