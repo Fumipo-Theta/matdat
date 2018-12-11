@@ -67,7 +67,7 @@ subplot.add においてタプルで渡されたパラメータは,
 最長でないタプルのパラメータについては, その最後の要素が繰り返し用いられる.
 
 subplot.add(
-    data,
+    data=(data1,data2),
     x="x",
     y=("x", "y", "z"),
     c=("black","red"),
@@ -75,21 +75,21 @@ subplot.add(
 )
 は次と等価
 subplot.add(
-    data,
+    data1,
     x="x",
     y="x",
     c="black",
     plot=[plot.scatter(s=1)]
 )\
 .add(
-    data,
+    data2,
     x="x",
     y="y",
     c="red",
     plot=[plot.scatter(s=2)]
 )\
 .add(
-    data,
+    data2,
     x="x",
     y="z",
     c="red",
@@ -135,7 +135,11 @@ figure.show(size=(8,8),column=2)
 ```
 
 ```python
-# Plotting empty data is skipped
+"""
+Plotting empty data is skipped
+Empty data is empty list, empty dictionay, and dataframe with no rows.
+"""
+
 
 figure = Figure()
 
@@ -144,8 +148,9 @@ figure.add_subplot(
     Subplot.create(tick={"labelsize":20})\
     .add(
         (
-           moc,
-           []
+            moc,
+            [],
+            {}
         ),
         x="x",
         y=(lambda df: df["y"],"y"),
