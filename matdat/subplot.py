@@ -22,6 +22,9 @@ def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
                 key, target[key]) if consume else mix_dict.get(key, target[key])
     return d, mix_dict
 
+def as_tuple(a):
+    return a if type(a) is tuple else tuple(a,)
+
 
 class Subplot(ISubplot):
     """
@@ -216,14 +219,13 @@ class Subplot(ISubplot):
         """
         Indipendent from type of data source.
         """
-        data:tuple = self.data[i] if type(self.data[i]) is tuple else (self.data[i],)
+        data:tuple = as_tuple(self.data[i])
 
-        meta:tuple = self.dataInfo[i] if type(self.dataInfo[i]) is tuple else (self.dataInfo[i],)
+        meta:tuple = as_tuple(self.dataInfo[i])
 
         default_transformers:tuple = self.default_transformers(i)
 
-        data_transformers:tuple = self.dataTransformer[i] if type(self.dataTransformer[i]) is tuple else (self.dataTransformer[i],)
-
+        data_transformers:tuple = as_tuple(self.dataTransformer[i])
         max_len = pip(
             it.mapping(len),
             it.reducing(lambda acc,e: acc if acc > e else e)(0)
