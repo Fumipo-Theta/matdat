@@ -112,7 +112,7 @@ class SubplotTime(Subplot):
         return super().read(i)
 
     def register(self, *arg, within_xlim=True, **kwargs):
-        return super().register(*arg, within_xlim=within_xlim, **kwargs)
+        return super().add(*arg, within_xlim=within_xlim, **kwargs)
 
     def add(self, *arg, within_xlim=True, **kwargs):
-        return self.register(*arg, within_xlim=within_xlim, **kwargs)
+        return super().add(*arg, within_xlim=within_xlim, **kwargs)

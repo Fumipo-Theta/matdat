@@ -49,15 +49,6 @@ moc.head()
 ```
 
 ```python
-print(moc.index.shape)
-print(moc[["x"]].shape)
-print(moc[["x","y"]].shape)
-
-for c in moc.loc[:,["x"]].iteritems():
-    print(c)
-```
-
-```python
 figure = Figure()
 
 """
@@ -130,6 +121,70 @@ sin_plot = Subplot.create()\
 figure.add_subplot(sin_plot)
 figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05])))
 figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)))
+
+figure.show(size=(8,8),column=2)
+```
+
+```python
+figure = Figure()
+
+"""
+subplot.add においてタプルで渡されたパラメータは, 
+タプルの各要素を用いて複数プロットすることと等価である.
+複数のパラメータがタプルの場合, 最長の長さのものの要素の数だけプロットされる.
+最長でないタプルのパラメータについては, その最後の要素が繰り返し用いられる.
+
+subplot.add(
+    data=(data1,data2),
+    x="x",
+    y=("x", "y", "z"),
+    c=("black","red"),
+    plot=[plot.scatter(s=(1,2,2))]
+)
+は次と等価
+subplot.add(
+    data1,
+    x="x",
+    y="x",
+    c="black",
+    plot=[plot.scatter(s=1)]
+)\
+.add(
+    data2,
+    x="x",
+    y="y",
+    c="red",
+    plot=[plot.scatter(s=2)]
+)\
+.add(
+    data2,
+    x="x",
+    y="z",
+    c="red",
+    plot=[plot.scatter(s=2)]
+)
+
+"""
+
+sin_plot = Subplot.create()\
+    .add(
+        data=d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
+        x="x",
+        y=("x","y"),
+        c=("black",lambda df: np.abs(df["y"])),
+        s=None,
+        
+        grid={"axis":"both"},
+        plot=[plot.scatter(marker="o"),plot.line()]
+    )
+
+figure.add_subplot(
+    sin_plot,
+    sin_plot.tee(dict(xlim=[0,1.05])),
+    sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)),
+    name=["test1","test2"]
+)
+
 
 figure.show(size=(8,8),column=2)
 ```
