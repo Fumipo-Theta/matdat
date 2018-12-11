@@ -32,7 +32,7 @@ def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
 
 
 def as_tuple(a):
-    return a if type(a) is tuple else tuple(a,)
+    return a if type(a) is tuple else (a,)
 
 
 class Subplot(ISubplot):
