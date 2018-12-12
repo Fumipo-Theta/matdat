@@ -135,6 +135,9 @@ class Figure:
     #
     # dddd
     """
+    @staticmethod
+    def create():
+        return Figure()
 
     def __init__(self, *arg, **kwargs):
         self.subplots = []
