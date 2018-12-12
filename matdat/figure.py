@@ -152,11 +152,13 @@ class Figure:
         if any(map(lambda s: not isinstance(s, ISubplot), subplot)):
             raise TypeError("subplot must inherit ISubplot.")
 
+        names = name if type(name) in [list, tuple] else [name]
+
         for i, s in enumerate(subplot):
             self.subplots.append(s)
             self.axIdentifier.append(
-                name[i]
-                if type(name) is list and len(name) >= self.get_length()
+                names[i]
+                if len(names) > i
                 else name+str(self.get_length())
                 if type(name) is str
                 else self.get_length()

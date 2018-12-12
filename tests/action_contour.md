@@ -122,47 +122,12 @@ figure.add_subplot(sin_plot)
 figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05])))
 figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)))
 
-figure.show(size=(8,8),column=2)
+figure.show(size=(4,4),column=2)
 ```
 
 ```python
-figure = Figure()
-
 """
-subplot.add においてタプルで渡されたパラメータは, 
-タプルの各要素を用いて複数プロットすることと等価である.
-複数のパラメータがタプルの場合, 最長の長さのものの要素の数だけプロットされる.
-最長でないタプルのパラメータについては, その最後の要素が繰り返し用いられる.
-
-subplot.add(
-    data=(data1,data2),
-    x="x",
-    y=("x", "y", "z"),
-    c=("black","red"),
-    plot=[plot.scatter(s=(1,2,2))]
-)
-は次と等価
-subplot.add(
-    data1,
-    x="x",
-    y="x",
-    c="black",
-    plot=[plot.scatter(s=1)]
-)\
-.add(
-    data2,
-    x="x",
-    y="y",
-    c="red",
-    plot=[plot.scatter(s=2)]
-)\
-.add(
-    data2,
-    x="x",
-    y="z",
-    c="red",
-    plot=[plot.scatter(s=2)]
-)
+figure.add_subplot()にてISubplotのインスタンスを登録する.
 
 """
 
@@ -178,15 +143,17 @@ sin_plot = Subplot.create()\
         plot=[plot.scatter(marker="o"),plot.line()]
     )
 
-figure.add_subplot(
+Figure.create()\
+.add_subplot(
     sin_plot,
+    name="test1"
+)\
+.add_subplot(
     sin_plot.tee(dict(xlim=[0,1.05])),
     sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)),
-    name=["test1","test2"]
-)
-
-
-figure.show(size=(8,8),column=2)
+    name=["test2"]
+)\
+.show(size=(4,4),column=2)
 ```
 
 ```python
@@ -218,7 +185,7 @@ figure.add_subplot(
 )
 
 
-figure.show(size=(8,8),column=2)
+figure.show(size=(4,4),column=2)
 ```
 
 ```python
@@ -291,7 +258,7 @@ figure.add_subplot(
 )
 
 
-fig, axs = figure.show(size=(400,400),column = 2,margin=(100,100),padding={"left":100},unit="px",dpi=100)
+fig, axs = figure.show(size=(300,300),column = 2,margin=(100,100),padding={"left":100},unit="px",dpi=100)
 axs[1].legend(["${(x-10)}^2$","$x-10$"])
 
 ```
@@ -319,7 +286,7 @@ xyz_for_moc2 = abstract_subplot_xyz.tee({"data":moc.assign(y=moc.x)},{"data":moc
 figure = Figure()
 figure.add_subplot(xyz_for_moc)
 figure.add_subplot(xyz_for_moc2)
-figure.show(size=(8,8),column=2)
+figure.show(size=(4,4),column=2)
 ```
 
 ```python
