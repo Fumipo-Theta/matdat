@@ -119,8 +119,8 @@ sin_plot = Subplot.create()\
     )
 
 figure.add_subplot(sin_plot)
-figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05])))
-figure.add_subplot(sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)))
+figure.add_subplot(sin_plot.forked(dict(xlim=[0,1.05])))
+figure.add_subplot(sin_plot.forked(dict(xlim=[0,1.05],within_xlim=True)))
 
 figure.show(size=(4,4),column=2)
 ```
@@ -149,8 +149,8 @@ Figure.create()\
     name="test1"
 )\
 .add_subplot(
-    sin_plot.tee(dict(xlim=[0,1.05])),
-    sin_plot.tee(dict(xlim=[0,1.05],within_xlim=True)),
+    sin_plot.forked(dict(xlim=[0,1.05])),
+    sin_plot.forked(dict(xlim=[0,1.05],within_xlim=True)),
     name=["test2"]
 )\
 .show(size=(4,4),column=2)
@@ -241,12 +241,12 @@ figure.add_subplot(
 
 # integrated は一つしかプロットを登録していないので, 2つめのオプションは適用されない.
 figure.add_subplot(
-    integrated.tee({"y":"y"},{"y":"z","ylabel":"tee from integrated","ylim":[-20,100]})
+    integrated.forked({"y":"y"},{"y":"z","ylabel":"tee from integrated","ylim":[-20,100]})
 )
 
 # 1つ目のオプションは適用される
 figure.add_subplot(
-    integrated.tee({
+    integrated.forked({
         "data" : moc.assign(y=moc.x**3),
         "ylabel":"tee from integrated",
         "ylim":[-20,100]
@@ -254,7 +254,7 @@ figure.add_subplot(
 )
 
 figure.add_subplot(
-    separated.tee({"y":"y"},{"y":"z", "ylabel":"tee from separated"},ylim=[-10,100])
+    separated.forked({"y":"y"},{"y":"z", "ylabel":"tee from separated"},ylim=[-10,100])
 )
 
 
@@ -278,8 +278,8 @@ abstract_subplot_xyz = Subplot.create()\
     plot=[plot.scatter(),plot.line()]
 )
 
-xyz_for_moc = abstract_subplot_xyz.tee({"data":moc},{"data":moc}).set_title("xyz in moc")
-xyz_for_moc2 = abstract_subplot_xyz.tee({"data":moc.assign(y=moc.x)},{"data":moc.assign(y=moc.x)},).set_title("xyz in moc2")
+xyz_for_moc = abstract_subplot_xyz.forked({"data":moc},{"data":moc}).set_title("xyz in moc")
+xyz_for_moc2 = abstract_subplot_xyz.forked({"data":moc.assign(y=moc.x)},{"data":moc.assign(y=moc.x)},).set_title("xyz in moc2")
 ```
 
 ```python
@@ -312,7 +312,7 @@ figure.show(mp,[a])
 ```python
 Iplot = Subplot.create(label={"fontsize":24}).register({})
 
-Iscatter_plot = Iplot.tee({
+Iscatter_plot = Iplot.forked({
     "plot":[plot.scatter(s=5)], 
     "transformer":lambda df: df.assign(x=df.x+5),
     "xlabel":"x", 
@@ -323,7 +323,7 @@ Iscatter_plot = Iplot.tee({
 
 ```python
 figure = Figure()
-subplot= Iscatter_plot.tee({"data" : moc, "x":"x", "y":"y"},label={"color":"red"})\
+subplot= Iscatter_plot.forked({"data" : moc, "x":"x", "y":"y"},label={"color":"red"})\
     .register(
         data=moc,
         x="x",

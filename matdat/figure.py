@@ -2,7 +2,15 @@ import re
 from func_helper import pip, identity
 from .save_plot import actionSavePNG
 from .i_subplot import ISubplot
-from matpos import Matpos, FigureSizing
+from matpos import Matpos, FigureSizing, Subgrid
+import matpos.matpos.type_set as matpos_type
+from typing import Union, List, Tuple, Optional, Dict
+
+Number = matpos_type.Number
+Size = matpos_type.Size
+Padding = matpos_type.Padding
+Figure = matpos_type.Figure
+Ax = matpos_type.Ax
 
 
 class Figure:
@@ -55,12 +63,12 @@ class Figure:
     # axes = {
     #   "a" : matplotlib.pyplot.axsubplot,
     #   "b" : matplotlib.pyplot.axsubplot,
-    #    2  : matplotlib.pyplot.axsubplot,
-    #    3  : matplotlib.pyplot.axsubplot
+    #    3  : matplotlib.pyplot.axsubplot,
+    #    4  : matplotlib.pyplot.axsubplot
     # }
 
     # You can customize detail of them.
-    axes[2].set_ylabel("c", fontsize=16)
+    axes["b"].set_ylabel("c", fontsize=16)
 
     # save image as png
     figure.save("./image/","image.png")
@@ -146,7 +154,7 @@ class Figure:
     def get_length(self):
         return len(self.subplots)
 
-    def add_subplot(self, *subplot, name=[]):
+    def add_subplot(self, *subplot: ISubplot, name: Union[str, List[str]]=[]):
         """
         subplot: Subplot
             has methods:
@@ -168,7 +176,11 @@ class Figure:
             )
         return self
 
-    def show(self, *arg, **kwargs):
+    def show(self,
+             *arg: Union[Matpos, FigureSizing, dict],
+             size=None,
+             **kwargs
+             )->Tuple[Figure, List[Ax]]:
         """
         Parameters
         ----------
@@ -223,28 +235,33 @@ class Figure:
                     "Type of positional arguments must be Matpos or dict. Or use keyword arguments.")
 
         else:
-            if type(kwargs.get("size")) is tuple:
-                size = kwargs.pop("size")
-
+            if type(size) is tuple:
                 return self.__show_grid(
                     [size for i in range(self.get_length())],
                     **kwargs
                 )
-            elif type(kwargs.get("size")) is list:
-                sizes = kwargs.pop("size")
-
-                return self.__show_grid(sizes, **kwargs)
+            elif type(size) is list:
+                return self.__show_grid(size, **kwargs)
             else:
                 raise TypeError(
                     "The first arguments must be MatPos, Tuple, or List")
 
-    def __show_grid(self, sizes, column=1, margin=(1, 0.5), padding={}, test=False, unit="inches", dpi=72, **kwargs):
+    def __show_grid(self,
+                    sizes: List[Size],
+                    column: int=1,
+                    margin: Size=(1, 0.5),
+                    padding: Padding={},
+                    test=False,
+                    unit="inches",
+                    dpi=72,
+                    **kwargs)->Tuple[Figure, List[Ax]]:
+
         matpos = Matpos(unit=unit, dpi=dpi)
         sgs = matpos.add_grid(sizes, column, margin)
 
         return self.__show_custom(matpos, sgs, padding, test, dpi=dpi, **kwargs)
 
-    def __show_custom(self, matpos, subgrids, padding={}, test=False, **kwargs):
+    def __show_custom(self, matpos: Matpos, subgrids: List[Subgrid], padding={}, test=False, **kwargs)->Tuple[Figure, List[Ax]]:
         fig, empty_axes = matpos.figure_and_axes(
             subgrids, padding=padding, **kwargs
         )

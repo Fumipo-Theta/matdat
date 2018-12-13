@@ -226,7 +226,7 @@ class Subplot(ISubplot):
             *[f(dfs, opt) for f in self.plotMethods[i]],
         )(ax)
 
-    def read(self, i)->tuple:
+    def read(self, i)->Tuple[pd.DataFrame]:
         """
         Indipendent from type of data source.
         """
@@ -431,7 +431,7 @@ class Subplot(ISubplot):
         self.length = self.length+1
         return self
 
-    def tee(self,
+    def forked(self,
             *option,
             **style_kwargs
             ):
