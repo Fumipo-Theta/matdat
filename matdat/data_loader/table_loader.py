@@ -48,4 +48,5 @@ class TableLoader(IDataLoader):
         elif type(pathLike) is str:
             return [pathLike]
         else:
+            print(pathLike)
             raise TypeError("Invalid data source type.")

@@ -79,12 +79,13 @@ class SubplotTime(Subplot):
             )(df, x) if self.filter_x else df
 
         def setIndex(index_name):
-            if type(index_name) is not list:
+            if type(index_name) is str:
                 return dataframe.setTimeSeriesIndex(
                     index_name
                 )
-
-            if len(index_name) is 0:
+            if type(index_name) is not list:
+                return identity
+            elif len(index_name) is 0:
                 return identity
             else:
                 return dataframe.setTimeSeriesIndex(
