@@ -4,6 +4,9 @@ from .subplot import Subplot
 from .csv_reader import CsvReader
 from func_helper import identity
 import func_helper.func_helper.dataframe as dataframe
+from . import plot
+
+Duplicated = plot.DuplicateArg
 
 
 class SubplotTime(Subplot):
@@ -79,6 +82,7 @@ class SubplotTime(Subplot):
             )(df, x) if self.filter_x else df
 
         def setIndex(index_name):
+
             if type(index_name) is str:
                 return dataframe.setTimeSeriesIndex(
                     index_name
@@ -92,10 +96,10 @@ class SubplotTime(Subplot):
                     *index_name
                 )
 
-        index_names = self.index_name[i] if type(
-            self.index_name[i]) is tuple else (self.index_name[i],)
+        index_names = self.index_name[i].args if type(
+            self.index_name[i]) is Duplicated else(self.index_name[i],)
 
-        return tuple([setIndex(index_name), filterX()] for index_name in index_names)
+        return Duplicated(*[[setIndex(index_name), filterX()] for index_name in index_names])
 
     def read(self, i):
 

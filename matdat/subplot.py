@@ -8,6 +8,8 @@ from .i_subplot import ISubplot
 import pandas as pd
 from typing import List, Tuple, Callable, Union, Optional,TypeVar
 
+Duplicated = plot.DuplicateArg
+
 DataSource = Union[dict, pd.DataFrame, pd.Series, PathList]
 Ax = plot.Ax
 AxPlot = plot.AxPlot
@@ -31,11 +33,11 @@ def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
     return d, mix_dict
 
 
-def wrap_by_tuple(a:Union[T,tuple])->Union[Tuple[T],tuple]:
+def wrap_by_duplicate(a:Union[T,Duplicated])->Union[Duplicated]:
     """
     Wrap not tuple parameter by tuple.
     """
-    return a if type(a) is tuple else (a,)
+    return a if type(a) is Duplicated else Duplicated(a)
 
 
 class Subplot(ISubplot):
@@ -216,10 +218,10 @@ class Subplot(ISubplot):
         return plotter
 
     def __getPlotAction(self, i):
-        dfs: tuple = self.read(i)
+        dfs: Duplicated = self.read(i)
         opt = self.get_option(i)
 
-        if len(dfs) == 0 or all(map(lambda df: len(df) is 0, dfs)):
+        if len(dfs) == 0 or all(map(lambda df: len(df) is 0, dfs.args)):
             return Subplot.__noDataAx
 
         return lambda ax: pip(
@@ -230,20 +232,21 @@ class Subplot(ISubplot):
         """
         Indipendent from type of data source.
         """
-        data: tuple = wrap_by_tuple(self.data[i])
-        meta: tuple = wrap_by_tuple(self.dataInfo[i])
-        default_transformers: tuple = self.default_transformers(i)
-        data_transformers: tuple = wrap_by_tuple(self.dataTransformer[i])
+        data: Duplicated = wrap_by_duplicate(self.data[i])
+        meta: Duplicated = wrap_by_duplicate(self.dataInfo[i])
+        default_transformers: Duplicated = self.default_transformers(i)
+        data_transformers: Duplicated = wrap_by_duplicate(
+            self.dataTransformer[i])
 
         max_len = pip(
             it.mapping(len),
             it.reducing(lambda acc, e: acc if acc > e else e)(0)
         )([data, meta, default_transformers, data_transformers])
 
-        def get_with_duplicate(it, i, default=None):
+        def get_with_duplicate(it:Duplicated, i, default=None):
             if len(it) is 0:
                 return default
-            return it[i] if len(it) > i else it[-1]
+            return it.take(i)
 
         dfs = []
         for j in range(max_len):
@@ -261,7 +264,7 @@ class Subplot(ISubplot):
 
             dfs.append(loader.read(d, meta=m,
                                    transformers=transformers))
-        return tuple(dfs)
+        return Duplicated(*dfs)
 
     def default_transformers(self, i)->tuple:
         def filterX(df):
@@ -279,9 +282,9 @@ class Subplot(ISubplot):
                 lower, upper, False, False
             )(df, x) if self.filter_x else df
 
-        data_len = len(self.data[i]) if type(self.data[i]) is tuple else 1
+        data_len = len(self.data[i]) if type(self.data[i]) is Duplicated else 1
 
-        return tuple([filterX] for i in range(data_len))
+        return Duplicated(*[[filterX] for i in range(data_len)])
 
     def get_option(self, i):
         if self.isTest():

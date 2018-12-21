@@ -32,6 +32,7 @@ import func_helper.func_helper.dictionary as d
 import func_helper.func_helper.iterator as it
 
 import numpy as np
+from typing import Optional
 ```
 
 ```python
@@ -92,16 +93,16 @@ subplot.add(
 figure.add_subplot(
     Subplot.create(tick={"labelsize":20})\
     .add(
-        (
+        plot.multiple(
             moc,
             d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1))
         ),
         x="x",
-        y=(lambda df: df["y"],"y"),
+        y=plot.multiple(lambda df: df["y"],"y"),
         s=lambda df: df["y"] + 5,
         c=lambda df: df["y"],
         marker="o",
-        vmax=(50,None),
+        vmax=plot.multiple(50,None),
         plot=[plot.scatter()]
     )
 )
@@ -110,8 +111,8 @@ sin_plot = Subplot.create()\
     .add(
         data=d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
         x="x",
-        y=("x","y"),
-        c=("black",lambda df: np.abs(df["y"])),
+        y=plot.multiple("x","y"),
+        c=plot.multiple("black",lambda df: np.abs(df["y"])),
         s=None,
         
         grid={"axis":"both"},
@@ -135,8 +136,8 @@ sin_plot = Subplot.create()\
     .add(
         data=d.over_iterator({"x" : lambda x: x, "y":np.sin})(np.arange(0,10,0.1)),
         x="x",
-        y=("x","y"),
-        c=("black",lambda df: np.abs(df["y"])),
+        y=plot.multiple("x","y"),
+        c=plot.multiple("black",lambda df: np.abs(df["y"])),
         s=None,
         
         grid={"axis":"both"},
@@ -169,17 +170,17 @@ figure = Figure()
 figure.add_subplot(
     Subplot.create(tick={"labelsize":20})\
     .add(
-        (
+        plot.multiple(
             moc,
             [],
             {}
         ),
         x="x",
-        y=(lambda df: df["y"],"y"),
+        y=plot.multiple(lambda df: df["y"],"y"),
         s=lambda df: df["y"] + 5,
         c=lambda df: df["y"],
         marker="o",
-        vmax=(50,None),
+        vmax=plot.multiple(50,None),
         plot=[plot.scatter()]
     )
 )
@@ -205,7 +206,7 @@ integrated = Subplot.create({"label":{"fontsize":12}},title={"fontsize":20,"font
         label = {"family":["serif"],"fontstyle":"italic","color":"blue"},
         xlabel="x 日本語",
         ylabel=r"$f(x) \frac{\infty}{b}$",
-        y=("y","z"),
+        y=plot.multiple("y","z"),
         plot=[plot.scatter(),plot.line()]
     )
 
@@ -217,7 +218,7 @@ separated = Subplot.create(title={"fontsize":20,"fontdict":{"family":["serif"]}}
         label = {"family":["serif"],"fontstyle":"italic","color":"blue"},
         xlabel="x 日本語",
         ylabel=r"$f(x) \frac{\infty}{b}$",
-        y=("y","z"),
+        y=plot.multiple("y","z"),
         plot=[plot.scatter()]
     )\
     .add(
@@ -226,7 +227,7 @@ separated = Subplot.create(title={"fontsize":20,"fontdict":{"family":["serif"]}}
         label = {"family":["serif"],"fontstyle":"italic","color":"blue"},
         xlabel="x 日本語",
         ylabel=r"$f(x) \frac{\infty}{b}$",
-        y=("y","z"),
+        y=plot.multiple("y","z"),
         plot=[plot.line()]
     )
 
@@ -355,7 +356,14 @@ subplot.diff_second_axes_style
 ```
 
 ```python
+import matplotlib
 import matplotlib.pyplot as plt
+
+Ax = Optional[matplotlib.axes._subplots.Axes]
+```
+
+```python
+matplotlib.axes._subplots.Axes
 ```
 
 ```python

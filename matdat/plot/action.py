@@ -8,14 +8,18 @@ from func_helper import pip
 import func_helper.func_helper.iterator as it
 
 DataSource = Union[dict, pd.DataFrame, pd.Series]
-Ax = plt.subplot
+Ax = matplotlib.axes._subplots.Axes
 AxPlot = Callable[[Ax], Ax]
-PlotAction = Callable[..., AxPlot]
+PlotAction = Callable[[], AxPlot]
+SetData = Callable[[DataSource, dict], AxPlot]
+Presetting = Callable[[dict], SetData]
 Selector = Optional[Union[str, Callable[[DataSource], DataSource]]]
-LiteralOrSequence = Optional[Union[int,float,str,list,tuple,DataSource]]
-LiteralOrSequencer = Optional[Union[LiteralOrSequence, Callable[[DataSource], DataSource]]]
+LiteralOrSequence = Optional[Union[int, float, str, list, tuple, DataSource]]
+LiteralOrSequencer = Optional[Union[LiteralOrSequence,
+                                    Callable[[DataSource], DataSource]]]
 
-def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
+
+def plot_action(plotter: PlotAction, arg_names: List[str], default_kwargs: dict={})->Presetting:
     """
     Generate plot action by hashable object and some parameters, which takes
         matplotlib.pyplot.Axes.subplot and return it.
@@ -35,8 +39,8 @@ def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
     arg_filter = get_values_by_keys(["data"]+arg_names, None)
     kwarg_filter = filter_dict(default_kwargs.keys())
 
-    def presetting(setting={}, **setting_kwargs):
-        def set_data(data_source: DataSource, option: dict={}, **option_kwargs):
+    def presetting(setting: dict={}, **setting_kwargs)->SetData:
+        def set_data(data_source: DataSource, option: dict={}, **option_kwargs)->AxPlot:
             """
             Parameters
             ----------
@@ -52,12 +56,12 @@ def plot_action(plotter: PlotAction, arg_names, default_kwargs={}):
             kwargs: parameters corresponding to items of option.
             """
             list_of_entry = to_flatlist(
-                {"data":data_source,**default_kwargs, **setting, **setting_kwargs, **option, **option_kwargs})
+                {"data": data_source, **default_kwargs, **setting, **setting_kwargs, **option, **option_kwargs})
             # print(list_of_entry)
 
-            arg_and_kwarg=generate_arg_and_kwags()(
-                #as_DataFrame(data_source),
-                #data_source,
+            arg_and_kwarg = generate_arg_and_kwags()(
+                # as_DataFrame(data_source),
+                # data_source,
                 list(map(arg_filter, list_of_entry)),
                 list(map(kwarg_filter, list_of_entry))
             )
@@ -83,7 +87,7 @@ def generate_arg_and_kwags():
     Setup positional arguments and keyword arguments for plotter.
     """
     def gen_func(
-        #df: DataSource,
+        # df: DataSource,
         option: List[list],
         style: List[dict]
     )->List[Tuple[list, dict]]:
@@ -101,11 +105,11 @@ def generate_arg_and_kwags():
 
 
 def get_subset(use_index=True)\
-        ->Callable[[DataSource,Selector], DataSource]:
+        ->Callable[[DataSource, Selector], DataSource]:
     """
 
     """
-    def f(df: DataSource, k:Selector)->DataSource:
+    def f(df: DataSource, k: Selector)->DataSource:
         """
         Select value in hashable (pandas.DataFrame, dict, etc.)
         """
@@ -129,24 +133,24 @@ def get_subset(use_index=True)\
 
         elif type(df) is dict:
             if type(k) is str:
-                return df.get(k,[])
+                return df.get(k, [])
             elif callable(k):
                 return k(df)
             else:
                 return df
 
         else:
-            #print(df)
+            # print(df)
             raise TypeError("df must be pandas.DataFrame or pandas.Series.")
     return f
 
-def get_literal_or_series(input:LiteralOrSequencer, df: DataSource)->LiteralOrSequence:
+
+def get_literal_or_series(input: LiteralOrSequencer, df: DataSource)->LiteralOrSequence:
 
     if callable(input):
         return input(df)
     else:
         return input
-
 
 
 def get_value(default=""):
@@ -160,6 +164,17 @@ def get_value(default=""):
 
 def is_iterable(o):
     return type(o) in [list, tuple]
+
+
+class DuplicateArg:
+    def __init__(self, *arg):
+        self.args = arg
+
+    def __len__(self):
+        return len(self.args)
+
+    def take(self, n):
+        return self.args[n] if len(self) > n else self.args[-1]
 
 
 def to_flatlist(d: dict) -> List[dict]:
@@ -180,13 +195,13 @@ def to_flatlist(d: dict) -> List[dict]:
     ]
 
     """
-    def value_to_list(d: dict) -> dict:
+    def to_duplicate(d: dict) -> dict:
         return dict(it.mapping(
             lambda kv: (kv[0], kv[1]) if type(
-                kv[1]) is tuple else (kv[0], [kv[1]])
+                kv[1]) is DuplicateArg else (kv[0], DuplicateArg(kv[1]))
         )(d.items()))
 
-    list_dict = value_to_list(d)
+    list_dict = to_duplicate(d)
 
     max_length = it.reducing(
         lambda acc, e: acc if acc >= len(e) else len(e)
@@ -197,10 +212,7 @@ def to_flatlist(d: dict) -> List[dict]:
         new_dict = {}
 
         for k in list_dict.keys():
-            if len(list_dict[k]) >= i+1:
-                new_dict.update({(k): list_dict[k][i]})
-            else:
-                new_dict.update({(k): list_dict[k][-1]})
+            new_dict.update({(k): list_dict[k].take(i)})
 
         flatlist.append(new_dict)
     return flatlist
@@ -317,7 +329,7 @@ _line2d_kwargs = {
     "color": None,
 }
 
-_grid_kwargs:dict = {
+_grid_kwargs: dict = {
     "axis": None,
     **_line2d_kwargs,
     "color": 'gray',
