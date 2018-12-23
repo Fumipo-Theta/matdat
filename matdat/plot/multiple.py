@@ -1,5 +1,5 @@
-from .action import DuplicateArg
+from func_helper.func_helper.iterator import DuplicateLast
 
 
 def multiple(*arg):
-    return DuplicateArg(*arg)
+    return DuplicateLast(*arg)

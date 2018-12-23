@@ -6,6 +6,7 @@ import matplotlib.transforms
 from typing import Union, List, Tuple, TypeVar, Callable, NewType, Optional
 from func_helper import pip
 import func_helper.func_helper.iterator as it
+from func_helper.func_helper.iterator import DuplicateLast
 
 DataSource = Union[dict, pd.DataFrame, pd.Series]
 Ax = matplotlib.axes._subplots.Axes
@@ -166,15 +167,7 @@ def is_iterable(o):
     return type(o) in [list, tuple]
 
 
-class DuplicateArg:
-    def __init__(self, *arg):
-        self.args = arg
 
-    def __len__(self):
-        return len(self.args)
-
-    def take(self, n):
-        return self.args[n] if len(self) > n else self.args[-1]
 
 
 def to_flatlist(d: dict) -> List[dict]:
@@ -198,7 +191,7 @@ def to_flatlist(d: dict) -> List[dict]:
     def to_duplicate(d: dict) -> dict:
         return dict(it.mapping(
             lambda kv: (kv[0], kv[1]) if type(
-                kv[1]) is DuplicateArg else (kv[0], DuplicateArg(kv[1]))
+                kv[1]) is DuplicateLast else (kv[0], DuplicateLast(kv[1]))
         )(d.items()))
 
     list_dict = to_duplicate(d)
@@ -212,7 +205,7 @@ def to_flatlist(d: dict) -> List[dict]:
         new_dict = {}
 
         for k in list_dict.keys():
-            new_dict.update({(k): list_dict[k].take(i)})
+            new_dict.update({(k): list_dict[k][i]})
 
         flatlist.append(new_dict)
     return flatlist

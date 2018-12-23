@@ -7,8 +7,8 @@ from .get_path import getFileList, PathList
 from .i_subplot import ISubplot
 import pandas as pd
 from typing import List, Tuple, Callable, Union, Optional,TypeVar
+from func_helper.func_helper.iterator import DuplicateLast as Duplicated
 
-Duplicated = plot.DuplicateArg
 
 DataSource = Union[dict, pd.DataFrame, pd.Series, PathList]
 Ax = plot.Ax
@@ -246,7 +246,7 @@ class Subplot(ISubplot):
         def get_with_duplicate(it:Duplicated, i, default=None):
             if len(it) is 0:
                 return default
-            return it.take(i)
+            return it[i]
 
         dfs = []
         for j in range(max_len):

@@ -3,7 +3,6 @@ import glob
 import re
 from func_helper import pip, tee, identity
 import func_helper.func_helper.iterator as it
-from IPython.display import display
 
 """
 与えられた正規表現パターン `patterns` に対し,

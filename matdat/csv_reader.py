@@ -4,7 +4,6 @@ from chardet.universaldetector import UniversalDetector
 import re
 from func_helper import pip, tee, identity
 import func_helper.func_helper.iterator as it
-from IPython.display import display
 from tqdm import tqdm
 
 from .i_lazy_reader import ILazyReader
@@ -59,7 +58,7 @@ class CsvReader(ILazyReader):
                     enumerate,
                     it.mapping(lambda t: (t[0], str(t[1], encoding=encoding))),
                     list,
-                    display
+                    print
                 )(lines)
             return encoding
 
@@ -118,7 +117,7 @@ class CsvReader(ILazyReader):
             return pd.read_csv(path, engine=engine,  **{**kwd, "encoding": "shift-JIS"})
 
     def getColumns(self):
-        display(self.df.columns)
+        print(self.df.columns)
         return self.df.columns
 
     def showPath(self):

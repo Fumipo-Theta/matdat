@@ -5,8 +5,7 @@ from .csv_reader import CsvReader
 from func_helper import identity
 import func_helper.func_helper.dataframe as dataframe
 from . import plot
-
-Duplicated = plot.DuplicateArg
+from func_helper.func_helper.iterator import DuplicateLast as Duplicated
 
 
 class SubplotTime(Subplot):
