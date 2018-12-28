@@ -194,7 +194,7 @@ def _bar_plotter(
         ]
 
         stack_heights = pip(
-            it.mapping(lambda df: agg(df[stack_name])),
+            it.mapping(lambda df: agg(df[stack_name].fillna(0))),
             #it.mapping(lambda arr: arr[0] if len(arr) > 0 else 0),
             list
         )(subset_for_x_factor)
