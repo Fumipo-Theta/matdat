@@ -113,16 +113,16 @@ def _factor_bar_plotter(
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
 
         ax.legend(stack_factor, **legend)
-        """
+
         if vert:
-            ax.set_xticks(ind)
-            ax.set_xticklabels(x_factor)
-            ax.set_xlim([-1,len(x_factor)])
+            # ax.set_xticks(ind)
+            # ax.set_xticklabels(x_factor)
+            ax.set_xlim([-1, len(x_factor)])
         else:
-            ax.set_yticks(ind)
-            ax.set_yticklabels(x_factor)
-            ax.set_ylim([-1,len(x_factor)])
-        """
+            # ax.set_yticks(ind)
+            # ax.set_yticklabels(x_factor)
+            ax.set_ylim([-1, len(x_factor)])
+
         return ax
     return plot
 
@@ -241,16 +241,16 @@ def _bar_plotter(
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
 
         ax.legend(stack_factor, **legend)
-        """
+
         if vert:
-            ax.set_xticks(ind)
-            ax.set_xticklabels(x_factor)
+            # ax.set_xticks(ind)
+            # ax.set_xticklabels(x_factor)
             ax.set_xlim([-1, len(x_factor)])
         else:
-            ax.set_yticks(ind)
-            ax.set_yticklabels(x_factor)
+            # ax.set_yticks(ind)
+            # ax.set_yticklabels(x_factor)
             ax.set_ylim([-1, len(x_factor)])
-        """
+
         return ax
     return plot
 
