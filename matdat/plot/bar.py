@@ -193,6 +193,8 @@ def _bar_plotter(
             for xfname in x_factor
         ]
 
+        # aggrigation時にnanがあると, normalize時にsumがnanになる.
+        # それを回避するためにfillna(0)してある.
         stack_heights = pip(
             it.mapping(lambda df: agg(df[stack_name].fillna(0))),
             #it.mapping(lambda arr: arr[0] if len(arr) > 0 else 0),
