@@ -4,7 +4,9 @@ from typing import Union, List
 import pandas as pd
 
 
-def _box_plotter(df: DataSource, ys: Union[str, List[str]], *arg, **kwargs)->AxPlot:
+@plot_action(["y"],
+             default_kwargs.get("box"))
+def box(df: DataSource, ys: Union[str, List[str]], *arg, **kwargs)->AxPlot:
     """
     Generate box plots for indicated columns.
     """
@@ -21,15 +23,9 @@ def _box_plotter(df: DataSource, ys: Union[str, List[str]], *arg, **kwargs)->AxP
     return plot
 
 
-def box(**presetting):
-    return plot_action(
-        _box_plotter,
-        ["y"],
-        default_kwargs.get("box")
-    )(**presetting)
-
-
-def _factor_box_plotter(df: DataSource, x, y, *arg, xfactor=None, **kwargs)->AxPlot:
+@plot_action(["x", "y"],
+             {**default_kwargs.get("box"), "xfactor": None})
+def factor_box(df: DataSource, x, y, *arg, xfactor=None, **kwargs)->AxPlot:
     """
     Generate box plots grouped by a factor column in DataFrame.
 
@@ -63,11 +59,3 @@ def _factor_box_plotter(df: DataSource, x, y, *arg, xfactor=None, **kwargs)->AxP
             ax.set_ylim([-1, len(_factor)])
         return ax
     return plot
-
-
-def factor_box(**presetting):
-    return plot_action(
-        _factor_box_plotter,
-        ["x", "y"],
-        {**default_kwargs.get("box"), "xfactor": None}
-    )(**presetting)

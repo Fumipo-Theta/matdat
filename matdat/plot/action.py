@@ -21,7 +21,7 @@ LiteralOrSequencer = Optional[Union[LiteralOrSequence,
                                     Callable[[DataSource], DataSource]]]
 
 
-def plot_action(plotter: PlotAction, arg_names: List[str], default_kwargs: dict={})->Presetting:
+def plot_action(arg_names: List[str], default_kwargs: dict={}):
     """
     Generate plot action by hashable object and some parameters, which takes
         matplotlib.pyplot.Axes.subplot and return it.
@@ -41,38 +41,41 @@ def plot_action(plotter: PlotAction, arg_names: List[str], default_kwargs: dict=
     arg_filter = get_values_by_keys(["data"]+arg_names, None)
     kwarg_filter = filter_dict(default_kwargs.keys())
 
-    def presetting(setting: dict={}, **setting_kwargs)->SetData:
-        def set_data(data_source: DataSource, option: dict={}, **option_kwargs)->AxPlot:
-            """
-            Parameters
-            ----------
-            df: pandas.DataFrame | dict
-            option: dict, optional
-                {
-                    "x" : "x_name",
-                    "y" : ["y1", "y2"],
-                    "ylim" : (None,10),
-                    "ylabel" : "Y",
-                    "linewidth" : [1,1.5]
-                }
-            kwargs: parameters corresponding to items of option.
-            """
-            list_of_entry = to_flatlist(
-                {"data": data_source, **default_kwargs, **setting, **setting_kwargs, **option, **option_kwargs})
-            # print(list_of_entry)
+    def wrapper(plotter: PlotAction)->Presetting:
 
-            arg_and_kwarg = generate_arg_and_kwags()(
-                # as_DataFrame(data_source),
-                # data_source,
-                list(map(arg_filter, list_of_entry)),
-                list(map(kwarg_filter, list_of_entry))
-            )
+        def presetting(setting: dict={}, **setting_kwargs)->SetData:
+            def set_data(data_source: DataSource, option: dict={},  **option_kwargs)->AxPlot:
+                """
+                Parameters
+                ----------
+                df: pandas.DataFrame | dict
+                option: dict, optional
+                    {
+                        "x" : "x_name",
+                        "y" : ["y1", "y2"],
+                        "ylim" : (None,10),
+                        "ylabel" : "Y",
+                        "linewidth" : [1,1.5]
+                    }
+                kwargs: parameters corresponding to items of option.
+                """
+                list_of_entry = to_flatlist(
+                    {"data": data_source, **default_kwargs,     **setting, **setting_kwargs, **option,  **option_kwargs})
+                # print(list_of_entry)
 
-            # return plot action
-            return lambda ax: it.reducing(
-                lambda acc, e: plotter(*e[0], **e[1])(acc))(ax)(arg_and_kwarg)
-        return set_data
-    return presetting
+                arg_and_kwarg = generate_arg_and_kwags()(
+                    # as_DataFrame(data_source),
+                    # data_source,
+                    list(map(arg_filter, list_of_entry)),
+                    list(map(kwarg_filter, list_of_entry))
+                )
+
+                # return plot action
+                return lambda ax: it.reducing(
+                    lambda acc, e: plotter(*e[0], **e[1])(acc))(ax)(arg_and_kwarg)
+            return set_data
+        return lambda **kwargs: presetting(kwargs)
+    return wrapper
 
 
 def as_DataFrame(d: DataSource) -> pd.DataFrame:

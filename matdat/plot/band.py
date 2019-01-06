@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 
 
-def _xband_plotter(*arg, xlim=None, ypos=None, **kwargs)->AxPlot:
+@plot_action([],
+             {**default_kwargs.get("fill"), "xlim": None, "ypos": None})
+def xband(*arg, xlim=None, ypos=None, **kwargs)->AxPlot:
 
     def plot(ax):
         if ypos is None:
@@ -36,7 +38,9 @@ def _xband_plotter(*arg, xlim=None, ypos=None, **kwargs)->AxPlot:
     return plot
 
 
-def _yband_plotter(*arg, ylim=None, xpos=None, **kwargs)->AxPlot:
+@plot_action([],
+             {**default_kwargs.get("fill"), "ylim": None, "xpos": None})
+def yband(*arg, ylim=None, xpos=None, **kwargs)->AxPlot:
 
     def plot(ax):
 
@@ -68,19 +72,3 @@ def _yband_plotter(*arg, ylim=None, xpos=None, **kwargs)->AxPlot:
             )
         return ax
     return plot
-
-
-def xband(**presetting):
-    return plot_action(
-        _xband_plotter,
-        [],
-        {**default_kwargs.get("fill"), "xlim": None, "ypos": None}
-    )(**presetting)
-
-
-def yband(**presetting):
-    return plot_action(
-        _yband_plotter,
-        [],
-        {**default_kwargs.get("fill"), "ylim": None, "xpos": None}
-    )(**presetting)

@@ -2,7 +2,9 @@ from .action import default_kwargs, plot_action, generate_arg_and_kwags, get_val
 from .action import DataSource, AxPlot, SetData, Selector, LiteralOrSequencer
 
 
-def _scatter_plotter(
+@plot_action(["x", "y"],
+             {**default_kwargs.get("scatter")})
+def scatter(
     data: DataSource,
     x: Selector,
     y: Selector,
@@ -26,14 +28,3 @@ def _scatter_plotter(
         ax.scatter(_x, _y, s=sizes, c=colors, **kwargs)
         return ax
     return plot
-
-
-def scatter(**presetting)->SetData:
-    """
-    Plot: dict -> DataSource, dict -> AxPlot
-    """
-    return plot_action(
-        _scatter_plotter,
-        ["x", "y"],
-        {**default_kwargs.get("scatter")}
-    )(**presetting)

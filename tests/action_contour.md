@@ -325,7 +325,7 @@ Iscatter_plot = Iplot.forked({
 ```python
 figure = Figure()
 subplot= Iscatter_plot.forked({"data" : moc, "x":"x", "y":"y"},label={"color":"red"})\
-    .register(
+    .add(
         data=moc,
         x="x",
         y="z",
@@ -333,7 +333,7 @@ subplot= Iscatter_plot.forked({"data" : moc, "x":"x", "y":"y"},label={"color":"r
         plot=[plot.line()],
         second_axis=True,
     )\
-    .register(
+    .add(
         data=moc,
         x="x",
         y="x",
@@ -344,9 +344,12 @@ subplot= Iscatter_plot.forked({"data" : moc, "x":"x", "y":"y"},label={"color":"r
         label={"color":"blue"}
     )
 
+subplot_custom_ylim=subplot.forked(dict(),dict(ylim=[0,100]),dict(ylim=[0,30]))
+
 figure.add_subplot(
     subplot
-)
+).add_subplot(
+    subplot_custom_ylim)
 
 figure.show(size=(8,6))
 ```

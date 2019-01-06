@@ -50,7 +50,9 @@ def _get_lim_parameter(df: DataSource, lim_list: Optional[list]):
 _invalid_range = [None, pd.NaT, np.nan]
 
 
-def _xlim_setter(df: DataSource, x, *arg, xlim=None, **kwargs)->AxPlot:
+@plot_action(["x"],
+             {"xlim": None})
+def set_xlim(df: DataSource, x, *arg, xlim=None, **kwargs)->AxPlot:
     """
     Parameters
     ----------
@@ -69,7 +71,9 @@ def _xlim_setter(df: DataSource, x, *arg, xlim=None, **kwargs)->AxPlot:
     return plot
 
 
-def _ylim_setter(df: DataSource, y, *arg, ylim=None, **kwargs)->AxPlot:
+@plot_action(["y"],
+             {"ylim": None})
+def set_ylim(df: DataSource, y, *arg, ylim=None, **kwargs)->AxPlot:
     """
     Parameters
     ----------
@@ -88,28 +92,9 @@ def _ylim_setter(df: DataSource, y, *arg, ylim=None, **kwargs)->AxPlot:
     return plot
 
 
-def set_xlim(**presetting):
-    """
-    Set xlim of ax.
-
-    xlim is list of numbers.
-    """
-    return plot_action(
-        _xlim_setter,
-        ["x"],
-        {"xlim": None},
-    )(**presetting)
-
-
-def set_ylim(**presetting):
-    return plot_action(
-        _ylim_setter,
-        ["y"],
-        {"ylim": None},
-    )(**presetting)
-
-
-def _grid_setter(*arg, axis=None, **kwargs)->AxPlot:
+@plot_action([],
+             default_kwargs.get("grid"))
+def set_grid(*arg, axis=None, **kwargs)->AxPlot:
     def plot(ax):
         if axis is None:
             return ax
@@ -118,15 +103,9 @@ def _grid_setter(*arg, axis=None, **kwargs)->AxPlot:
     return plot
 
 
-def set_grid(**presetting):
-    return plot_action(
-        _grid_setter,
-        [],
-        default_kwargs.get("grid")
-    )(**presetting)
-
-
-def _tick_params_setter(df, axis, *arg, **kwargs)->AxPlot:
+@plot_action(["axis"],
+             default_kwargs.get("tick_params"))
+def set_tick_parameters(df, axis, *arg, **kwargs)->AxPlot:
     def plot(ax):
         if axis is "both":
             ax.tick_params(axis=axis, **kwargs)
@@ -137,15 +116,9 @@ def _tick_params_setter(df, axis, *arg, **kwargs)->AxPlot:
     return plot
 
 
-def set_tick_parameters(**presetting):
-    return plot_action(
-        _tick_params_setter,
-        ["axis"],
-        default_kwargs.get("tick_params")
-    )(**presetting)
-
-
-def _axis_scale(*arg, xscale=None, yscale=None):
+@plot_action([],
+             {"xscale": None, "yscale": None})
+def axis_scale(*arg, xscale=None, yscale=None):
     def plot(ax):
         if xscale is not None:
             ax.set_xscale(xscale)
@@ -155,15 +128,9 @@ def _axis_scale(*arg, xscale=None, yscale=None):
     return plot
 
 
-def axis_scale(**presetting):
-    return plot_action(
-        _axis_scale,
-        [],
-        {"xscale": None, "yscale": None}
-    )(**presetting)
-
-
-def _label_setter(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
+@plot_action(["xlabel", "ylabel"],
+        default_kwargs.get("axis_label"))
+def set_label(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
     def plot(ax):
         if xlabel is not None:
             ax.set_xlabel(
@@ -178,13 +145,6 @@ def _label_setter(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxP
         return ax
     return plot
 
-
-def set_label(**presetting):
-    return plot_action(
-        _label_setter,
-        ["xlabel", "ylabel"],
-        default_kwargs.get("axis_label")
-    )(**presetting)
 
 
 def twinx():

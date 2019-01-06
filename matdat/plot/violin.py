@@ -6,7 +6,9 @@ from func_helper import pip
 import func_helper.func_helper.iterator as it
 
 
-def _factor_violin_plotter(
+@plot_action(["x", "y"],
+             {**default_kwargs.get("violin"), "xfactor": None})
+def factor_violin(
         df: DataSource, x, y, *arg,
         bodies=None,
         cmeans=None,
@@ -15,9 +17,50 @@ def _factor_violin_plotter(
         xfactor=None,
         **kwargs)->AxPlot:
     """
+    factor_violine
+    --------------
+    Plot violin plots for pandas.Series.
+    The serieses are subset filtered by a factor.
+
+    Usage
+    -----
+    plot.factor_violin(**preset_kwargs)(
+        df,{
+            "y":"column name for violin plot",
+            "x":"column name for factor"
+        }
+    )(matplotlib.pyplot.subplot())
+
+    Default preset_kwargs are:
+        {
+            "vert": True,
+            "widths" :0.5,
+            "showmeans":False,
+            "showextrema":True,
+            "showmedians":False,
+            "points":100,
+            "bw_method":None,
+            "scale" : "width",
+            "bodies": None,
+            "cmeans": None
+        }
+
+    If scale is "width", each violin has the same width.
+    Else of scale is "count", each violin has the width proportional
+        to its data size.
+
+    "bodies" is used for styling parts of violin.
+    Default is:
+        {
+            "facecolor": "#2196f3",
+            "edgecolor": "#005588",
+            "alpha": 0.5
+        }
+
     factorが与えられたときはfactorでgroupbyする.
     与えられなかったときはdf[f]でgroupbyする.
     """
+
     _factor_series, _factor = Iget_factor(df, x, xfactor)
     _factor_detector = pd.Categorical(
         _factor_series, ordered=True, categories=_factor)
@@ -79,53 +122,3 @@ def _factor_violin_plotter(
 
         return ax
     return plot
-
-
-def factor_violin(**presetting):
-    """
-    factor_violine
-    --------------
-    Plot violin plots for pandas.Series.
-    The serieses are subset filtered by a factor.
-
-    Usage
-    -----
-    plot.factor_violin(**preset_kwargs)(
-        df,{
-            "y":"column name for violin plot",
-            "x":"column name for factor"
-        }
-    )(matplotlib.pyplot.subplot())
-
-    Default preset_kwargs are:
-        {
-            "vert": True,
-            "widths" :0.5,
-            "showmeans":False,
-            "showextrema":True,
-            "showmedians":False,
-            "points":100,
-            "bw_method":None,
-            "scale" : "width",
-            "bodies": None,
-            "cmeans": None
-        }
-
-    If scale is "width", each violin has the same width.
-    Else of scale is "count", each violin has the width proportional
-        to its data size.
-
-    "bodies" is used for styling parts of violin.
-    Default is:
-        {
-            "facecolor": "#2196f3",
-            "edgecolor": "#005588",
-            "alpha": 0.5
-        }
-    """
-
-    return plot_action(
-        _factor_violin_plotter,
-        ["x", "y"],
-        {**default_kwargs.get("violin"), "xfactor": None}
-    )(**presetting)

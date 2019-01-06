@@ -2,7 +2,9 @@ from .action import default_kwargs, plot_action, generate_arg_and_kwags, get_val
 from .action import DataSource, AxPlot
 
 
-def _vlines_plotter(df: DataSource, x, y, *arg, lower=0, **kwargs)->AxPlot:
+@plot_action(["x", "y"],
+             {**default_kwargs.get("vlines"), "lower": 0})
+def vlines(df: DataSource, x, y, *arg, lower=0, **kwargs)->AxPlot:
     if len(df) is 0:
         return lambda ax: ax
 
@@ -15,11 +17,3 @@ def _vlines_plotter(df: DataSource, x, y, *arg, lower=0, **kwargs)->AxPlot:
         )
         return ax
     return plot
-
-
-def vlines(**presetting):
-    return plot_action(
-        _vlines_plotter,
-        ["x", "y"],
-        {**default_kwargs.get("vlines"), "lower": 0}
-    )(**presetting)

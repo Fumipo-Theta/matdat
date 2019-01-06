@@ -2,7 +2,9 @@ from .action import default_kwargs, plot_action, generate_arg_and_kwags, get_val
 from .action import DataSource, AxPlot, Selector
 
 
-def _line_plotter(df: DataSource, x: Selector, y: Selector, *arg, **kwargs)->AxPlot:
+@plot_action(["x", "y"],
+             default_kwargs.get("line"))
+def line(df: DataSource, x: Selector, y: Selector, *arg, **kwargs)->AxPlot:
 
     if len(df) is 0:
         return lambda ax: ax
@@ -14,11 +16,3 @@ def _line_plotter(df: DataSource, x: Selector, y: Selector, *arg, **kwargs)->AxP
         ax.plot(_x, _y, **kwargs)
         return ax
     return plot
-
-
-def line(**presetting):
-    return plot_action(
-        _line_plotter,
-        ["x", "y"],
-        default_kwargs.get("line")
-    )(**presetting)

@@ -2,7 +2,13 @@ from .action import default_kwargs, plot_action, generate_arg_and_kwags, get_val
 from .action import DataSource, AxPlot
 
 
-def _fill_between_plotter(data, x, y, y2=0, cmap=None, **kwargs)->AxPlot:
+@plot_action(["x", "y"],
+             {
+    "y2": 0,
+    **default_kwargs.get("fill"),
+    "color": "blue"
+})
+def fill_between(data, x, y, y2=0, cmap=None, **kwargs)->AxPlot:
     if len(data) is 0:
         return lambda ax: ax
 
@@ -17,15 +23,3 @@ def _fill_between_plotter(data, x, y, y2=0, cmap=None, **kwargs)->AxPlot:
         return ax
 
     return plot
-
-
-def fill_between(**presetting):
-    return plot_action(
-        _fill_between_plotter,
-        ["x", "y"],
-        {
-            "y2": 0,
-            **default_kwargs.get("fill"),
-            "color": "blue"
-        }
-    )(**presetting)

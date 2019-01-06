@@ -6,7 +6,14 @@ from func_helper import pip
 import func_helper.func_helper.iterator as it
 
 
-def _factor_bar_plotter(
+@plot_action(["x", "y", "agg"],
+             {
+    **default_kwargs.get("bar"),
+    "xfactor": None,
+    "yfactor": None,
+    "legend": {}
+})
+def factor_bar(
     df: DataSource,
     x,  # factor1 selector
     y: str,  # stack factor selector
@@ -18,12 +25,32 @@ def _factor_bar_plotter(
     vert=True,
     legend={},
         **kwargs):
+    """
+    plot.bar(**presetting)(df, option, **kwargs)(ax)
+
+    df: dict, pandas.DataFrame, numpy.ndarray
+
+    option: dict
+        x:
+        y:
+        agg:
+        **other_option
+
+    presetting, other_option,kwargs:
+        xfactor:
+        yfactor:
+        norm: bool
+        vert: bool
+        legend: dict
+        align: str
+        width:
+    """
 
     if len(df) is 0:
         return lambda ax: ax
 
     if type(y) is list:
-        return _bar_plotter(df, x, y, agg, *arg, xfactor=xfactor, norm=norm, vert=vert, legend=legend, **kwargs)
+        return bar(x=x, y=y, agg=agg, xfactor=xfactor, norm=norm, vert=vert, legend=legend, **kwargs)(df)
 
     """
     1. stacking bar plotのstackしていくgroupingをつくる
@@ -127,7 +154,23 @@ def _factor_bar_plotter(
     return plot
 
 
-def factor_bar(**presetting):
+@plot_action(["x", "y", "agg"],
+             {
+    **default_kwargs.get("bar"),
+    "xfactor": None,
+    "legend": {}
+})
+def bar(
+    df: DataSource,
+    x,  # factor1 selector
+    y: str,  # stack factor selector
+    agg,  # aggregate
+    *arg,
+    xfactor=None,  # explicit factor list
+    norm=False,
+    vert=True,
+    legend={},
+        **kwargs):
     """
     plot.bar(**presetting)(df, option, **kwargs)(ax)
 
@@ -141,37 +184,12 @@ def factor_bar(**presetting):
 
     presetting, other_option,kwargs:
         xfactor:
-        yfactor:
         norm: bool
         vert: bool
         legend: dict
         align: str
         width:
     """
-
-    return plot_action(
-        _factor_bar_plotter,
-        ["x", "y", "agg"],
-        {
-            **default_kwargs.get("bar"),
-            "xfactor": None,
-            "yfactor": None,
-            "legend": {}
-        }
-    )(**presetting)
-
-
-def _bar_plotter(
-    df: DataSource,
-    x,  # factor1 selector
-    y: str,  # stack factor selector
-    agg,  # aggregate
-    *arg,
-    xfactor=None,  # explicit factor list
-    norm=False,
-    vert=True,
-    legend={},
-        **kwargs):
 
     stack_factor = y if type(y) is list else [y]
     stack_bars = []
@@ -255,34 +273,3 @@ def _bar_plotter(
 
         return ax
     return plot
-
-
-def bar(**presetting):
-    """
-    plot.bar(**presetting)(df, option, **kwargs)(ax)
-
-    df: dict, pandas.DataFrame, numpy.ndarray
-
-    option: dict
-        x:
-        y:
-        agg:
-        **other_option
-
-    presetting, other_option,kwargs:
-        xfactor:
-        norm: bool
-        vert: bool
-        legend: dict
-        align: str
-        width:
-    """
-    return plot_action(
-        _bar_plotter,
-        ["x", "y", "agg"],
-        {
-            **default_kwargs.get("bar"),
-            "xfactor": None,
-            "legend": {}
-        }
-    )(**presetting)
