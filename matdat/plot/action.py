@@ -14,7 +14,8 @@ AxPlot = Callable[[Ax], Ax]
 PlotAction = Callable[[], AxPlot]
 SetData = Callable[[DataSource, dict], AxPlot]
 Presetting = Callable[[dict], SetData]
-Selector = Optional[Union[str, Callable[[DataSource], DataSource]]]
+Scalar = Union[int, float]
+Selector = Optional[Union[Scalar, str, Callable[[DataSource], DataSource]]]
 LiteralOrSequence = Optional[Union[int, float, str, list, tuple, DataSource]]
 LiteralOrSequencer = Optional[Union[LiteralOrSequence,
                                     Callable[[DataSource], DataSource]]]
@@ -119,6 +120,8 @@ def get_subset(use_index=True)\
                 return df.index
             elif type(k) is str:
                 return df[k]
+            elif type(k) in [int, float]:
+                return k
             elif callable(k):
                 return k(df)
             else:
@@ -129,6 +132,8 @@ def get_subset(use_index=True)\
                 return df.index
             elif callable(k):
                 return k(df)
+            elif type(k) in [int, float]:
+                return k
             else:
                 return df
 
@@ -137,6 +142,8 @@ def get_subset(use_index=True)\
                 return df.get(k, [])
             elif callable(k):
                 return k(df)
+            elif type(k) in [int, float]:
+                return k
             else:
                 return df
 
@@ -165,9 +172,6 @@ def get_value(default=""):
 
 def is_iterable(o):
     return type(o) in [list, tuple]
-
-
-
 
 
 def to_flatlist(d: dict) -> List[dict]:
@@ -359,8 +363,10 @@ _scatter_kwargs = {
 
 _fill_kwargs = {
     "color": "green",
+    "cmap": None,
     "alpha": 0.5,
-    "hatch": None
+    "facecolor": None,
+    "hatch": None,
 }
 
 _quiver_kwargs = {

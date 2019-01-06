@@ -37,3 +37,4 @@ from .text import text
 from .hist import hist
 from .bar import bar, factor_bar
 from .cycler import *
+from .fill import *
