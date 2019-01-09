@@ -204,6 +204,7 @@ integrated = Subplot.create({"label":{"fontsize":12}},title={"fontsize":20,"font
         moc,
         x="x",
         label = {"family":["serif"],"fontstyle":"italic","color":"blue"},
+        ylabel_setting={"fontsize":20},
         xlabel="x 日本語",
         ylabel=r"$f(x) \frac{\infty}{b}$",
         y=plot.multiple("y","z"),
@@ -316,6 +317,7 @@ Iplot = Subplot.create(label={"fontsize":24}).register({})
 Iscatter_plot = Iplot.forked({
     "plot":[plot.scatter(s=5)], 
     "transformer":lambda df: df.assign(x=df.x+5),
+    "grid":{"axis":"both"},
     "xlabel":"x", 
     "ylabel":"first y"
 })
@@ -338,20 +340,25 @@ subplot= Iscatter_plot.forked({"data" : moc, "x":"x", "y":"y"},label={"color":"r
         x="x",
         y="x",
         #xlim=[-5,25],
-        grid={"axis":"both"},
+        grid={"axis":"both","linestyle":"--"},
         plot=[plot.line(),],
         second_axis=True,
         label={"color":"blue"}
     )
 
-subplot_custom_ylim=subplot.forked(dict(),dict(ylim=[0,100]),dict(ylim=[0,30]))
+subplot_custom_ylim=subplot.forked(dict(ylim=[]),dict(),dict(xlim=[0,50],ylim=[0,200]))
 
 figure.add_subplot(
-    subplot
-).add_subplot(
-    subplot_custom_ylim)
+    subplot,
+    subplot_custom_ylim
+)
 
-figure.show(size=(8,6))
+fig,axs = figure.show(size=(8,6),margin=2,column=2,test=False)
+
+axs[1][0].set_xlabel("mod")
+axs[1][0].set_ylabel("mod")
+
+fig,axs
 ```
 
 ```python
@@ -363,6 +370,15 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 Ax = Optional[matplotlib.axes._subplots.Axes]
+```
+
+```python
+ax1 = plt.subplot(121)
+ax1.scatter(x=[0,1,2],y=[0,1,2])
+ax1_ = ax1.twinx()
+ax1_.scatter(x=[0,1,2],y=[2,1,0],c="red")
+ax1_.set_ylim([0,5])
+ax1.set_xlim([-2,2])
 ```
 
 ```python

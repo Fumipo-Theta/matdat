@@ -268,7 +268,7 @@ class Figure:
 
         axes = pip(
             Figure.__applyForEach(test),
-            list
+            # list
         )(zip(empty_axes, self.subplots))
 
         return (fig, dict(zip(self.axIdentifier, axes)))

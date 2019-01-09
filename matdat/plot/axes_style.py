@@ -129,7 +129,7 @@ def axis_scale(*arg, xscale=None, yscale=None):
 
 
 @plot_action(["xlabel", "ylabel"],
-        default_kwargs.get("axis_label"))
+             default_kwargs.get("axis_label"))
 def set_label(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
     def plot(ax):
         if xlabel is not None:
@@ -145,6 +145,29 @@ def set_label(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
         return ax
     return plot
 
+
+@plot_action(["xlabel"], default_kwargs.get("axis_label"))
+def set_xlabel(df, xlabel: str, *arg, **kwargs)->AxPlot:
+    def plot(ax):
+        if xlabel is not None:
+            ax.set_xlabel(
+                xlabel,
+                **kwargs
+            )
+        return ax
+    return plot
+
+
+@plot_action(["ylabel"], default_kwargs.get("axis_label"))
+def set_ylabel(df, ylabel: str, *arg, **kwargs)->AxPlot:
+    def plot(ax):
+        if ylabel is not None:
+            ax.set_ylabel(
+                ylabel,
+                **kwargs
+            )
+        return ax
+    return plot
 
 
 def twinx():

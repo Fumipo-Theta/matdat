@@ -6,7 +6,7 @@ from . import plot
 from .get_path import getFileList, PathList
 from .i_subplot import ISubplot
 import pandas as pd
-from typing import List, Tuple, Callable, Union, Optional,TypeVar
+from typing import List, Tuple, Callable, Union, Optional, TypeVar
 from func_helper.func_helper.iterator import DuplicateLast as Duplicated
 
 
@@ -15,9 +15,10 @@ Ax = plot.Ax
 AxPlot = plot.AxPlot
 PlotAction = Callable[..., AxPlot]
 DataTransformer = Callable[[pd.DataFrame], pd.DataFrame]
-T=TypeVar("T")
+T = TypeVar("T")
 
-def arg_filter(ref_keys):
+
+def filter_dict(ref_keys):
     return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
 
 
@@ -33,7 +34,7 @@ def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
     return d, mix_dict
 
 
-def wrap_by_duplicate(a:Union[T,Duplicated])->Union[Duplicated]:
+def wrap_by_duplicate(a: Union[T, Duplicated])->Union[Duplicated]:
     """
     Wrap not tuple parameter by tuple.
     """
@@ -69,6 +70,12 @@ class Subplot(ISubplot):
         subplot = Subplot(*style_dict, **style)
         return subplot
 
+    @staticmethod
+    def create_empty_space():
+        return Subplot.create().add(
+            plot=[lambda df,opt: Subplot.__noDataAx]
+        )
+
     def __init__(self, *style_dict, **style):
 
         self.data = []
@@ -91,6 +98,8 @@ class Subplot(ISubplot):
             "label": {
                 "fontsize": 16,
             },
+            "xlabel_setting": {},
+            "ylabel_setting": {},
             "scale": {
                 "xscale": None,
                 "yscale": None,
@@ -119,6 +128,8 @@ class Subplot(ISubplot):
             "xlim": [],
             "ylim": [],
             "label": {},
+            "xlabel_setting": {},
+            "ylabel_setting": {},
             "scale": {},
             "tick": {},
             "xtick": {},
@@ -135,6 +146,15 @@ class Subplot(ISubplot):
     def set_title(self, title):
         self.title = title
         return self
+
+    def get_first_axis_style(self)->dict:
+        return self.axes_style
+
+    def get_second_axis_style(self)->dict:
+        return mix_dict(
+            self.axes_style,
+            self.diff_second_axes_style
+        )[0]
 
     def show_title(self, ax):
         if self.title is not None:
@@ -163,34 +183,35 @@ class Subplot(ISubplot):
 
         self.set_test_mode(test)
 
-        actions1 = map(
+        first_plot_actions = map(
             self.__getPlotAction,
             filter(lambda i: not self.is_second_axes[i], range(self.length))
         )
 
+        first_axis_style = self.get_first_axis_style()
+
         ax1 = pip(
-            self.plotter(actions1, self.axes_style),
+            self.plotter(first_plot_actions, first_axis_style),
             self.show_title,
             self.setXaxisFormat()
         )(ax)
 
         if any(self.is_second_axes):
-            actions2 = map(
+            second_axis_actions = map(
                 self.__getPlotAction,
                 filter(
                     lambda i: self.is_second_axes[i], range(self.length))
             )
 
-            style2, _ = mix_dict(
-                self.axes_style,
-                self.diff_second_axes_style
-            )
+            second_xaxis_style = {**self.get_second_axis_style(), "ylim": []}
+            second_yaxis_style = {**self.get_second_axis_style(), "xlim": []}
 
+            # A hack for changing the first and the second axis limits independently.
             ax2 = pip(
                 lambda ax: ax.twiny(),
-                self.plotter([],style2),
+                self.plotter([], second_xaxis_style),
                 lambda ax: ax.twinx(),
-                self.plotter(actions2,style2)
+                self.plotter(second_axis_actions, second_yaxis_style)
             )(ax1)
 
             return (ax1, ax2)
@@ -200,6 +221,9 @@ class Subplot(ISubplot):
     @staticmethod
     def Iplotter():
         def plotter(actions, style):
+            """
+
+            """
             return pip(
                 plot.set_cycler(style["cycler"]),
                 *actions,
@@ -212,13 +236,16 @@ class Subplot(ISubplot):
                     {}, {**style["tick"], **style["ytick"]}),
                 plot.set_xlim()({}, {"xlim": style["xlim"]}),
                 plot.set_ylim()({}, {"ylim": style["ylim"]}),
-                plot.set_label()({}, style["label"]),
+                plot.set_xlabel()(
+                    {}, {**style["label"], **style["xlabel_setting"]}),
+                plot.set_ylabel()(
+                    {}, {**style["label"], **style["ylabel_setting"]}),
                 plot.set_grid()({}, style["grid"])
             )
         return plotter
 
     def __getPlotAction(self, i):
-        dfs: Duplicated = self.read(i)
+        dfs: Duplicated = self.__read(i)
         opt = self.get_option(i)
 
         if len(dfs) == 0 or all(map(lambda df: len(df) is 0, dfs.args)):
@@ -228,13 +255,13 @@ class Subplot(ISubplot):
             *[f(dfs, opt) for f in self.plotMethods[i]],
         )(ax)
 
-    def read(self, i)->Tuple[pd.DataFrame]:
+    def __read(self, i)->Tuple[pd.DataFrame]:
         """
         Indipendent from type of data source.
         """
         data: Duplicated = wrap_by_duplicate(self.data[i])
         meta: Duplicated = wrap_by_duplicate(self.dataInfo[i])
-        default_transformers: Duplicated = self.default_transformers(i)
+        default_transformers: Duplicated = self.__default_transformers(i)
         data_transformers: Duplicated = wrap_by_duplicate(
             self.dataTransformer[i])
 
@@ -243,7 +270,7 @@ class Subplot(ISubplot):
             it.reducing(lambda acc, e: acc if acc > e else e)(0)
         )([data, meta, default_transformers, data_transformers])
 
-        def get_with_duplicate(it:Duplicated, i, default=None):
+        def get_with_duplicate(it: Duplicated, i, default=None):
             if len(it) is 0:
                 return default
             return it[i]
@@ -266,7 +293,7 @@ class Subplot(ISubplot):
                                    transformers=transformers))
         return Duplicated(*dfs)
 
-    def default_transformers(self, i)->tuple:
+    def __default_transformers(self, i)->tuple:
         def filterX(df):
             x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim")
@@ -297,27 +324,29 @@ class Subplot(ISubplot):
         return self.add(*arg, **kwargs)
 
     def add(self,
-                 data: Union[DataSource, Tuple[DataSource]]={},
-                 dataInfo: dict={},
-                 index: Optional[Union[List[str], Tuple[List[str]]]]=None,
-                 transformer: Union[DataTransformer, List[DataTransformer], Tuple[DataTransformer], Tuple[List[DataTransformer]]]=identity,
-                 plot: List[PlotAction]=[],
-                 option: dict={},
-                 xlim: Optional[list]=None,
-                 ylim: Optional[list]=None,
-                 xscale: Optional[str]=None,
-                 yscale: Optional[str]=None,
-                 tick: dict={},
-                 xtick: dict={},
-                 ytick: dict={},
-                 label: dict={},
-                 xlabel: Optional[str]=None,
-                 ylabel: Optional[str]=None,
-                 grid: dict={},
-                 cycler=None,
-                 within_xlim: bool=False,
-                 second_axis: bool=False,
-                 **_kwargs):
+            data: Union[DataSource, Tuple[DataSource]]={},
+            dataInfo: dict={},
+            index: Optional[Union[List[str], Tuple[List[str]]]]=None,
+            transformer: Union[DataTransformer, List[DataTransformer], Tuple[DataTransformer], Tuple[List[DataTransformer]]]=identity,
+            plot: List[PlotAction]=[],
+            option: dict={},
+            xlim: Optional[list]=None,
+            ylim: Optional[list]=None,
+            xscale: Optional[str]=None,
+            yscale: Optional[str]=None,
+            tick: dict={},
+            xtick: dict={},
+            ytick: dict={},
+            label: dict={},
+            xlabel_setting: dict={},
+            ylabel_setting: dict={},
+            xlabel: Optional[str]=None,
+            ylabel: Optional[str]=None,
+            grid: dict={},
+            cycler=None,
+            within_xlim: bool=False,
+            second_axis: bool=False,
+            **_kwargs):
         """
         Set parameters for plotting.
 
@@ -379,13 +408,21 @@ class Subplot(ISubplot):
                     {"xlabel": xlabel} if xlabel else {},
                     {"ylabel": ylabel} if ylabel else {}
                 ),
+                "xlabel_setting": dictionary.mix(
+                    {},
+                    xlabel_setting if type(xlabel_setting) is dict else {}
+                ),
+                "ylabel_setting": dictionary.mix(
+                    {},
+                    ylabel_setting if type(ylabel_setting) is dict else {}
+                ),
                 "scale": {
                     "xscale": xscale,
                     "yscale": yscale
                 },
                 "tick": dictionary.mix(
                     tick,
-                    arg_filter([
+                    filter_dict([
                         "labelbottom",
                         "labeltop",
                         "labelleft",
@@ -435,9 +472,9 @@ class Subplot(ISubplot):
         return self
 
     def forked(self,
-            *option,
-            **style_kwargs
-            ):
+               *option,
+               **style_kwargs
+               ):
         """
         Method for extends a subplot to the another subplot.
         Without any option, a subplot instance is copied to
