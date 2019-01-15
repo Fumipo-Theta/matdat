@@ -72,9 +72,12 @@ class Subplot(ISubplot):
 
     @staticmethod
     def create_empty_space():
-        return Subplot.create().add(
-            plot=[lambda df,opt: Subplot.__noDataAx]
+        return Subplot().add(
+            plot=[lambda df, opt: Subplot.__noDataAx]
         )
+
+    def __new__(cls, *arg, **kwargs):
+        return super().__new__(cls)
 
     def __init__(self, *style_dict, **style):
 
@@ -143,7 +146,7 @@ class Subplot(ISubplot):
         self.length = 0
         self.plotter = Subplot.Iplotter()
 
-    def set_title(self, title):
+    def set_title(self, title=""):
         self.title = title
         return self
 
@@ -405,8 +408,8 @@ class Subplot(ISubplot):
             {
                 "label": dictionary.mix(
                     label,
-                    {"xlabel": xlabel} if xlabel else {},
-                    {"ylabel": ylabel} if ylabel else {}
+                    {"xlabel": xlabel} if xlabel is not None else {},
+                    {"ylabel": ylabel} if ylabel is not None else {}
                 ),
                 "xlabel_setting": dictionary.mix(
                     {},

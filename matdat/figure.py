@@ -2,6 +2,7 @@ import re
 from func_helper import pip, identity
 from .save_plot import actionSavePNG
 from .i_subplot import ISubplot
+from .subplot import Subplot
 from matpos import Matpos, FigureSizing, Subgrid
 import matpos.matpos.type_set as matpos_type
 from typing import Union, List, Tuple, Optional, Dict
@@ -147,9 +148,18 @@ class Figure:
     def create():
         return Figure()
 
+    def __new__(cls, *arg, **kwargs):
+        return super().__new__(cls)
+
     def __init__(self, *arg, **kwargs):
         self.subplots = []
         self.axIdentifier = []
+
+    def __add__(self, figure: Figure):
+        return Figure.create().add_subplot(
+            *self.subplots,
+            *figure.subplots,
+        )
 
     def get_length(self):
         return len(self.subplots)
@@ -265,6 +275,9 @@ class Figure:
         fig, empty_axes = matpos.figure_and_axes(
             subgrids, padding=padding, **kwargs
         )
+
+        while len(self.subplots) < len(empty_axes):
+            self.add_subplot(Subplot.create_empty_space())
 
         axes = pip(
             Figure.__applyForEach(test),

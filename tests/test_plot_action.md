@@ -38,19 +38,9 @@ from matdat import Figure, Subplot
 ## Publisher class
 
 ```python
-class IPublisher:
-    def __init__(self):
-        pass
+from matdat.matdat.plot_size.powerpoint import Slide4x3, Slide16x9
     
-    def use_setting(self)->dict:
-        pass
-    
-    
-class Slide4x3(IPublisher):
-    def use_setting(self)->dict:
-        return dict(
-            figuresize=(10,7.5)
-        )
+grid_2x2 = Slide4x3(row=2,column=2)
 ```
 
 ## xyz sequential data
@@ -69,12 +59,43 @@ moc = dictionary.over_iterator(
 
 ## Test of plot actions
 
+```python
+if "a":
+    print(True)
+```
+
+```python
+figure_1 = Figure().add_subplot(
+    Subplot().add(
+        data=moc,
+        x="x",
+        y="y",
+        xlabel="x",
+        ylabel="y",
+        plot=[plot.scatter()]
+    ).set_title("(a)")
+)
+
+figure_2 = Figure().add_subplot(
+    Subplot().add(
+        data=moc,
+        x="x",
+        y="z",
+        plot=[plot.scatter()]
+    ),
+)
+
+figure = figure_1 + figure_2
+
+figure.show(grid_2x2.use())
+
+```
 
 ### Axes styling
 
 ```python
 # Default style defining in Subplot class
-I_default_style_plot = Subplot.create().add(
+I_default_style_plot = Subplot().add(
     data=moc,
     xlabel="x",
     ylabel="y",
@@ -104,16 +125,16 @@ I_multi_plot = I_single_plot.forked(dict(
 ```
 
 ```python
-Figure.create().add_subplot(
+Figure().add_subplot(
     I_default_style_plot.set_title("Default style"),
     I_custom_style_plot.set_title("Custom style"),
-).show(size=(4,4),margin=(1,1),column=2)
+).show(size=(5,5),margin=(1,1),column=2)
 ```
 
 ### Line plot
 
 ```python
-Figure.create().add_subplot(
+Figure().add_subplot(
     I_single_plot.forked(dict(plot=[plot.line()])),
     I_multi_plot.forked(dict(plot=[plot.line()]))
 ).show(size=(5,5),margin=(1,1),column=2)
@@ -122,7 +143,7 @@ Figure.create().add_subplot(
 ### Scatter plot
 
 ```python
-Figure.create().add_subplot(
+Figure().add_subplot(
     I_single_plot.forked(dict(plot=[plot.scatter(s=lambda df:df["y"])])),
     I_multi_plot.forked(dict(plot=[plot.scatter()])),
     I_single_plot.forked(dict(plot=[plot.scatter(alpha=0.5),plot.line()])),
@@ -133,7 +154,7 @@ Figure.create().add_subplot(
 ### Vertical line plot
 
 ```python
-Figure.create().add_subplot(
+Figure().add_subplot(
     I_single_plot.forked(dict(plot=[plot.vlines(lower=5, linestyle="--")])),
     I_multi_plot.forked(dict(plot=[plot.vlines(color=plot.multiple("C0","C1"))]))
 ).show(size=(5,5),margin=(1,1),column=2)
@@ -142,7 +163,7 @@ Figure.create().add_subplot(
 ### Band plot
 
 ```python
-Figure.create().add_subplot(
+Figure().add_subplot(
     I_single_plot.forked(dict(plot=[plot.scatter(),plot.yband(xpos=0.5,color="blue")])),
     I_multi_plot.forked(dict(plot=[plot.scatter(),plot.yband(xpos=plot.multiple([-2,2],[-4,-3]))])),
 ).show(size=(4,4),column=2)
@@ -151,7 +172,7 @@ Figure.create().add_subplot(
 ### Plot fill between lines
 
 ```python
-Figure.create().add_subplot(
+Figure().add_subplot(
     I_single_plot.forked(dict(plot=[plot.fill_between(y2=5)])),
     I_multi_plot.forked(dict(plot=[plot.fill_between(y2="z")])),
 ).show(size=(4,4),column=2)
@@ -191,7 +212,7 @@ moc_count = dictionary.over_iterator(
 moc_count["non_linear"] = non_linear(moc_count["xfactor"])
 
 
-I_hist_plot = Subplot.create().add(
+I_hist_plot = Subplot().add(
     data = moc_count,
     y="normal",
     
@@ -213,7 +234,7 @@ horizontal_hist = vertical_hist.forked(
     dict(x="xdensity",y="x")
 )
 
-Figure.create().add_subplot(
+Figure().add_subplot(
     vertical_hist,
     horizontal_hist,
 ).show(size=(4,4),column=2)
@@ -260,7 +281,7 @@ def joint_plot(data,x,y,*,scatter=plot.scatter(),hist=plot.hist(),dpi=72):
         plot=[hist]
     )
     
-    return Figure.create().add_subplot(
+    return Figure().add_subplot(
         x_hist,
         empty_space,
         scatter_plot,
@@ -297,14 +318,14 @@ i_violin_box_plot = Subplot.create().add(
         plot=[plot.box(),plot.violin()]
 )
 
-Figure.create().add_subplot(
+Figure().add_subplot(
     i_box_plot.forked(),
     i_violin_plot.forked(),
     i_violin_box_plot.forked(),
     i_box_plot.forked(dict(vert=False)),
     i_violin_plot.forked(dict(vert=False)),
     i_violin_box_plot.forked(dict(vert=False)),
-    Subplot.create().add(
+    Subplot.().add(
         data=moc_count,
         x="xfactor",
         y="non_linear",
@@ -316,7 +337,7 @@ Figure.create().add_subplot(
 ### Bar plot
 
 ```python
-Figure.create().add_subplot(
+Figure().add_subplot(
     Subplot.create().add(
         data=moc_count,
         x=None,
