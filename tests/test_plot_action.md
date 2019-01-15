@@ -35,6 +35,24 @@ from func_helper import pip
 from matdat import Figure, Subplot
 ```
 
+## Publisher class
+
+```python
+class IPublisher:
+    def __init__(self):
+        pass
+    
+    def use_setting(self)->dict:
+        pass
+    
+    
+class Slide4x3(IPublisher):
+    def use_setting(self)->dict:
+        return dict(
+            figuresize=(10,7.5)
+        )
+```
+
 ## xyz sequential data
 
 ```python
@@ -142,13 +160,36 @@ Figure.create().add_subplot(
 ## Discontinuous data
 
 ```python
+def xfactor(_)->str:
+    r = np.random.normal()
+    if r > 0.75:
+        return "upper"
+    elif r > 0.25:
+        return "middle"
+    else:
+        return "lower"
+
+@np.vectorize
+def non_linear(cls):
+    r = np.random.normal()
+    if cls is "upper":
+        return r + 1
+    elif cls is "middle":
+        return r + 0.5
+    else:
+        return r
+
 moc_count = dictionary.over_iterator(
     normal = lambda x: np.random.normal(),
     xcount = lambda x: np.random.normal() + 0.5 * x*x,
     ycount = lambda x: np.random.normal(scale=0.5) +  x,
     x = lambda x: x,
-    xdensity = lambda x: np.exp(-x*x/2)/np.sqrt(2*math.pi)
+    xdensity = lambda x: np.exp(-x*x/2)/np.sqrt(2*math.pi),
+    xfactor = xfactor,
 )(np.linspace(-5,5,1000))
+
+moc_count["non_linear"] = non_linear(moc_count["xfactor"])
+
 
 I_hist_plot = Subplot.create().add(
     data = moc_count,
@@ -235,21 +276,55 @@ def joint_plot(data,x,y,*,scatter=plot.scatter(),hist=plot.hist(),dpi=72):
 joint_plot(moc_count,"xcount","ycount",scatter=plot.scatter(alpha=0.5),hist=plot.hist(density=True),dpi=72)
 ```
 
-### Box plot
+### Box and violin plot
+
+```python
+i_box_plot=Subplot.create().add(
+        data=moc_count,
+        y=["xcount","ycount"],
+        plot=[plot.box()]
+)
+
+i_violin_plot = Subplot.create().add(
+        data=moc_count,
+        y=["xcount","ycount"],
+        plot=[plot.violin()]
+)
+
+i_violin_box_plot = Subplot.create().add(
+        data=moc_count,
+        y=["xcount","ycount"],
+        plot=[plot.box(),plot.violin()]
+)
+
+Figure.create().add_subplot(
+    i_box_plot.forked(),
+    i_violin_plot.forked(),
+    i_violin_box_plot.forked(),
+    i_box_plot.forked(dict(vert=False)),
+    i_violin_plot.forked(dict(vert=False)),
+    i_violin_box_plot.forked(dict(vert=False)),
+    Subplot.create().add(
+        data=moc_count,
+        x="xfactor",
+        y="non_linear",
+        plot=[plot.factor_box(),plot.factor_violin()],
+    ),
+).show(size=(6,6),column=3)
+```
+
+### Bar plot
 
 ```python
 Figure.create().add_subplot(
     Subplot.create().add(
         data=moc_count,
-        y=["xcount","ycount"],
-        plot=[plot.box()]
-    ),
-    Subplot.create().add(
-        data=moc_count,
-        y=["xcount","ycount"],
-        plot=[plot.box(vert=False)]
-    ),
-).show(size=(6,6),column=2)
+        x=None,
+        y="xcount",
+        agg=lambda s: s.mean(),
+        plot=[plot.bar()]
+    )
+).show(size=(6,6),column=3)
 ```
 
 ```python

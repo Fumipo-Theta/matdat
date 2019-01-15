@@ -32,7 +32,7 @@ from .vhlines import vlines
 from .band import xband, yband
 from .velocity import velocity
 from .box import box, factor_box
-from .violin import factor_violin
+from .violin import violin, factor_violin
 from .text import text
 from .hist import hist
 from .bar import bar, factor_bar
