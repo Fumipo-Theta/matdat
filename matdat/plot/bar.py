@@ -6,7 +6,7 @@ from func_helper import pip
 import func_helper.func_helper.iterator as it
 
 
-@plot_action(["x", "y", "agg"],
+@plot_action(["x", "y", "yagg"],
              {
     **default_kwargs.get("bar"),
     "xfactor": None,
@@ -17,7 +17,7 @@ def factor_bar(
     df: DataSource,
     x,  # factor1 selector
     y: str,  # stack factor selector
-    agg,  # aggregate
+    yagg,  # aggregate
     *arg,
     xfactor=None,  # explicit factor list
     yfactor=None,  # explicit factor list
@@ -50,7 +50,7 @@ def factor_bar(
         return lambda ax: ax
 
     if type(y) is list:
-        return bar(x=x, y=y, agg=agg, xfactor=xfactor, norm=norm, vert=vert, legend=legend, **kwargs)(df)
+        return bar(x=x, y=y, yagg=yagg, xfactor=xfactor, norm=norm, vert=vert, legend=legend, **kwargs)(df)
 
     """
     1. stacking bar plotのstackしていくgroupingをつくる
@@ -93,7 +93,7 @@ def factor_bar(
         ]
 
         stack_heights = pip(
-            it.mapping(lambda df: df.agg(agg).values),
+            it.mapping(lambda df: df.agg(yagg).values),
             it.mapping(lambda arr: arr[0] if len(arr) > 0 else 0),
             list
         )(subset_for_x_factor)
@@ -154,7 +154,7 @@ def factor_bar(
     return plot
 
 
-@plot_action(["x", "y", "agg"],
+@plot_action(["x", "y", "yagg"],
              {
     **default_kwargs.get("bar"),
     "xfactor": None,
@@ -164,7 +164,7 @@ def bar(
     df: DataSource,
     x,  # factor1 selector
     y: str,  # stack factor selector
-    agg,  # aggregate
+    yagg,  # aggregate
     *arg,
     xfactor=None,  # explicit factor list
     norm=False,
@@ -214,7 +214,7 @@ def bar(
         # aggrigation時にnanがあると, normalize時にsumがnanになる.
         # それを回避するためにfillna(0)してある.
         stack_heights = pip(
-            it.mapping(lambda df: agg(df[stack_name].fillna(0))),
+            it.mapping(lambda df: yagg(df[stack_name].fillna(0))),
             #it.mapping(lambda arr: arr[0] if len(arr) > 0 else 0),
             list
         )(subset_for_x_factor)
