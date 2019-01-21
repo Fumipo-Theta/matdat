@@ -21,7 +21,7 @@ LiteralOrSequencer = Optional[Union[LiteralOrSequence,
                                     Callable[[DataSource], DataSource]]]
 
 
-def plot_action(arg_names: List[str], default_kwargs: dict={}):
+def plot_action(arg_names: List[str], default_kwargs: dict = {}):
     """
     Generate plot action by hashable object and some parameters, which takes
         matplotlib.pyplot.Axes.subplot and return it.
@@ -43,8 +43,8 @@ def plot_action(arg_names: List[str], default_kwargs: dict={}):
 
     def wrapper(plotter: PlotAction)->Presetting:
 
-        def presetting(setting: dict={}, **setting_kwargs)->SetData:
-            def set_data(data_source: DataSource, option: dict={},  **option_kwargs)->AxPlot:
+        def presetting(setting: dict = {}, **setting_kwargs)->SetData:
+            def set_data(data_source: DataSource, option: dict = {},  **option_kwargs)->AxPlot:
                 """
                 Parameters
                 ----------
@@ -313,7 +313,7 @@ _label_kwargs = {
     # "fontname" : "sans-serif",
     "fontsize": 16,
     "fontstyle": "normal",
-
+    "fontweight": "normal",
 }
 
 _line2d_kwargs = {
