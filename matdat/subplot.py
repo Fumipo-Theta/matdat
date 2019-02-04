@@ -264,7 +264,7 @@ class Subplot(ISubplot):
         """
         data: Duplicated = wrap_by_duplicate(self.data[i])
         meta: Duplicated = wrap_by_duplicate(self.dataInfo[i])
-        default_transformers: Duplicated = self.__default_transformers(i)
+        default_transformers: Duplicated = self.default_transformers(i)
         data_transformers: Duplicated = wrap_by_duplicate(
             self.dataTransformer[i])
 
@@ -296,7 +296,7 @@ class Subplot(ISubplot):
                                    transformers=transformers))
         return Duplicated(*dfs)
 
-    def __default_transformers(self, i)->tuple:
+    def default_transformers(self, i)->tuple:
         def filterX(df):
             x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim")
