@@ -11,6 +11,7 @@ import func_helper.func_helper.iterator as it
     **default_kwargs.get("bar"),
     "xfactor": None,
     "yfactor": None,
+    "legend_labels": None,
     "legend": {}
 })
 def factor_bar(
@@ -23,6 +24,7 @@ def factor_bar(
     yfactor=None,  # explicit factor list
     norm=False,
     vert=True,
+    legend_labels=None,
     legend={},
         **kwargs):
     """
@@ -50,7 +52,11 @@ def factor_bar(
         return lambda ax: ax
 
     if type(y) is list:
-        return bar(x=x, y=y, yagg=yagg, xfactor=xfactor, norm=norm, vert=vert, legend=legend, **kwargs)(df)
+        return bar(x=x, y=y,
+                   yagg=yagg, xfactor=xfactor,
+                   norm=norm, vert=vert,
+                   legend_labels=legend_labels, legend=legend,
+                   **kwargs)(df)
 
     """
     1. stacking bar plotのstackしていくgroupingをつくる
@@ -139,7 +145,9 @@ def factor_bar(
                         ind, bar, left=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
 
-        ax.legend(stack_factor, **legend)
+        if (legend is not None) and (legend is not False):
+            ax.legend(
+                stack_factor if legend_labels is None else legend_labels, **legend)
 
         if vert:
             # ax.set_xticks(ind)
@@ -158,6 +166,7 @@ def factor_bar(
              {
     **default_kwargs.get("bar"),
     "xfactor": None,
+    "legend_labels": None,
     "legend": {}
 })
 def bar(
@@ -169,6 +178,7 @@ def bar(
     xfactor=None,  # explicit factor list
     norm=False,
     vert=True,
+    legend_labels=None,
     legend={},
         **kwargs):
     """
@@ -260,7 +270,9 @@ def bar(
                         ind, bar, left=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
 
-        ax.legend(stack_factor, **legend)
+        if (legend is not None) and (legend is not False):
+            ax.legend(
+                stack_factor if legend_labels is None else legend_labels, **legend)
 
         if vert:
             # ax.set_xticks(ind)
