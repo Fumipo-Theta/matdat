@@ -85,6 +85,7 @@ def factor_violin(
         widths=0.5,
         scale="width",
         xfactor=None,
+        positions=None,
         **kwargs)->AxPlot:
     """
     factor_violine
@@ -139,13 +140,16 @@ def factor_violin(
     _data_without_nan = [df.loc[_group.groups[fname]][y].dropna()
                          for fname in _factor]
 
+    loc_and_violin = enumerate(_data_without_nan) if positions is None \
+        else zip(positions, _data_without_nan)
+
     _subset_hasLegalLength = pip(
         it.filtering(lambda iv: len(iv[1]) > 0),
         list
     )(enumerate(_data_without_nan))
 
     dataset = [iv[1].values for iv in _subset_hasLegalLength]
-    positions = [iv[0] for iv in _subset_hasLegalLength]
+    _positions = [iv[0] for iv in _subset_hasLegalLength]
 
     if scale is "count":
         count = [len(d) for d in dataset]
@@ -162,7 +166,7 @@ def factor_violin(
 
         parts = ax.violinplot(
             dataset=dataset,
-            positions=positions,
+            positions=_positions,
             widths=_widths,
             **kwargs
         )

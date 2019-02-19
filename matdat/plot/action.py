@@ -425,7 +425,7 @@ _violin_kwargs = {
     "showmedians": False,
     "points": 100,
     "bw_method": None,
-
+    "positions":None,
     "scale": "width",  # "width" | "count"
 
     "bodies": None,
