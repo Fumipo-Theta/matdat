@@ -524,6 +524,7 @@ class Subplot(ISubplot):
                         "index": self.index_name[i],
                         "plot": self.plotMethods[i],
                         "second_axis": self.is_second_axes[i],
+                        "transformer": self.dataTransformer[i],
                     },
                     self.option[i],
                     option[i] if len(option) > i and type(
