@@ -359,6 +359,7 @@ _scatter_kwargs = {
     "vmax": None,
     "alpha": 1,
     "marker": "o",
+    "facecolor": None,
     "edgecolors": "face",
     "linewidth": None,
     "linestyle": "-"
@@ -425,7 +426,7 @@ _violin_kwargs = {
     "showmedians": False,
     "points": 100,
     "bw_method": None,
-    "positions":None,
+    "positions": None,
     "scale": "width",  # "width" | "count"
 
     "bodies": None,
