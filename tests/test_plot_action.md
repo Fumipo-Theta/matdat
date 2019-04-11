@@ -60,11 +60,6 @@ moc = dictionary.over_iterator(
 ## Test of plot actions
 
 ```python
-if "a":
-    print(True)
-```
-
-```python
 figure_1 = Figure().add_subplot(
     Subplot().add(
         data=moc,
