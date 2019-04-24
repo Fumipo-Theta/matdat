@@ -64,3 +64,12 @@ def getFileList(*patterns):
         list,
         PathList
     )(dirPath)
+
+
+def multiple_path_finder(*patterns):
+    def apply(roots):
+        if type(roots) is str:
+            return [getFileList(*patterns)(roots)]
+        else:
+            return [getFileList(*patterns)(root) for root in roots]
+    return apply
