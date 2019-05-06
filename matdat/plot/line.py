@@ -17,7 +17,9 @@ def line(
     _y = get_subset()(df, y)
     _color = get_literal_or_series(color, df)
 
+    new_kwargs = {k:get_literal_or_series(v,df) for k,v in kwargs.items()}
+
     def plot(ax):
-        ax.plot(_x, _y, color=_color, **kwargs)
+        ax.plot(_x, _y, color=_color, **new_kwargs)
         return ax
     return plot
