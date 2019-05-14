@@ -59,7 +59,7 @@ class SubplotTime(Subplot):
         def f(ax):
             ax.xaxis.set_major_formatter(
                 mdates.DateFormatter(
-                    self.axes_style["style"]["xFmt"]
+                    self.axes_style["style"].get("xFmt", None)
                 )
             )
             return ax
