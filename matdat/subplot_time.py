@@ -65,14 +65,14 @@ class SubplotTime(Subplot):
             return ax
         return f
 
-    def default_transformers(self, i)->tuple:
+    def default_transformers(self, i) -> tuple:
 
         def filterX():
             x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim", [])
-            if len(lim) is 0 or lim is None:
+            if len(lim) == 0 or lim is None:
                 return identity
-            elif len(lim) is 1:
+            elif len(lim) == 1:
                 lower = lim[0]
                 upper = None
             else:
@@ -91,7 +91,7 @@ class SubplotTime(Subplot):
                 )
             if type(index_name) is not list:
                 return identity
-            elif len(index_name) is 0:
+            elif len(index_name) == 0:
                 return identity
             else:
                 return dataframe.setTimeSeriesIndex(

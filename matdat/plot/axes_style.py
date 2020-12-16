@@ -7,7 +7,7 @@ import pandas as pd
 
 def set_cycler(cycler=None):
     def setter(ax):
-        if cycler is 'default':
+        if cycler == 'default':
             return ax
         elif cycler is None:
             return ax
@@ -41,7 +41,7 @@ def _get_lim_parameter(df: DataSource, lim_list: Optional[list]):
         return None
     elif len(lim_list) >= 2:
         return lim_list
-    elif len(lim_list) is 1:
+    elif len(lim_list) == 1:
         return [lim_list[0], None]
     else:
         return None
@@ -52,7 +52,7 @@ _invalid_range = [None, pd.NaT, np.nan]
 
 @plot_action(["x"],
              {"xlim": None})
-def set_xlim(df: DataSource, x, *arg, xlim=None, **kwargs)->AxPlot:
+def set_xlim(df: DataSource, x, *arg, xlim=None, **kwargs) -> AxPlot:
     """
     Parameters
     ----------
@@ -73,7 +73,7 @@ def set_xlim(df: DataSource, x, *arg, xlim=None, **kwargs)->AxPlot:
 
 @plot_action(["y"],
              {"ylim": None})
-def set_ylim(df: DataSource, y, *arg, ylim=None, **kwargs)->AxPlot:
+def set_ylim(df: DataSource, y, *arg, ylim=None, **kwargs) -> AxPlot:
     """
     Parameters
     ----------
@@ -94,7 +94,7 @@ def set_ylim(df: DataSource, y, *arg, ylim=None, **kwargs)->AxPlot:
 
 @plot_action([],
              default_kwargs.get("grid"))
-def set_grid(*arg, axis=None, **kwargs)->AxPlot:
+def set_grid(*arg, axis=None, **kwargs) -> AxPlot:
     def plot(ax):
         if axis is None:
             return ax
@@ -105,9 +105,9 @@ def set_grid(*arg, axis=None, **kwargs)->AxPlot:
 
 @plot_action(["axis"],
              default_kwargs.get("tick_params"))
-def set_tick_parameters(df, axis, *arg, **kwargs)->AxPlot:
+def set_tick_parameters(df, axis, *arg, **kwargs) -> AxPlot:
     def plot(ax):
-        if axis is "both":
+        if axis == "both":
             ax.tick_params(axis=axis, **kwargs)
         else:
             ax.tick_params(
@@ -130,7 +130,7 @@ def axis_scale(*arg, xscale=None, yscale=None):
 
 @plot_action(["xlabel", "ylabel"],
              default_kwargs.get("axis_label"))
-def set_label(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
+def set_label(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs) -> AxPlot:
     def plot(ax):
         if xlabel is not None:
             ax.set_xlabel(
@@ -147,7 +147,7 @@ def set_label(df: DataSource, xlabel: str, ylabel: str, *arg, **kwargs)->AxPlot:
 
 
 @plot_action(["xlabel"], default_kwargs.get("axis_label"))
-def set_xlabel(df, xlabel: str, *arg, **kwargs)->AxPlot:
+def set_xlabel(df, xlabel: str, *arg, **kwargs) -> AxPlot:
     def plot(ax):
         if xlabel is not None:
             ax.set_xlabel(
@@ -159,7 +159,7 @@ def set_xlabel(df, xlabel: str, *arg, **kwargs)->AxPlot:
 
 
 @plot_action(["ylabel"], default_kwargs.get("axis_label"))
-def set_ylabel(df, ylabel: str, *arg, **kwargs)->AxPlot:
+def set_ylabel(df, ylabel: str, *arg, **kwargs) -> AxPlot:
     def plot(ax):
         if ylabel is not None:
             ax.set_ylabel(

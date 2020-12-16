@@ -48,7 +48,7 @@ def factor_bar(
         width:
     """
 
-    if len(df) is 0:
+    if len(df) == 0:
         return lambda ax: ax
 
     if type(y) is list:
@@ -131,14 +131,14 @@ def factor_bar(
         prev_top = stack_bars[0]
         for i, bar in enumerate(stack_bars):
             if vert:
-                if i is 0:
+                if i == 0:
                     ax.bar(ind, bar, **plot_arg)
                 else:
                     ax.bar(
                         ind, bar, bottom=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
             else:
-                if i is 0:
+                if i == 0:
                     ax.barh(ind, bar, **plot_arg)
                 else:
                     ax.barh(
@@ -256,14 +256,14 @@ def bar(
         prev_top = stack_bars[0]
         for i, bar in enumerate(stack_bars):
             if vert:
-                if i is 0:
+                if i == 0:
                     ax.bar(ind, bar, **plot_arg)
                 else:
                     ax.bar(
                         ind, bar, bottom=prev_top, **plot_arg)
                     prev_top = [a+b for a, b in zip(prev_top, bar)]
             else:
-                if i is 0:
+                if i == 0:
                     ax.barh(ind, bar, **plot_arg)
                 else:
                     ax.barh(

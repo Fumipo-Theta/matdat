@@ -22,7 +22,7 @@ def filter_dict(ref_keys):
     return lambda dictionary: dict(filter(lambda kv: kv[0] in ref_keys, dictionary.items()))
 
 
-def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
+def mix_dict(target: dict, mix_dict: dict, consume: bool = False) -> dict:
     d = {}
     for key in target.keys():
         if type(target[key]) is dict:
@@ -34,7 +34,7 @@ def mix_dict(target: dict, mix_dict: dict, consume: bool=False)->dict:
     return d, mix_dict
 
 
-def wrap_by_duplicate(a: Union[T, Duplicated])->Union[Duplicated]:
+def wrap_by_duplicate(a: Union[T, Duplicated]) -> Union[Duplicated]:
     """
     Wrap not tuple parameter by tuple.
     """
@@ -150,10 +150,10 @@ class Subplot(ISubplot):
         self.title = title
         return self
 
-    def get_first_axis_style(self)->dict:
+    def get_first_axis_style(self) -> dict:
         return self.axes_style
 
-    def get_second_axis_style(self)->dict:
+    def get_second_axis_style(self) -> dict:
         return mix_dict(
             self.axes_style,
             self.diff_second_axes_style
@@ -258,7 +258,7 @@ class Subplot(ISubplot):
             *[f(dfs, opt) for f in self.plotMethods[i]],
         )(ax)
 
-    def __read(self, i)->Tuple[pd.DataFrame]:
+    def __read(self, i) -> Tuple[pd.DataFrame]:
         """
         Indipendent from type of data source.
         """
@@ -274,7 +274,7 @@ class Subplot(ISubplot):
         )([data, meta, default_transformers, data_transformers])
 
         def get_with_duplicate(it: Duplicated, i, default=None):
-            if len(it) is 0:
+            if len(it) == 0:
                 return default
             return it[i]
 
@@ -296,13 +296,13 @@ class Subplot(ISubplot):
                                    transformers=transformers))
         return Duplicated(*dfs)
 
-    def default_transformers(self, i)->tuple:
+    def default_transformers(self, i) -> tuple:
         def filterX(df):
             x = self.option[i].get("x", None)
             lim = self.axes_style.get("xlim")
-            if len(lim) is 0 or lim is None:
+            if len(lim) == 0 or lim is None:
                 return df
-            elif len(lim) is 1:
+            elif len(lim) == 1:
                 lower = lim[0]
                 upper = None
             else:
@@ -327,28 +327,29 @@ class Subplot(ISubplot):
         return self.add(*arg, **kwargs)
 
     def add(self,
-            data: Union[DataSource, Tuple[DataSource]]={},
-            dataInfo: dict={},
-            index: Optional[Union[List[str], Tuple[List[str]]]]=None,
-            transformer: Union[DataTransformer, List[DataTransformer], Tuple[DataTransformer], Tuple[List[DataTransformer]]]=identity,
-            plot: List[PlotAction]=[],
-            option: dict={},
-            xlim: Optional[list]=None,
-            ylim: Optional[list]=None,
-            xscale: Optional[str]=None,
-            yscale: Optional[str]=None,
-            tick: dict={},
-            xtick: dict={},
-            ytick: dict={},
-            label: dict={},
-            xlabel_setting: dict={},
-            ylabel_setting: dict={},
-            xlabel: Optional[str]=None,
-            ylabel: Optional[str]=None,
-            grid: dict={},
+            data: Union[DataSource, Tuple[DataSource]] = {},
+            dataInfo: dict = {},
+            index: Optional[Union[List[str], Tuple[List[str]]]] = None,
+            transformer: Union[DataTransformer, List[DataTransformer],
+                               Tuple[DataTransformer], Tuple[List[DataTransformer]]] = identity,
+            plot: List[PlotAction] = [],
+            option: dict = {},
+            xlim: Optional[list] = None,
+            ylim: Optional[list] = None,
+            xscale: Optional[str] = None,
+            yscale: Optional[str] = None,
+            tick: dict = {},
+            xtick: dict = {},
+            ytick: dict = {},
+            label: dict = {},
+            xlabel_setting: dict = {},
+            ylabel_setting: dict = {},
+            xlabel: Optional[str] = None,
+            ylabel: Optional[str] = None,
+            grid: dict = {},
             cycler=None,
-            within_xlim: bool=False,
-            second_axis: bool=False,
+            within_xlim: bool = False,
+            second_axis: bool = False,
             **_kwargs):
         """
         Set parameters for plotting.
